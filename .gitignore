@@ -1,0 +1,26 @@
+# Logs
+frontEnd/acompañamiento de alumnos/logs
+frontEnd/acompañamiento de alumnos/*.log
+frontEnd/acompañamiento de alumnos/npm-debug.log*
+frontEnd/acompañamiento de alumnos/yarn-debug.log*
+frontEnd/acompañamiento de alumnos/yarn-error.log*
+frontEnd/acompañamiento de alumnos/pnpm-debug.log*
+frontEnd/acompañamiento de alumnos/lerna-debug.log*
+
+frontEnd/acompañamiento de alumnos/node_modules
+frontEnd/acompañamiento de alumnos/dist
+frontEnd/acompañamiento de alumnos/dist-ssr
+frontEnd/acompañamiento de alumnos/*.local
+
+# Editor directories and files
+frontEnd/acompañamiento de alumnos/.vscode/*
+frontEndacompañamiento de alumnos/!.vscode/extensions.json
+frontEnd/acompañamiento de alumnos/.idea
+frontEnd/acompañamiento de alumnos/.DS_Store
+frontEnd/acompañamiento de alumnos/*.suo
+frontEnd/acompañamiento de alumnos/*.ntvs*
+frontEnd/acompañamiento de alumnos/*.njsproj
+frontEnd/acompañamiento de alumnos/*.sln
+frontEnd/acompañamiento de alumnos/*.sw?
+
+backEnd/node_modules
