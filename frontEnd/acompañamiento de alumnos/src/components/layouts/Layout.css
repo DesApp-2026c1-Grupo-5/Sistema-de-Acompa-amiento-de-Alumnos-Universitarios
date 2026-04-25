@@ -1,0 +1,14 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.layout__sidebar {
+  flex-shrink: 0;
+}
+
+.layout__content {
+  flex: 1;
+  padding: 24px;
+  background: var(--bg);
+}
