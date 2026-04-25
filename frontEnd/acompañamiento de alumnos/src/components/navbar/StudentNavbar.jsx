@@ -1,11 +1,16 @@
 import { NavLink } from 'react-router-dom';
-import { Home, User, GraduationCap, Bot, Clock, FileText } from 'lucide-react';
+import { Home, User, GraduationCap, Bot, Clock, FileText, X } from 'lucide-react';
 import './Navbar.css';
 
-function StudentNavbar() {
+function StudentNavbar({ onClose }) {
   return (
     <nav className="navbar">
-      <div className="navbar__brand">Estudiante</div>
+      <div className="navbar__header">
+        <span className="navbar__brand">Estudiante</span>
+        <button className="navbar__close" onClick={onClose} aria-label="Cerrar menú">
+          <X size={20} />
+        </button>
+      </div>
       <ul className="navbar__list">
         <li>
           <NavLink to="/student/home" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>

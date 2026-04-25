@@ -1,11 +1,16 @@
 import { NavLink } from 'react-router-dom';
-import { Home, BarChart3, Users, GraduationCap, FileStack, FileWarning } from 'lucide-react';
+import { Home, BarChart3, Users, GraduationCap, FileStack, FileWarning, X } from 'lucide-react';
 import './Navbar.css';
 
-function AdminNavbar() {
+function AdminNavbar({ onClose }) {
   return (
     <nav className="navbar">
-      <div className="navbar__brand">Administrador</div>
+      <div className="navbar__header">
+        <span className="navbar__brand">Administrador</span>
+        <button className="navbar__close" onClick={onClose} aria-label="Cerrar menú">
+          <X size={20} />
+        </button>
+      </div>
       <ul className="navbar__list">
         <li>
           <NavLink to="/admin/home" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>
