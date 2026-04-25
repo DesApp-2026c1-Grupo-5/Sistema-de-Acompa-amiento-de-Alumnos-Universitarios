@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Menu, Bell, Moon, Sun, User, School } from 'lucide-react';
 import './Header.css';
 
-function Header({ onMenuToggle, isDarkMode, onToggleTheme }) {
+function Header({ onMenuToggle, isDarkMode, onToggleTheme, isSidebarOpen }) {
   const [notifications] = useState(3);
 
   return (
     <header className="header">
       <div className="header__left">
-        <button className="header__hamburger" onClick={onMenuToggle} aria-label="Abrir menú">
-          <Menu size={24} />
-        </button>
+        {!isSidebarOpen && (
+          <button className="header__hamburger" onClick={onMenuToggle} aria-label="Abrir menú">
+            <Menu size={24} />
+          </button>
+        )}
         <div className="header__brand">
           <School className="header__brand-icon" size={28} />
           <span className="header__brand-text">UNAHUR</span>

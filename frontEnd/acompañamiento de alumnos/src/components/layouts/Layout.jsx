@@ -32,6 +32,7 @@ function Layout({ navbarBrand, navbarLinks }) {
             onMenuToggle={handleMenuToggle}
             isDarkMode={isDarkMode}
             onToggleTheme={handleToggleTheme}
+            isSidebarOpen={sidebarOpen}
           />
           <Outlet />
         </main>
