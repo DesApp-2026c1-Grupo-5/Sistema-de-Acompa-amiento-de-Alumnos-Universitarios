@@ -1,56 +1,10 @@
-import { NavLink } from 'react-router-dom';
-import { Home, BarChart3, Users, GraduationCap, FileStack, FileWarning, X } from 'lucide-react';
-import './Navbar.css';
+import { Home, BarChart3, Users, GraduationCap, FileStack, FileWarning } from 'lucide-react';
 
-function AdminNavbar({ onClose }) {
-  return (
-    <nav className="navbar">
-      <div className="navbar__header">
-        <span className="navbar__brand">Administrador</span>
-        <button className="navbar__close" onClick={onClose} aria-label="Cerrar menú">
-          <X size={20} />
-        </button>
-      </div>
-      <ul className="navbar__list">
-        <li>
-          <NavLink to="/admin/home" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>
-            <Home size={20} />
-            <span>Home</span>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/admin/statistics" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>
-            <BarChart3 size={20} />
-            <span>Estadisticas</span>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/admin/admins" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>
-            <Users size={20} />
-            <span>Gestionar Administradores</span>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/admin/careers" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>
-            <GraduationCap size={20} />
-            <span>Gestionar Carreras</span>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/admin/study-plan" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>
-            <FileStack size={20} />
-            <span>Gestionar Planes De Estudio</span>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/admin/reports" className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}>
-            <FileWarning size={20} />
-            <span>Gestionar Denuncias</span>
-          </NavLink>
-        </li>
-      </ul>
-    </nav>
-  );
-}
-
-export default AdminNavbar;
+export const adminLinks = [
+  { path: '/admin/home', label: 'Home', icon: Home },
+  { path: '/admin/statistics', label: 'Estadisticas', icon: BarChart3 },
+  { path: '/admin/admins', label: 'Gestionar Administradores', icon: Users },
+  { path: '/admin/careers', label: 'Gestionar Carreras', icon: GraduationCap },
+  { path: '/admin/study-plan', label: 'Gestionar Planes De Estudio', icon: FileStack },
+  { path: '/admin/reports', label: 'Gestionar Denuncias', icon: FileWarning },
+];

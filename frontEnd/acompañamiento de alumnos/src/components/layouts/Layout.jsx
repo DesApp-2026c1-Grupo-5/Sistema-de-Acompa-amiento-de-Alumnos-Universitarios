@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import AdminNavbar from '../navbar/AdminNavbar';
 import Header from '../header/Header';
+import Navbar from '../navbar/Navbar';
 import './Layout.css';
 
-function AdminLayout() {
+function Layout({ navbarBrand, navbarLinks }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -23,10 +23,9 @@ function AdminLayout() {
 
   return (
     <div className="layout">
-
       <div className={`layout__body ${sidebarOpen ? 'has-sidebar' : ''}`}>
         <aside className={`layout__sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <AdminNavbar onClose={handleClose}/>
+          <Navbar brand={navbarBrand} links={navbarLinks} onClose={handleClose} />
         </aside>
         <main className="layout__content">
           <Header
@@ -42,4 +41,4 @@ function AdminLayout() {
   );
 }
 
-export default AdminLayout;
+export default Layout;

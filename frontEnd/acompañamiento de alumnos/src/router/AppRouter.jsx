@@ -1,8 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
-import StudentLayout from '../components/layouts/StudentLayout';
-import AdminLayout from '../components/layouts/AdminLayout';
+import Layout from '../components/layouts/Layout';
+import { adminLinks } from '../components/navbar/AdminNavbar';
+import { studentLinks } from '../components/navbar/StudentNavbar';
 import HomeStudent from '../pages/student/HomeStudent';
 import Profile from '../pages/student/Profile';
 import AcademicStatus from '../pages/student/AcademicStatus';
@@ -26,7 +27,7 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    element: <StudentLayout />,
+    element: <Layout navbarBrand="Estudiante" navbarLinks={studentLinks} />,
     children: [
       {
         path: '/student/home',
@@ -55,7 +56,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    element: <AdminLayout />,
+    element: <Layout navbarBrand="Administrador" navbarLinks={adminLinks} />,
     children: [
       {
         path: '/admin/home',
