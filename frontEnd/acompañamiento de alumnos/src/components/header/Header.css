@@ -1,0 +1,141 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header__hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header__hamburger:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header__brand-icon {
+  color: var(--accent);
+}
+
+.header__brand-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+@media (max-width: 480px) {
+  .header__brand-text {
+    display: none;
+  }
+}
+
+.header__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.header__icon-btn:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.header__badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--accent);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header__user-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 50%;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header__user-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .header__brand {
+    gap: 8px;
+  }
+
+  .header__right {
+    gap: 4px;
+  }
+
+  .header__icon-btn,
+  .header__user-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
