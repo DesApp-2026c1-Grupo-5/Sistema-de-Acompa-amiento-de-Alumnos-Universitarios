@@ -31,6 +31,13 @@ npm run lint     # Verificar código
 
 Ver `frontEnd/acompañamiento de alumnos/docs/FRONTEND_ROUTES.md` para detalle completo.
 
+## Colores Institucionales
+
+- **Cian**: `#00bcd4` (principal - accent)
+- **Verde Oscuro**: `#004d40` (texto headings)
+- **Verde Agua**: `#00695c` (bordes accent)
+- **Blanco**: `#ffffff` (fondo)
+
 ## Pendiente
 
 - Sistema de autenticación y protección de rutas
