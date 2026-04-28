@@ -9,7 +9,7 @@ import Profile from '../pages/student/Profile';
 import AcademicStatus from '../pages/student/AcademicStatus';
 import AcademicAssistant from '../pages/student/AcademicAssistant';
 import StudySessions from '../pages/student/StudySessions';
-import Materials from '../pages/student/Materials';
+import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
 import HomeAdmin from '../pages/admin/HomeAdmin';
 import Careers from '../pages/admin/Careers';
 import StudyPlan from '../pages/admin/StudyPlan';
@@ -25,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/student/materials',
+    element: <MaterialRepositoryPage />,
   },
   {
     element: <Layout navbarBrand="Estudiante" navbarLinks={studentLinks} />,
@@ -48,10 +52,6 @@ const router = createBrowserRouter([
       {
         path: '/student/study-sessions',
         element: <StudySessions />,
-      },
-      {
-        path: '/student/materials',
-        element: <Materials />,
       },
     ],
   },

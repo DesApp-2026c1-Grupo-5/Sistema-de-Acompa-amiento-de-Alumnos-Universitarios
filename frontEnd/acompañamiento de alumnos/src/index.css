@@ -279,6 +279,13 @@ button {
   color: #344054;
 }
 
+#root.fullwidth {
+  width: 100%;
+  max-width: 100%;
+  border-inline: none;
+  text-align: left;
+}
+
 .subject-preview--active .subject-preview__top span {
   background: var(--color-primary);
   color: white;
