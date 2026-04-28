@@ -5,7 +5,7 @@ const Footer = () => {
         <div className="landing-footer__brand">
           <div className="landing-logo">
             <div className="landing-logo__icon">🎓</div>
-            <span>EduPath</span>
+            <span>SIVA UNAHUR</span>
           </div>
 
           <p>
@@ -15,13 +15,12 @@ const Footer = () => {
 
           <div className="landing-footer__social">
             <span>𝕏</span>
-            <span>GitHub</span>
             <span>Instagram</span>
           </div>
         </div>
 
         <div className="landing-footer__bottom">
-          <p>© 2026 EduPath. Todos los derechos reservados.</p>
+          <p>© 2026 SIVA UNAHUR. Todos los derechos reservados.</p>
 
           <div>
             <a href="#">Privacidad</a>

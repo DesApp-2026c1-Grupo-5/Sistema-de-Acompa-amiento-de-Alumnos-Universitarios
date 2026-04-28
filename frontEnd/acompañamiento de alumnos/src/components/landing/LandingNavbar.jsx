@@ -4,7 +4,7 @@ const LandingNavbar = ({ isDarkMode, toggleTheme }) => {
       <div className="landing-navbar__content">
         <div className="landing-logo">
           <div className="landing-logo__icon">🎓</div>
-          <span>EduPath</span>
+          <span>SIVA UNAHUR</span>
         </div>
 
         <nav className="landing-navbar__actions">
@@ -21,7 +21,7 @@ const LandingNavbar = ({ isDarkMode, toggleTheme }) => {
             Iniciar sesión
           </a>
 
-          <a href="/register" className="register-button">
+          <a href="/login" className="register-button">
             Registrarse
           </a>
         </nav>
