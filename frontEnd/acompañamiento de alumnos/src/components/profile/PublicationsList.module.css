@@ -1,0 +1,77 @@
+.section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.title {
+  color: var(--text-h);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.publication {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.author {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.date {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.content {
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.socialBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.socialBtn:hover {
+  background: var(--color-soft);
+}
