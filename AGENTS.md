@@ -15,7 +15,8 @@ npm run lint     # ESLint (flat config)
 ```
 
 ### Backend
-- No start script configured yet - use `node index.js` or configure in package.json
+- No entry point yet (no `index.js`). Use `node index.js` after creating one.
+- nodemon is installed for development: add `"dev": "nodemon index.js"` to scripts
 
 ## Frontend Stack
 
