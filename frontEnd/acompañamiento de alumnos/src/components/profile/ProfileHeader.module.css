@@ -92,7 +92,6 @@
   color: #00838f;
   display: flex;
   align-items: center;
-  gap: 8px;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
@@ -102,27 +101,10 @@
   background: rgba(0, 188, 212, 0.2);
 }
 
-.btnEditar {
-  padding: 8px 24px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #00bcd4 0%, #00695c 100%);
-  color: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-
-.btnEditar:hover {
-  opacity: 0.9;
-}
-
 .btnIcon {
   width: 16px;
   height: 16px;
+  margin-right: 4px;
 }
 
 .divider {

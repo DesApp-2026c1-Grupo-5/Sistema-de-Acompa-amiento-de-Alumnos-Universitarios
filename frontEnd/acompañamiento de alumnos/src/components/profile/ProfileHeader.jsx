@@ -1,4 +1,6 @@
 import { MapPin, Users, Globe, SquarePen, Mail } from 'lucide-react';
+import { useState } from 'react';
+import FormModal from '../common/FormModal';
 import Avatar from '../common/Avatar';
 import Card from '../common/Card';
 import styles from './ProfileHeader.module.css';
@@ -6,6 +8,22 @@ import Button from '../common/Button';
 
 function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
   const { initials, name, career, location, contactsCount, email, academicStatus } = user;
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const fields = [
+    { name: 'name', label: 'Nombre completo', type: 'text', required: true },
+    { name: 'career', label: 'Carrera', type: 'text', required: true },
+    { name: 'location', label: 'Ubicación', type: 'text' },
+    { name: 'email', label: 'Email', type: 'email' },
+    { name: 'academicStatus', label: 'Estado académico', type: 'text' },
+    { name: 'bio', label: 'Biografía', type: 'textarea' },
+  ];
+
+  const handleSubmit = (data) => {
+    onEditProfile?.(data);
+    setModalOpen(false);
+  };
 
   return (
     <Card className={styles.card}>
@@ -44,9 +62,9 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
             </button>
             <Button
               variant="primary"
-              iconLeft={<SquarePen size={16} strokeWidth={2.5} />}
-              onClick={onEditProfile}
+              onClick={() => setModalOpen(true)}
             >
+              <SquarePen className={styles.btnIcon} />
               Editar perfil
             </Button>
           </div>
@@ -72,7 +90,16 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
         </div>
 
       </div>
+      <FormModal
+        open={modalOpen}
+        title="Contacto"
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleSubmit}
+        fields={fields}
+        initialValues={user}
+      />
     </Card>
+
   );
 }
 

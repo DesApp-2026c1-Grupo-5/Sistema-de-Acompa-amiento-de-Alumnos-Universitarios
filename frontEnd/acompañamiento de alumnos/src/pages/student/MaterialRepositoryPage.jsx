@@ -8,7 +8,7 @@ import MaterialGrid from '../../components/materials/MaterialGrid';
 import UploadMaterialModal from '../../components/materials/UploadMaterialModal';
 import MaterialDetailModal from '../../components/materials/MaterialDetailModal';
 import ReportModal from '../../components/materials/ReportModal';
-import Button from '../../components/materials/Button';
+import Button from '../../components/common/Button'
 import { initialMaterials } from './materials/mockData';
 import { filterMaterials } from './materials/helpers';
 import styles from './MaterialRepositoryPage.module.css';

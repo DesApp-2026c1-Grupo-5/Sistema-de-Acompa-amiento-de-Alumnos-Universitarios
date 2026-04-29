@@ -1,6 +1,6 @@
 import { ThumbsUp, ThumbsDown, Flag } from 'lucide-react';
-import Modal from './Modal';
-import Badge from './Badge';
+import Modal from '../common/Modal';
+import Badge from '../common/Badge';
 import {
   formatDate,
   calcRatio,

@@ -10,8 +10,8 @@ import {
   Eye,
   Download,
 } from 'lucide-react';
-import Badge from './Badge';
-import Button from './Button';
+import Badge from '../common/Badge';
+import Button from '../common/Button';
 import { formatDate } from '../../pages/student/materials/helpers';
 import styles from './MaterialCard.module.css';
 
