@@ -1,6 +1,7 @@
 import Avatar from '../common/Avatar';
 import Card from '../common/Card';
 import styles from './PendingRequests.module.css';
+import { useState } from 'react';
 import Button from '../common/Button';
 
 function RequestItem({ request, onAccept, onIgnore }) {
@@ -35,19 +36,29 @@ function RequestItem({ request, onAccept, onIgnore }) {
   );
 }
 
-function PendingRequests({ requests, onAccept, onIgnore }) {
+function PendingRequests({ requests }) {
   const hasRequests = requests && requests.length > 0;
+
+  const [currentRequests, setCurrentRequests] = useState(requests)
+
+  const handleOnAccept = (id) => {
+    setCurrentRequests(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleOnIgnore = (id) => {
+    setCurrentRequests(prev => prev.filter(r => r.id !== id));
+  };
 
   return (
     <Card title={"Solicitudes pendientes"}>
       {hasRequests ? (
         <ul className={styles.list}>
-          {requests.map((request) => (
+          {currentRequests.map((request) => (
             <RequestItem
               key={request.id}
               request={request}
-              onAccept={onAccept}
-              onIgnore={onIgnore}
+              onAccept={handleOnAccept}
+              onIgnore={handleOnIgnore}
             />
           ))}
         </ul>
