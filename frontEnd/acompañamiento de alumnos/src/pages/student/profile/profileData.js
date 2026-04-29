@@ -3,10 +3,11 @@ export const userData = {
   name: 'Federico García',
   career: 'Ingeniería en Sistemas de Información',
   location: 'Buenos Aires, Argentina',
-  contactsCount: 342,
   email: 'federico.garcia@estudiante.edu',
-  academicStatus: '3er año en curso'
-};
+  academicStatus: '3er año en curso',
+  bio: `Estudiante de 3er año de Ingeniería en Sistemas apasionado por el desarrollo de software y la inteligencia artificial. Me interesa colaborar en proyectos open source y compartir conocimientos con la comunidad estudiantil. Siempre buscando aprender nuevas tecnologías y mejorar mis habilidades de programación.`,
+  contactsCount: 342,
+}  
 
 export const contacts = [
   { id: 1, initials: 'ML', name: 'María López' },
@@ -37,8 +38,6 @@ export const pendingRequests = [
     commonContacts: 5 
   }
 ];
-
-export const bio = `Estudiante de 3er año de Ingeniería en Sistemas apasionado por el desarrollo de software y la inteligencia artificial. Me interesa colaborar en proyectos open source y compartir conocimientos con la comunidad estudiantil. Siempre buscando aprender nuevas tecnologías y mejorar mis habilidades de programación.`;
 
 export const publications = [
   {
