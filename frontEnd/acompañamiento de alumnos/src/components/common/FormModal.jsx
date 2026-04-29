@@ -63,7 +63,6 @@ function FormModal({ open, title, onClose, onSubmit, fields = [], initialValues 
 
   const renderField = (field) => {
     const commonProps = {
-      key: field.name,
       className: styles.input,
       value: form[field.name] || '',
       onChange: (e) => handleChange(field.name, e),

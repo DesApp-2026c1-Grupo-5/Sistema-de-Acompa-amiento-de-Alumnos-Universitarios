@@ -15,13 +15,14 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
     { name: 'name', label: 'Nombre completo', type: 'text', required: true },
     { name: 'career', label: 'Carrera', type: 'text', required: true },
     { name: 'location', label: 'Ubicación', type: 'text' },
-    { name: 'email', label: 'Email', type: 'mail' },
+    { name: 'email', label: 'Email', type: 'email' },
     { name: 'academicStatus', label: 'Estado académico', type: 'text' },
     { name: 'bio', label: 'Biografía', type: 'textarea' },
   ];
 
   const handleSubmit = (data) => {
-    console.log('Datos enviados:', data);
+    onEditProfile?.(data);
+    setModalOpen(false);
   };
 
   return (

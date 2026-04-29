@@ -2,6 +2,7 @@ import ProfileHeader from '../../components/profile/ProfileHeader';
 import ContactList from '../../components/profile/ContactList';
 import PendingRequests from '../../components/profile/PendingRequests';
 import PublicationsList from '../../components/profile/PublicationsList';
+import { useState } from 'react';
 
 import { userData, contacts, pendingRequests, publications } from './profile/profileData';
 
@@ -9,7 +10,6 @@ import styles from './Profile.module.css';
 import Card from '../../components/common/Card';
 
 function Profile({
-  user = userData,
   contactList = contacts,
   requests = pendingRequests,
   posts = publications,
@@ -21,11 +21,17 @@ function Profile({
   onLike,
   onComment
 }) {
+  const [currentUser, setCurrentUser] = useState(userData);
+
+  const handleEditProfile = (data) => {
+    setCurrentUser((prev) => ({ ...prev, ...data }));
+  };
+
   return (
     <div className={styles.container}>
       <ProfileHeader 
-        user={user}
-        onEditProfile={onEditProfile}
+        user={currentUser}
+        onEditProfile={handleEditProfile}
         onToggleVisibility={onToggleVisibility}
       />
       
@@ -42,7 +48,7 @@ function Profile({
       />
 
       <Card title={"Acerca de"}>
-        <p>{user.bio}</p>
+        <p>{currentUser.bio}</p>
       </Card>
 
       <PublicationsList 
