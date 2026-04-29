@@ -1,4 +1,4 @@
-import { MapPin, Users, Globe, SquarePen, Mail } from 'lucide-react';
+import { MapPin, Users, Globe, SquarePen, Mail, Lock } from 'lucide-react';
 import { useState } from 'react';
 import FormModal from '../common/FormModal';
 import Avatar from '../common/Avatar';
@@ -10,6 +10,9 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
   const { initials, name, career, location, contactsCount, email, academicStatus } = user;
 
   const [modalOpen, setModalOpen] = useState(false);
+  // TODO: conectar con backend cuando esté implementado
+  // usar onToggleVisibility callback en lugar de estado local
+  const [visibility, setVisibility] = useState(false);
 
   const fields = [
     { name: 'name', label: 'Nombre completo', type: 'text', required: true },
@@ -53,13 +56,13 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
           </div>
 
           <div className={styles.actions}>
-            <button
-              className={styles.btnPublico}
-              onClick={onToggleVisibility}
+            <Button
+              variant={visibility ? 'outline' : 'primarySoft'}
+              onClick={() => setVisibility(!visibility)}
             >
-              <Globe className={styles.btnIcon} />
-              Público
-            </button>
+              {visibility ? <Lock size={16} /> : <Globe size={16} />}
+              {visibility ? 'Privado' : 'Público'}
+            </Button>
             <Button
               variant="primary"
               onClick={() => setModalOpen(true)}

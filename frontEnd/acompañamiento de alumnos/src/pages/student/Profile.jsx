@@ -11,10 +11,7 @@ import Card from '../../components/common/Card';
 
 function Profile({
   contactList = contacts,
-  requests = pendingRequests,
   posts = publications,
-  onAcceptRequest,
-  onIgnoreRequest,
   onEditProfile,
   onViewAllContacts,
   onToggleVisibility,
@@ -42,9 +39,7 @@ function Profile({
       />
 
       <PendingRequests 
-        requests={requests}
-        onAccept={onAcceptRequest}
-        onIgnore={onIgnoreRequest}
+        requests={pendingRequests}
       />
 
       <Card title={"Acerca de"}>
