@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Flag } from 'lucide-react';
-import Modal from './Modal';
-import Button from './Button';
+import Modal from '../common/Modal';
+import Button from '../common/Button';
 import { REPORT_REASONS } from '../../pages/student/materials/mockData';
 import styles from './ReportModal.module.css';
 
