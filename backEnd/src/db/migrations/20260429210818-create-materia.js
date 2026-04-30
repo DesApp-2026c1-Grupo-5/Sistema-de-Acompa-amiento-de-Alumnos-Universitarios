@@ -9,12 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
-      plan_id: {
-        type: Sequelize.INTEGER
-      },
       nombre: {
         type: Sequelize.STRING
       },

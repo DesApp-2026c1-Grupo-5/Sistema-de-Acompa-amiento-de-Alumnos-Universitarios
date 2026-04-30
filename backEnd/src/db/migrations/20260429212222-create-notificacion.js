@@ -9,12 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
-      usuario_id: {
-        type: Sequelize.INTEGER
-      },
       tipo: {
         type: Sequelize.STRING
       },
@@ -29,9 +23,6 @@ module.exports = {
       },
       leida: {
         type: Sequelize.BOOLEAN
-      },
-      created_at: {
-        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,

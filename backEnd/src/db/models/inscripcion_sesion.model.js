@@ -14,9 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   inscripcion_sesion.init({
-    id: DataTypes.INTEGER,
-    sesion_id: DataTypes.INTEGER,
-    estudiante_id: DataTypes.INTEGER,
     estado: DataTypes.STRING,
     fecha_inscripcion: DataTypes.DATE,
     notificado_recordatorio: DataTypes.BOOLEAN

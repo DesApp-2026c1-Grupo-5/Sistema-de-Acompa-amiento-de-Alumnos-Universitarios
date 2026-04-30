@@ -14,9 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   correlatividad.init({
-    id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
-    materia_requisito_id: DataTypes.INTEGER,
     tipo: DataTypes.STRING
   }, {
     sequelize,

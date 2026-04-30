@@ -1,19 +1,25 @@
 require("dotenv").config();
 
 const app = require("./app");
-const { connectDB } = require('./db/config/database');
+const db = require("./db/models");
 
-// Conectar DB y levantar server
 const PORT = process.env.PORT || 3000;
 
-
 const startServer = async () => {
-  await connectDB();
+  try {
+    await db.sequelize.sync({force:true});
+    console.log(' DB conectada correctamente');
 
-  app.listen (PORT, () => {
+    await db.sequelize.sync({ force: true });
+    console.log(' Tablas sincronizadas');
 
-    console.log(`Servidor corriendo en puerto ${PORT}`);
-  });
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en puerto ${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Error al iniciar:', error);
+    process.exit(1);
+  }
 };
 
 startServer();

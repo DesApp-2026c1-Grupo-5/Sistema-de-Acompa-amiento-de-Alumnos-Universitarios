@@ -9,9 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
       email: {
         type: Sequelize.STRING
       },
@@ -23,9 +20,6 @@ module.exports = {
       },
       activo: {
         type: Sequelize.BOOLEAN
-      },
-      created_at: {
-        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,

@@ -14,8 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   oferta_academica.init({
-    id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
     anio: DataTypes.INTEGER,
     cuatrimestre: DataTypes.INTEGER,
     turno: DataTypes.STRING,

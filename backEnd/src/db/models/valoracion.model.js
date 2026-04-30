@@ -22,9 +22,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   valoracion.init({
-    id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
-    estudiante_id: DataTypes.INTEGER,
     valor: DataTypes.STRING,
     fecha: DataTypes.DATE
   }, {

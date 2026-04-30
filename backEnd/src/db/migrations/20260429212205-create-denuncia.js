@@ -9,18 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
-      materia_id: {
-        type: Sequelize.INTEGER
-      },
-      denunciante_id: {
-        type: Sequelize.INTEGER
-      },
-      motivo_id: {
-        type: Sequelize.INTEGER
-      },
       detalle: {
         type: Sequelize.STRING
       },

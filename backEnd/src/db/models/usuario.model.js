@@ -18,12 +18,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   usuario.init({
-    id: DataTypes.INTEGER,
     email: DataTypes.STRING,
     password_hash: DataTypes.STRING,
     tipo: DataTypes.STRING,
     activo: DataTypes.BOOLEAN,
-    created_at: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'usuario',

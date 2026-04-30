@@ -18,8 +18,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   materia.init({
-    id: DataTypes.INTEGER,
-    plan_id: DataTypes.INTEGER,
     nombre: DataTypes.STRING,
     anio_cursada: DataTypes.INTEGER,
     tipo: DataTypes.STRING,

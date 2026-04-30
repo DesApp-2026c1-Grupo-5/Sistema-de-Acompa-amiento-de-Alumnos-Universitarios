@@ -14,9 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   estado_materia.init({
-    id: DataTypes.INTEGER,
-    situacion_id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
     estado: DataTypes.STRING,
     anio: DataTypes.INTEGER,
     cuatrimestre: DataTypes.INTEGER,

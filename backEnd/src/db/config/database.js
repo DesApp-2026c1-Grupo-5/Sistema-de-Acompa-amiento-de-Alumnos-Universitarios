@@ -1,19 +1,8 @@
-const { Sequelize } = require('sequelize');
-const config = require('./config.js');
-
-const env = process.env.NODE_ENV || 'development';
-const dbConfig = config[env];
-
-const sequelize = new Sequelize(
-  dbConfig.database,
-  dbConfig.username,
-  dbConfig.password,
-  dbConfig
-);
+const db = require('../models');
 
 const connectDB = async () => {
   try {
-    await sequelize.authenticate();
+    await db.sequelize.authenticate();
     console.log('✅ DB conectada correctamente');
   } catch (error) {
     console.error('❌ Error conectando DB:', error);
@@ -21,4 +10,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = { sequelize, connectDB };
+module.exports = { sequelize: db.sequelize, connectDB };

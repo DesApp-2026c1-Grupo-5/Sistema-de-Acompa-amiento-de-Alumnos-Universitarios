@@ -19,8 +19,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   administrador.init({
-    id: DataTypes.INTEGER,
-    usuario_id: DataTypes.INTEGER,
     nombre: DataTypes.STRING,
     apellido: DataTypes.STRING,
     creado_por: DataTypes.INTEGER
