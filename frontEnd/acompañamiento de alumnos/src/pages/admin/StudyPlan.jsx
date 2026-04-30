@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function StudyPlan() {
   return (
     <div>
-      <h1>Configurar Plan de Estudio</h1>
-      <p>Gestión de planes de estudio</p>
+      <PageTitle
+        title="Configurar Plan de Estudio"
+        description="Gestión de planes de estudio"
+      />
     </div>
   );
 }

@@ -149,6 +149,8 @@
   font-size: 14px;
 }
 
+/* INPUT CON ÍCONO */
+
 .auth-input {
   height: 52px;
   border: 1px solid #e5e7eb;
@@ -184,6 +186,8 @@
   cursor: pointer;
   font-size: 18px;
 }
+
+/* BOTÓN ORIGINAL DEL LOGIN */
 
 .auth-submit {
   height: 52px;

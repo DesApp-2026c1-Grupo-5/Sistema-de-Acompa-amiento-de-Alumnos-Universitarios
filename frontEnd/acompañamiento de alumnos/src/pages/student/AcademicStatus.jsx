@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function AcademicStatus() {
   return (
     <div>
-      <h1>Situación Académica</h1>
-      <p>Estado académico actual</p>
+      <PageTitle
+        title="Situación Académica"
+        description="Estado académico actual"
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import Button from "../../components/common/Button";
 import "../../styles/login.css";
 
 const Login = () => {
@@ -132,9 +133,9 @@ const Login = () => {
                 </div>
               </div>
 
-              <button type="button" className="auth-submit">
+              <Button variant="primary" size="lg" fullWidth>
                 Crear cuenta
-              </button>
+              </Button>
             </form>
           )}
         </div>

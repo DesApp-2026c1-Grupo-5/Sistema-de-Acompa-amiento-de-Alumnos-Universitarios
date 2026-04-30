@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function StudySessions() {
   return (
     <div>
-      <h1>Sesiones de Estudio</h1>
-      <p>Gestión de sesiones de estudio</p>
+      <PageTitle
+        title="Sesiones de Estudio"
+        description="Gestión de sesiones de estudio"
+      />
     </div>
   );
 }

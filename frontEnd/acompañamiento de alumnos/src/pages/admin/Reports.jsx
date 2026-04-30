@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function Reports() {
   return (
     <div>
-      <h1>Moderación de Denuncias</h1>
-      <p>Gestión de reportes y denuncias</p>
+      <PageTitle
+        title="Moderación de Denuncias"
+        description="Gestión de reportes y denuncias"
+      />
     </div>
   );
 }

@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function AcademicAssistant() {
   return (
     <div>
-      <h1>Asistente Académico</h1>
-      <p>Asistente virtual para consultas académicas</p>
+      <PageTitle
+        title="Asistente Académico"
+        description="Asistente virtual para consultas académicas"
+      />
     </div>
   );
 }

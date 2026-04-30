@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function Statistics() {
   return (
     <div>
-      <h1>Estadísticas</h1>
-      <p>Dashboard de estadísticas</p>
+      <PageTitle
+        title="Estadísticas"
+        description="Dashboard de estadísticas"
+      />
     </div>
   );
 }

@@ -2,22 +2,34 @@ import { useState } from 'react';
 import { Menu, Bell, Moon, Sun, User, School } from 'lucide-react';
 import './Header.css';
 
-function Header({ onMenuToggle, isDarkMode, onToggleTheme, isSidebarOpen }) {
+function Header({
+  onMenuToggle,
+  isDarkMode,
+  onToggleTheme,
+  isSidebarOpen,
+  brand = 'SIVA UNAHUR',
+}) {
   const [notifications] = useState(3);
 
   return (
     <header className="header">
       <div className="header__left">
         {!isSidebarOpen && (
-          <button className="header__hamburger" onClick={onMenuToggle} aria-label="Abrir menú">
+          <button
+            className="header__hamburger"
+            onClick={onMenuToggle}
+            aria-label="Abrir menú"
+          >
             <Menu size={24} />
           </button>
         )}
+
         <div className="header__brand">
           <School className="header__brand-icon" size={28} />
-          <span className="header__brand-text">UNAHUR</span>
+          <span className="header__brand-text">{brand}</span>
         </div>
       </div>
+
       <div className="header__right">
         <button className="header__icon-btn" aria-label="Notificaciones">
           <Bell size={20} />
@@ -25,9 +37,15 @@ function Header({ onMenuToggle, isDarkMode, onToggleTheme, isSidebarOpen }) {
             <span className="header__badge">{notifications}</span>
           )}
         </button>
-        <button className="header__icon-btn" onClick={onToggleTheme} aria-label="Cambiar tema">
+
+        <button
+          className="header__icon-btn"
+          onClick={onToggleTheme}
+          aria-label="Cambiar tema"
+        >
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
+
         <button className="header__user-btn" aria-label="Perfil de usuario">
           <User size={20} />
         </button>

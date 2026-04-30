@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function HomeStudent() {
   return (
     <div>
-      <h1>Home Estudiante</h1>
-      <p>Bienvenido estudiante</p>
+      <PageTitle
+        title="Home Estudiante"
+        description="Bienvenido estudiante"
+      />
     </div>
   );
 }

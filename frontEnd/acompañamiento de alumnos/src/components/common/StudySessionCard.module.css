@@ -1,0 +1,49 @@
+.sessionCard {
+  margin-bottom: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topic {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 18px;
+}
+
+.subject {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.meta {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.meta span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--accent-bg);
+}
+
+.description {
+  margin: 16px 0 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

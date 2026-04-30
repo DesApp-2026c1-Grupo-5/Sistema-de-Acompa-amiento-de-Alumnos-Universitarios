@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function Admins() {
   return (
     <div>
-      <h1>Alta de Administradores</h1>
-      <p>Gestión de usuarios administradores</p>
+      <PageTitle
+        title="Alta de Administradores"
+        description="Gestión de usuarios administradores"
+      />
     </div>
   );
 }

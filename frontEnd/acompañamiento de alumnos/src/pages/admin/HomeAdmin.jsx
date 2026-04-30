@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function HomeAdmin() {
   return (
     <div>
-      <h1>Home Administrador</h1>
-      <p>Panel de control del administrador</p>
+      <PageTitle
+        title="Home Administrador"
+        description="Panel de control del administrador"
+      />
     </div>
   );
 }

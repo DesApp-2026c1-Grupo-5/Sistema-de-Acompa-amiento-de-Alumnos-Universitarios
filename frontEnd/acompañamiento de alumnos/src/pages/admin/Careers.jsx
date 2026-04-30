@@ -1,8 +1,12 @@
+import PageTitle from "../../components/common/PageTitle";
+
 function Careers() {
   return (
     <div>
-      <h1>Gestión de Carreras</h1>
-      <p>Administrar carreras universitarias</p>
+      <PageTitle
+        title="Gestión de Carreras"
+        description="Administrar carreras universitarias"
+      />
     </div>
   );
 }
