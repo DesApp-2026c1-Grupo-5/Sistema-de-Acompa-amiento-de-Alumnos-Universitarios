@@ -1,0 +1,48 @@
+.simulatorTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.simulatorTitle h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.simulatorDesc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-soft);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.checkboxLabel:hover {
+  background: var(--color-soft-hover);
+}
+
+.checkboxLabel input {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  accent-color: var(--color-accent);
+}

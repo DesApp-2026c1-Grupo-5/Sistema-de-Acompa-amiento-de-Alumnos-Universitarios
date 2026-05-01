@@ -1,0 +1,38 @@
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tr:hover {
+  background: var(--color-soft);
+}
+
+.subjectName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.correlatives {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #22c55e;
+}

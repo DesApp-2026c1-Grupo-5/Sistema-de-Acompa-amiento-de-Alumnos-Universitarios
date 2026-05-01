@@ -1,0 +1,31 @@
+.finalsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.finalItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--color-soft);
+  border-radius: 8px;
+}
+
+.finalInfo {
+  flex: 1;
+}
+
+.finalName {
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.finalMeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
