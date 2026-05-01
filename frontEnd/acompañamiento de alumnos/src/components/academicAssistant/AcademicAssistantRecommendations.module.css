@@ -15,38 +15,37 @@
   color: var(--text);
 }
 
-.icon {
+.title svg {
   color: var(--color-accent);
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 .item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px;
+  padding: 16px;
   background: var(--card);
   border-radius: 8px;
 }
 
-.iconInfo {
-  color: var(--color-accent);
+.item + .item {
+  margin-top: 16px;
+}
+
+.item svg:first-child {
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+.iconInfo {
+  color: var(--color-accent);
 }
 
 .iconWarning {
   color: #eab308;
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
-.text {
+.item p {
   font-size: 14px;
   color: var(--text);
   margin: 0;

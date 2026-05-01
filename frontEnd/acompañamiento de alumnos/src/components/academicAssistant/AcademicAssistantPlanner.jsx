@@ -14,15 +14,15 @@ function AcademicAssistantPlanner() {
   return (
     <Card>
       <h3 className={styles.title}>Planificador de cursada</h3>
-      <div className={styles.inputGroup}>
-        <label className={styles.label}>Horas disponibles por semana</label>
+      <label className={styles.label}>
+        Horas disponibles por semana
         <input
           type="number"
           value={hours}
           onChange={(e) => setHours(e.target.value)}
           className={styles.input}
         />
-      </div>
+      </label>
       <Button variant="primary" onClick={handleGenerate} iconLeft={<Calendar size={20} />}>
         Generar plan
       </Button>

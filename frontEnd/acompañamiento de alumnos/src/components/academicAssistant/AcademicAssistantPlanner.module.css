@@ -2,17 +2,15 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 16px;
-}
-
-.inputGroup {
-  margin-bottom: 16px;
+  display: block;
 }
 
 .label {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   font-size: 14px;
   color: var(--text-muted);
-  margin-bottom: 8px;
 }
 
 .input {

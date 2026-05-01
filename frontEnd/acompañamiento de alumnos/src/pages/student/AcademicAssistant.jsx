@@ -12,7 +12,7 @@ import AcademicAssistantSimulator from '../../components/academicAssistant/Acade
 import AcademicAssistantPlanner from '../../components/academicAssistant/AcademicAssistantPlanner';
 import AcademicAssistantRecommendations from '../../components/academicAssistant/AcademicAssistantRecommendations';
 import styles from './AcademicAssistant.module.css';
-import academicData from './academicAssistantData.json';
+import academicData from './academicAssistant/academicAssistantData.json';
 
 function AcademicAssistant() {
   const [simulatorSubjects, setSimulatorSubjects] = useState(

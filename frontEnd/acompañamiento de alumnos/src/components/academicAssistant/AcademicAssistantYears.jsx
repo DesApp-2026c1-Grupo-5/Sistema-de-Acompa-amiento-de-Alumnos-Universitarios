@@ -1,43 +1,30 @@
 import Card from '../common/Card';
+import ProgressBar from '../common/ProgressBar';
 import styles from './AcademicAssistantYears.module.css';
+
+const statsLabels = ['Total', 'Aprobadas', 'Regularizadas', 'Faltantes'];
+const statsKeys = ['total', 'approved', 'regularized', 'missing'];
 
 function AcademicAssistantYears({ years }) {
   return (
     <Card title="Análisis por año de carrera">
-      <div className={styles.yearsList}>
-        {years.map((yearData) => (
-          <div key={yearData.year} className={styles.yearItem}>
-            <div className={styles.yearHeader}>
-              <h4 className={styles.yearTitle}>Año {yearData.year}</h4>
-              <span className={styles.yearPercent}>{yearData.percentage}%</span>
-            </div>
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressBarFill}
-                style={{ width: `${yearData.percentage}%` }}
-              />
-            </div>
-            <div className={styles.yearStats}>
-              <div className={styles.yearStatsItem}>
-                <p>Total</p>
-                <p>{yearData.total}</p>
-              </div>
-              <div className={styles.yearStatsItem}>
-                <p>Aprobadas</p>
-                <p>{yearData.approved}</p>
-              </div>
-              <div className={styles.yearStatsItem}>
-                <p>Regularizadas</p>
-                <p>{yearData.regularized}</p>
-              </div>
-              <div className={styles.yearStatsItem}>
-                <p>Faltantes</p>
-                <p>{yearData.missing}</p>
-              </div>
-            </div>
+      {years.map((year) => (
+        <div key={year.year} className={styles.item}>
+          <div className={styles.header}>
+            <h4>Año {year.year}</h4>
+            <span>{year.percentage}%</span>
           </div>
-        ))}
-      </div>
+          <ProgressBar percentage={year.percentage} />
+          <div className={styles.stats}>
+            {statsLabels.map((label, i) => (
+              <div key={label} className={styles.stat}>
+                <p>{label}</p>
+                <p>{year[statsKeys[i]]}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </Card>
   );
 }
