@@ -29,3 +29,9 @@
   ring: 2px;
   ring-color: rgba(0, 188, 212, 0.5);
 }
+
+@media (max-width: 640px) {
+  .input {
+    max-width: 100%;
+  }
+}

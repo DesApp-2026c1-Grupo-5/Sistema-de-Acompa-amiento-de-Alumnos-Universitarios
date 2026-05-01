@@ -38,3 +38,11 @@
   border: 1px solid var(--border);
   accent-color: var(--color-accent);
 }
+
+@media (max-width: 640px) {
+  .checkbox {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
