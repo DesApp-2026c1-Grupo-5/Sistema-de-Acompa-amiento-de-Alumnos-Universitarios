@@ -1,0 +1,62 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.variant_tag {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.variant_tagSoft {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.variant_subject {
+  background: #e0f7f5;
+  color: #0aa5a0;
+  font-weight: 600;
+}
+
+.variant_typeFile {
+  background: #e0f7f5;
+  color: #0aa5a0;
+}
+.variant_typeVideo {
+  background: #e0f7f5;
+  color: #0aa5a0;
+}
+.variant_typeLink {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+.variant_typeDrive {
+  background: #fef3c7;
+  color: #b45309;
+}
+.variant_typeGithub {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+.variant_typeDiscord {
+  background: #e0e2ff;
+  color: #4f46e5;
+}
+
+.variant_success {
+  background: #dcfce7;
+  color: #15803d;
+}
+.variant_danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
