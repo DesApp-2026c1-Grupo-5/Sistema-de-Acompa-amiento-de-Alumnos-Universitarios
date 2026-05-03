@@ -53,3 +53,22 @@
   font-size: 14px;
   color: #64748b;
 }
+
+/* ===== Dark mode ===== */
+:global(.dark) .empty {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .emptyIcon {
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+:global(.dark) .emptyTitle {
+  color: #ffffff;
+}
+
+:global(.dark) .emptyText {
+  color: #94a3b8;
+}

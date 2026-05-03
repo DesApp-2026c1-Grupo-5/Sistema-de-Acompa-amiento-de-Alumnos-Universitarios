@@ -145,3 +145,46 @@
     width: 86vw;
   }
 }
+
+/* ===== Dark mode ===== */
+:global(.dark) .sidebar {
+  background: #1e293b;
+  border-right-color: #334155;
+  box-shadow: 8px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .head {
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .brandText {
+  color: #ffffff;
+}
+
+:global(.dark) .closeBtn {
+  color: #cbd5e1;
+}
+
+:global(.dark) .closeBtn:hover {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(.dark) .link {
+  color: #cbd5e1;
+}
+
+:global(.dark) .link:hover {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(.dark) .active {
+  background: rgba(0, 212, 255, 0.12);
+  color: #00d4ff;
+}
+
+:global(.dark) .active:hover {
+  background: rgba(0, 212, 255, 0.18);
+  color: #00d4ff;
+}
