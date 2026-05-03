@@ -27,34 +27,29 @@ function Layout({
 
   return (
     <div className="layout">
-      <div className={`layout__body ${sidebarOpen ? 'has-sidebar' : ''}`}>
-        <aside className={`layout__sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <Navbar
-            brand={navbarBrand}
-            links={navbarLinks}
-            onClose={handleClose}
-          />
-        </aside>
+      <Header
+        brand={headerBrand}
+        onMenuToggle={handleMenuToggle}
+        isDarkMode={isDarkMode}
+        onToggleTheme={handleToggleTheme}
+        isSidebarOpen={sidebarOpen}
+      />
 
-        <main className="layout__content">
-          <Header
-            brand={headerBrand}
-            onMenuToggle={handleMenuToggle}
-            isDarkMode={isDarkMode}
-            onToggleTheme={handleToggleTheme}
-            isSidebarOpen={sidebarOpen}
-          />
-
-          <Outlet />
-        </main>
-      </div>
+      <aside className={`layout__sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <Navbar
+          brand={navbarBrand}
+          links={navbarLinks}
+          onClose={handleClose}
+        />
+      </aside>
 
       {sidebarOpen && (
-        <div
-          className="layout__overlay"
-          onClick={handleClose}
-        />
+        <div className="layout__overlay" onClick={handleClose} />
       )}
+
+      <main className="layout__content">
+        <Outlet />
+      </main>
     </div>
   );
 }

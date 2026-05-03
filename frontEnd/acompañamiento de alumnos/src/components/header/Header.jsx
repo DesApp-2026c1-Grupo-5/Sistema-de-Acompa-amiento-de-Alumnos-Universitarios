@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Menu, Bell, Moon, Sun, User, School } from 'lucide-react';
+import { Menu, Bell, Moon, User, GraduationCap } from 'lucide-react';
 import './Header.css';
 
 function Header({
   onMenuToggle,
-  isDarkMode,
   onToggleTheme,
   isSidebarOpen,
   brand = 'SIVA UNAHUR',
@@ -25,7 +24,10 @@ function Header({
         )}
 
         <div className="header__brand">
-          <School className="header__brand-icon" size={28} />
+          <div className="header__brand-logo">
+            <GraduationCap size={22} />
+          </div>
+
           <span className="header__brand-text">{brand}</span>
         </div>
       </div>
@@ -33,9 +35,7 @@ function Header({
       <div className="header__right">
         <button className="header__icon-btn" aria-label="Notificaciones">
           <Bell size={20} />
-          {notifications > 0 && (
-            <span className="header__badge">{notifications}</span>
-          )}
+          {notifications > 0 && <span className="header__notification-dot" />}
         </button>
 
         <button
@@ -43,7 +43,7 @@ function Header({
           onClick={onToggleTheme}
           aria-label="Cambiar tema"
         >
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          <Moon size={20} />
         </button>
 
         <button className="header__user-btn" aria-label="Perfil de usuario">

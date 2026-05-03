@@ -1,0 +1,949 @@
+.screen {
+  min-height: 100vh;
+  background: #ffffff;
+  color: #020617;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.content {
+  max-width: 1252px;
+  margin: 0 auto;
+  padding: 26px 0 56px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.titleRow h1 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.createButton {
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.createButton:hover {
+  transform: translateY(-1px);
+  opacity: 0.94;
+}
+
+/* Buscador y filtros */
+
+.filterPanel {
+  border: 1px solid #e5e7eb;
+  border-radius: 17px;
+  padding: 15px;
+  margin-bottom: 25px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filterPanel:hover {
+  border-color: #b7edf2;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.searchLine {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+}
+
+.searchBox {
+  height: 52px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.searchBox svg {
+  color: #64748b;
+}
+
+.searchBox input {
+  flex: 1;
+  border: none;
+  outline: none;
+  color: #526987;
+  font-size: 15px;
+  background: transparent;
+}
+
+.filtersButton {
+  height: 52px;
+  padding: 0 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #020617;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease,
+    border-color 0.18s ease, color 0.18s ease;
+}
+
+.filtersButton:hover {
+  transform: translateY(-1px);
+}
+
+.filtersButtonActive {
+  background: #cffafe;
+  border-color: #00bcd4;
+  color: #0891b2;
+}
+
+.filtersGrid {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px 17px;
+  animation: filtersFadeIn 0.22s ease;
+}
+
+@keyframes filtersFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filtersGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filtersGrid label span {
+  color: #526987;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.filtersGrid select {
+  height: 41px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0 13px;
+  background: #ffffff;
+  font-size: 15px;
+  color: #020617;
+}
+
+.checkboxFilter {
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: flex-end;
+  color: #020617;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.checkboxFilter input {
+  width: 16px;
+  height: 16px;
+  accent-color: #009f9c;
+}
+
+/* Mis sesiones */
+
+.mySessionsBox {
+  border: 1px solid #e5e7eb;
+  border-radius: 17px;
+  padding: 24px;
+  margin-bottom: 27px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mySessionsBox:hover {
+  border-color: #b7edf2;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.mySessionsBox h2,
+.availableSection h2 {
+  margin: 0 0 22px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.tabs {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.tabs button {
+  border: none;
+  background: transparent;
+  color: #526987;
+  padding: 0 0 13px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tabs .activeTab {
+  color: #00a8c2;
+  border-bottom: 2px solid #00a8c2;
+}
+
+.mySessionItem {
+  height: 95px;
+  background: #f6f8fb;
+  border-radius: 10px;
+  padding: 15px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mySessionItem h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #020617;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.mySessionItem p {
+  margin: 8px 0;
+  color: #526987;
+  font-size: 13px;
+}
+
+.smallMeta {
+  color: #526987;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.myActions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.myActions button {
+  border: none;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px 17px;
+  color: #020617;
+  font-size: 14px;
+  font-weight: 800;
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.myActions button:hover {
+  transform: translateY(-1px);
+}
+
+.deleteIcon {
+  color: #ef4444;
+}
+
+/* Sesiones disponibles */
+
+.availableSection h2 {
+  margin-bottom: 17px;
+}
+
+.sessionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 17px;
+}
+
+.sessionCard {
+  min-height: 284px;
+  border: 1px solid #e5e7eb;
+  border-radius: 17px;
+  background: #ffffff;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sessionCard:hover {
+  border-color: #b7edf2;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cardTop h3 {
+  margin: 0;
+  color: #020617;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardTop p {
+  margin: 8px 0 0;
+  color: #526987;
+  font-size: 14px;
+}
+
+.moreIcon {
+  color: #526987;
+}
+
+.statusBadge {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusAvailable {
+  background: #c8f3dc;
+  color: #00a15d;
+}
+
+.statusFull {
+  background: #ffd7dc;
+  color: #ff001f;
+}
+
+.statusPending {
+  background: #fdecc8;
+  color: #d97706;
+}
+
+.cardMeta {
+  margin-top: 23px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.cardMeta span {
+  color: #526987;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardMeta svg {
+  color: #00bcd4;
+}
+
+.cardFooter {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.creator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #526987;
+  font-size: 14px;
+}
+
+.creatorAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #00a8ad;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.joinButton,
+.fullButton,
+.pendingButton,
+.joinedButton {
+  border: none;
+  border-radius: 11px;
+  padding: 9px 15px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.joinButton {
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.joinButton:hover {
+  transform: translateY(-1px);
+  opacity: 0.94;
+}
+
+.fullButton {
+  background: #ffd7dc;
+  color: #ff001f;
+  cursor: not-allowed;
+}
+
+.pendingButton {
+  background: #fdecc8;
+  color: #d97706;
+  cursor: not-allowed;
+}
+
+.joinedButton {
+  background: #dbeafe;
+  color: #1d4ed8;
+  cursor: not-allowed;
+}
+
+/* Formulario dentro del modal */
+
+.sessionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  background: #ffffff;
+  color: #101828;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  color: #526987;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.label span {
+  color: #0ea5e9;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #020617;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.input {
+  height: 42px;
+  padding: 0 14px;
+}
+
+.textarea {
+  min-height: 90px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #00bcd4;
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+}
+
+.inputError {
+  border-color: #ef4444;
+}
+
+.error {
+  margin: 0;
+  color: #ef4444;
+  font-size: 12px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 16px;
+}
+
+.radioOption,
+.checkboxOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #020617;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.radioOption input,
+.checkboxOption input {
+  accent-color: #0ea5e9;
+}
+
+.helpText {
+  margin: 0;
+  color: #526987;
+  font-size: 13px;
+}
+
+.formActions {
+  position: sticky;
+  bottom: 0;
+  margin: 4px -24px -22px;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.formActions button:last-child {
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff; 
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.formActions button:last-child:hover {
+  transform: translateY(-1px);
+  opacity: 0.94;
+}
+
+.formActions button:first-child {
+  color: #ffffff;
+}
+
+/* Detalle de sesión */
+
+.detailBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detailBox h3 {
+  margin: 0;
+  color: #101828;
+}
+
+.detailBox p {
+  margin: 0;
+  color: #526987;
+  font-size: 14px;
+}
+
+/* Fuerza modo claro dentro del formulario aunque el sitio esté en dark mode */
+
+.sessionForm :global(input),
+.sessionForm :global(select),
+.sessionForm :global(textarea) {
+  background: #ffffff !important;
+  color: #101828 !important;
+  border-color: #e5e7eb !important;
+  color-scheme: light !important;
+}
+
+.sessionForm :global(input::placeholder),
+.sessionForm :global(textarea::placeholder) {
+  color: #667085 !important;
+}
+
+.sessionForm :global(label),
+.sessionForm :global(span) {
+  color: #526987;
+}
+
+.sessionForm :global(input[type="radio"]),
+.sessionForm :global(input[type="checkbox"]) {
+  accent-color: #08aeb8;
+}
+
+/* Responsive */
+
+@media (max-width: 1200px) {
+  .content {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (max-width: 900px) {
+  .sessionsGrid,
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .searchLine {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .titleRow,
+  .mySessionItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .formActions {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border-top: none;
+    flex-direction: column-reverse;
+  }
+}
+
+/* ========================= */
+/* DARK MODE - STUDY SESSIONS */
+/* ========================= */
+
+:global(.dark) .screen {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(.dark) .content {
+  background: #0f172a;
+}
+
+:global(.dark) .titleRow h1,
+:global(.dark) .mySessionsBox h2,
+:global(.dark) .availableSection h2 {
+  color: #ffffff;
+}
+
+/* Paneles */
+
+:global(.dark) .filterPanel,
+:global(.dark) .mySessionsBox,
+:global(.dark) .sessionCard {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .filterPanel:hover,
+:global(.dark) .mySessionsBox:hover,
+:global(.dark) .sessionCard:hover {
+  border-color: #475569;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+/* Buscador */
+
+:global(.dark) .searchBox {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .searchBox input {
+  color: #e5e7eb;
+}
+
+:global(.dark) .searchBox input::placeholder {
+  color: #94a3b8;
+}
+
+:global(.dark) .searchBox svg {
+  color: #94a3b8;
+}
+
+/* Botón filtros */
+
+:global(.dark) .filtersButton {
+  background: #0f172a;
+  border-color: #00bcd4;
+  color: #00d4ff;
+}
+
+:global(.dark) .filtersButtonActive {
+  background: rgba(0, 188, 212, 0.15);
+  border-color: #00bcd4;
+  color: #00d4ff;
+}
+
+/* Filtros desplegados */
+
+:global(.dark) .filtersGrid {
+  border-top-color: #334155;
+}
+
+:global(.dark) .filtersGrid label span {
+  color: #93c5fd;
+}
+
+:global(.dark) .filtersGrid select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+/* Checkbox */
+
+:global(.dark) .checkboxFilter {
+  color: #ffffff;
+}
+
+:global(.dark) .checkboxFilter input {
+  accent-color: #00bcd4;
+}
+
+/* Tabs */
+
+:global(.dark) .tabs {
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .tabs button {
+  color: #94a3b8;
+}
+
+:global(.dark) .tabs .activeTab {
+  color: #00d4ff;
+  border-bottom-color: #00d4ff;
+}
+
+/* Mis sesiones */
+
+:global(.dark) .mySessionItem {
+  background: #273449;
+}
+
+:global(.dark) .mySessionItem h3 {
+  color: #ffffff;
+}
+
+:global(.dark) .mySessionItem p,
+:global(.dark) .smallMeta {
+  color: #cbd5e1;
+}
+
+:global(.dark) .myActions button {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+/* Cards */
+
+:global(.dark) .cardTop h3 {
+  color: #ffffff;
+}
+
+:global(.dark) .cardTop p,
+:global(.dark) .cardMeta span,
+:global(.dark) .creator {
+  color: #cbd5e1;
+}
+
+:global(.dark) .cardFooter {
+  border-top-color: #334155;
+}
+
+:global(.dark) .moreIcon {
+  color: #94a3b8;
+}
+
+/* Estados */
+
+:global(.dark) .statusAvailable {
+  background: rgba(16, 185, 129, 0.18);
+  color: #22c55e;
+}
+
+:global(.dark) .statusFull {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+:global(.dark) .statusPending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+/* Modal / formulario */
+
+:global(.dark) .sessionForm {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+:global(.dark) .sessionForm :global(input),
+:global(.dark) .sessionForm :global(select),
+:global(.dark) .sessionForm :global(textarea) {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+  color-scheme: dark !important;
+}
+
+:global(.dark) .sessionForm :global(input::placeholder),
+:global(.dark) .sessionForm :global(textarea::placeholder) {
+  color: #94a3b8 !important;
+}
+
+:global(.dark) .sessionForm :global(label),
+:global(.dark) .sessionForm :global(span) {
+  color: #93c5fd;
+}
+
+:global(.dark) .formActions {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+:global(.dark) .formActions button:first-child {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+/* Detalle de sesión */
+
+:global(.dark) .detailBox h3 {
+  color: #ffffff;
+}
+
+:global(.dark) .detailBox p {
+  color: #cbd5e1;
+}
+
+:root.dark .sessionForm {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+:root.dark .formActions {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+:root.dark .label,
+:root.dark .helpText {
+  color: #93c5fd;
+}
+
+:root.dark .input,
+:root.dark .textarea {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #334155;
+}
+
+:root.dark .input::placeholder,
+:root.dark .textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* DARK MODE - SESSION FORM */
+
+:global(html.dark) .sessionForm {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+:global(html.dark) .formGroup {
+  background: #1e293b;
+}
+
+:global(html.dark) .label,
+:global(html.dark) .helpText {
+  color: #93c5fd;
+}
+
+:global(html.dark) .input,
+:global(html.dark) .textarea {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+  color-scheme: dark;
+}
+
+:global(html.dark) .input::placeholder,
+:global(html.dark) .textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+:global(html.dark) .radioOption,
+:global(html.dark) .checkboxOption {
+  color: #ffffff;
+}
+
+:global(html.dark) .radioOption input,
+:global(html.dark) .checkboxOption input {
+  accent-color: #00d4ff;
+}
+
+:global(html.dark) .formActions {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+:global(html.dark) .formActions button:first-child {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(html.dark) .formActions button:last-child {
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff;
+}
