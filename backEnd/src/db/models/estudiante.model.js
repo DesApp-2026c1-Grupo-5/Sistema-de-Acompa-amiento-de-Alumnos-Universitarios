@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
 
+      estudiante.belongsTo(models.usuario, {
+        foreignKey: 'usuario_id'
+      });
+
       estudiante.hasMany(models.material, {
         foreignKey: 'estudiante_id'
       });
@@ -22,6 +26,33 @@ module.exports = (sequelize, DataTypes) => {
       estudiante.hasMany(models.denuncia, {
         foreignKey: 'denunciante_id',
         as: 'denuncias_realizadas'
+      });
+
+      estudiante.hasMany(models.situacion_academica, {
+        foreignKey: 'estudiante_id'
+      });
+
+      estudiante.hasMany(models.post, {
+        foreignKey: 'estudiante_id'
+      });
+
+      estudiante.hasMany(models.sesion_estudio, {
+        foreignKey: 'creador_id',
+        as: 'sesiones_creadas'
+      });
+
+      estudiante.hasMany(models.inscripcion_sesion, {
+        foreignKey: 'estudiante_id'
+      });
+
+      estudiante.hasMany(models.contacto, {
+        foreignKey: 'estudiante_solicitante_id',
+        as: 'contactos_solicitados'
+      });
+
+      estudiante.hasMany(models.contacto, {
+        foreignKey: 'estudiante_receptor_id',
+        as: 'contactos_recibidos'
       });
 
     }

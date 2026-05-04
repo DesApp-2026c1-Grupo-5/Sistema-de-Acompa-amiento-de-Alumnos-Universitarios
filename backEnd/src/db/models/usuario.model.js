@@ -15,6 +15,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'usuario_id'
       });
 
+      usuario.hasOne(models.estudiante, {
+        foreignKey: 'usuario_id'
+      });
+
+      usuario.hasOne(models.administrador, {
+        foreignKey: 'usuario_id'
+      });
+
     }
   }
   usuario.init({
