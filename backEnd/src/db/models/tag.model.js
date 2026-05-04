@@ -12,15 +12,13 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
 
       tag.belongsToMany(models.material, {
-        through: models.material_tag,
-        foreignKey: 'tag_id',
-        otherKey: 'material_id'
+        through: "material_tag",
+        as: "material"
       });
 
     }
   }
   tag.init({
-    id: DataTypes.INTEGER,
     nombre: DataTypes.STRING
   }, {
     sequelize,

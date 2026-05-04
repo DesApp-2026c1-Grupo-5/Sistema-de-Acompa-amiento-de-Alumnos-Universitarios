@@ -10,13 +10,18 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+
+      plan_cursada_item.belongsTo(models.plan_cursada, {
+        foreignKey: 'plan_id'
+      });
+
+      plan_cursada_item.belongsTo(models.materia, {
+        foreignKey: 'materia_id'
+      });
+
     }
   }
   plan_cursada_item.init({
-    id: DataTypes.INTEGER,
-    plan_id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
     anio_proyectado: DataTypes.INTEGER,
     cuatrimestre_proyectado: DataTypes.INTEGER
   }, {

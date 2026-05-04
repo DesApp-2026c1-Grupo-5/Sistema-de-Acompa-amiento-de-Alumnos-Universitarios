@@ -116,3 +116,26 @@
     gap: 6px;
   }
 }
+
+/* ===== Dark mode ===== */
+:global(.dark) .header {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .iconBtn {
+  color: #e5e7eb;
+}
+
+:global(.dark) .iconBtn:hover {
+  background: #0f172a;
+  color: #00d4ff;
+}
+
+:global(.dark) .dot {
+  border-color: #1e293b;
+}
+
+:global(.dark) .brandText {
+  color: #ffffff;
+}

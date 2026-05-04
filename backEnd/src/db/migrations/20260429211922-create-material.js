@@ -9,15 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
-      materia_id: {
-        type: Sequelize.INTEGER
-      },
-      estudiante_id: {
-        type: Sequelize.INTEGER
-      },
       tipo: {
         type: Sequelize.STRING
       },
@@ -44,9 +35,6 @@ module.exports = {
       },
       size_bytes: {
         type: Sequelize.INTEGER
-      },
-      created_at: {
-        type: Sequelize.DATE
       },
       suspendido: {
         type: Sequelize.BOOLEAN

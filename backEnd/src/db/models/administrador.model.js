@@ -11,6 +11,20 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
 
+      administrador.belongsTo(models.usuario, {
+        foreignKey: 'usuario_id'
+      });
+
+      administrador.belongsTo(models.administrador, {
+        foreignKey: 'creado_por',
+        as: 'creador'
+      });
+
+      administrador.hasMany(models.administrador, {
+        foreignKey: 'creado_por',
+        as: 'creados'
+      });
+
       administrador.hasMany(models.denuncia, {
         foreignKey: 'admin_revisor_id',
         as: 'denuncias_revisadas'
@@ -19,8 +33,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   administrador.init({
-    id: DataTypes.INTEGER,
-    usuario_id: DataTypes.INTEGER,
     nombre: DataTypes.STRING,
     apellido: DataTypes.STRING,
     creado_por: DataTypes.INTEGER

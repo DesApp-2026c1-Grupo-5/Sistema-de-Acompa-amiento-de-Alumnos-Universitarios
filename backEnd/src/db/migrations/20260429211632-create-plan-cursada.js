@@ -9,17 +9,8 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
-      situacion_id: {
-        type: Sequelize.INTEGER
-      },
       nombre: {
         type: Sequelize.STRING
-      },
-      created_at: {
-        type: Sequelize.DATE
       },
       activo: {
         type: Sequelize.BOOLEAN

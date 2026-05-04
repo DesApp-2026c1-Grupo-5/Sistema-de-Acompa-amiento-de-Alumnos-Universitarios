@@ -15,18 +15,25 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'usuario_id'
       });
 
+      usuario.hasOne(models.estudiante, {
+        foreignKey: 'usuario_id'
+      });
+
+      usuario.hasOne(models.administrador, {
+        foreignKey: 'usuario_id'
+      });
+
     }
   }
   usuario.init({
-    id: DataTypes.INTEGER,
     email: DataTypes.STRING,
     password_hash: DataTypes.STRING,
     tipo: DataTypes.STRING,
     activo: DataTypes.BOOLEAN,
-    created_at: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'usuario',
+    timestamps: false,
   });
   return usuario;
 };

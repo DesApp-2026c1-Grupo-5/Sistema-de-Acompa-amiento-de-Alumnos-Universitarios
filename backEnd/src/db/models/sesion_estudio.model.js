@@ -10,13 +10,23 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+
+      sesion_estudio.belongsTo(models.estudiante, {
+        foreignKey: 'creador_id',
+        as: 'creador'
+      });
+
+      sesion_estudio.belongsTo(models.materia, {
+        foreignKey: 'materia_id'
+      });
+
+      sesion_estudio.hasMany(models.inscripcion_sesion, {
+        foreignKey: 'sesion_id'
+      });
+
     }
   }
   sesion_estudio.init({
-    id: DataTypes.INTEGER,
-    creador_id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
     tema: DataTypes.STRING,
     tipo: DataTypes.STRING,
     link_ubicacion: DataTypes.STRING,

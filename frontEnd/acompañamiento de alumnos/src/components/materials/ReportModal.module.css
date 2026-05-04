@@ -130,3 +130,61 @@
   font-size: 11.5px;
   color: #94a3b8;
 }
+
+/* ===== Dark mode ===== */
+:global(.dark) .target {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+:global(.dark) .target strong {
+  color: #ef4444;
+}
+
+:global(.dark) .label {
+  color: #ffffff;
+}
+
+:global(.dark) .reasonItem {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .reasonItem:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+:global(.dark) .reasonItemSelected {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #ef4444;
+}
+
+:global(.dark) .radio {
+  border-color: #475569;
+  background: #0f172a;
+}
+
+:global(.dark) .reasonLabel {
+  color: #ffffff;
+}
+
+:global(.dark) .textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(.dark) .textarea::placeholder {
+  color: #94a3b8;
+}
+
+:global(.dark) .textarea:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+:global(.dark) .counter {
+  color: #94a3b8;
+}

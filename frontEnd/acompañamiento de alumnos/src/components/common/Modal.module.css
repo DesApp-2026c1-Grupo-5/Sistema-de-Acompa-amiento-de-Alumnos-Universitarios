@@ -109,3 +109,38 @@
     padding: 18px;
   }
 }
+
+/* DARK MODE - MODAL */
+
+:global(html.dark) .dialog {
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid #334155;
+}
+
+:global(html.dark) .header {
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+
+:global(html.dark) .title {
+  color: #ffffff;
+}
+
+:global(html.dark) .closeBtn {
+  color: #cbd5e1;
+}
+
+:global(html.dark) .closeBtn:hover {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(html.dark) .body {
+  background: #1e293b;
+}
+
+:global(html.dark) .footer {
+  background: #1e293b;
+  border-top: 1px solid #334155;
+}

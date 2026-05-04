@@ -9,15 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
-      plan_id: {
-        type: Sequelize.INTEGER
-      },
-      materia_id: {
-        type: Sequelize.INTEGER
-      },
       anio_proyectado: {
         type: Sequelize.INTEGER
       },

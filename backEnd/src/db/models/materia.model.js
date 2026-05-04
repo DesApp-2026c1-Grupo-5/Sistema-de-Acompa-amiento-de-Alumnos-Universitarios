@@ -11,15 +11,43 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
 
+      materia.belongsTo(models.plan_estudio, {
+        foreignKey: 'plan_id'
+      });
+
       materia.hasMany(models.material, {
         foreignKey: 'materia_id'
+      });
+
+      materia.hasMany(models.oferta_academica, {
+        foreignKey: 'materia_id'
+      });
+
+      materia.hasMany(models.estado_materia, {
+        foreignKey: 'materia_id'
+      });
+
+      materia.hasMany(models.sesion_estudio, {
+        foreignKey: 'materia_id'
+      });
+
+      materia.hasMany(models.plan_cursada_item, {
+        foreignKey: 'materia_id'
+      });
+
+      materia.hasMany(models.correlatividad, {
+        foreignKey: 'materia_id',
+        as: 'correlatividades'
+      });
+
+      materia.hasMany(models.correlatividad, {
+        foreignKey: 'materia_requisito_id',
+        as: 'requerida_en'
       });
 
     }
   }
   materia.init({
-    id: DataTypes.INTEGER,
-    plan_id: DataTypes.INTEGER,
     nombre: DataTypes.STRING,
     anio_cursada: DataTypes.INTEGER,
     tipo: DataTypes.STRING,

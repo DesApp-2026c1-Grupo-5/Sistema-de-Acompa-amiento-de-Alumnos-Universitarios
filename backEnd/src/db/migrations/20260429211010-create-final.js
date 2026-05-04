@@ -9,12 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
-      estado_materia_id: {
-        type: Sequelize.INTEGER
-      },
       fecha: {
         type: Sequelize.DATE
       },

@@ -10,13 +10,20 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+
+      correlatividad.belongsTo(models.materia, {
+        foreignKey: 'materia_id',
+        as: 'materia'
+      });
+
+      correlatividad.belongsTo(models.materia, {
+        foreignKey: 'materia_requisito_id',
+        as: 'requisito'
+      });
+
     }
   }
   correlatividad.init({
-    id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
-    materia_requisito_id: DataTypes.INTEGER,
     tipo: DataTypes.STRING
   }, {
     sequelize,

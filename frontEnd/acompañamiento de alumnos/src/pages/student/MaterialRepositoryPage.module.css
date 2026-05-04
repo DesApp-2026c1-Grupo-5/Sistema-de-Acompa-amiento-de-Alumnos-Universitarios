@@ -61,3 +61,13 @@
     width: 100%;
   }
 }
+
+/* ===== Dark mode ===== */
+:global(.dark) .page {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(.dark) .title {
+  color: #ffffff;
+}

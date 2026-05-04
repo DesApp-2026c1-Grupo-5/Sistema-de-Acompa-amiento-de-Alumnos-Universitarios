@@ -213,3 +213,96 @@
   background: #f1f5f9;
   color: #0aa5a0;
 }
+
+/* ===== Dark mode ===== */
+:global(.dark) .card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark) .card:hover {
+  border-color: #475569;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+:global(.dark) .cardDiscord {
+  background: #1e1b3a;
+  border-color: #3b3a6b;
+}
+
+:global(.dark) .cardDiscord:hover {
+  border-color: #5a58a3;
+  box-shadow: 0 12px 32px rgba(79, 70, 229, 0.3);
+}
+
+:global(.dark) .type_file,
+:global(.dark) .type_video {
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+}
+
+:global(.dark) .type_link {
+  background: rgba(99, 102, 241, 0.18);
+  color: #a5b4fc;
+}
+
+:global(.dark) .type_drive {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+
+:global(.dark) .type_github {
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+:global(.dark) .type_discord {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+:global(.dark) .title {
+  color: #ffffff;
+}
+
+:global(.dark) .subject {
+  color: #cbd5e1;
+}
+
+:global(.dark) .discordServer {
+  color: #a5b4fc;
+}
+
+:global(.dark) .description {
+  color: #cbd5e1;
+}
+
+:global(.dark) .authorName {
+  color: #ffffff;
+}
+
+:global(.dark) .date {
+  color: #94a3b8;
+}
+
+:global(.dark) .divider {
+  background: #334155;
+}
+
+:global(.dark) .voteItem {
+  color: #cbd5e1;
+}
+
+:global(.dark) .voteIcon {
+  color: #94a3b8;
+}
+
+:global(.dark) .viewBtn {
+  color: #cbd5e1;
+}
+
+:global(.dark) .viewBtn:hover {
+  background: #0f172a;
+  color: #00d4ff;
+}

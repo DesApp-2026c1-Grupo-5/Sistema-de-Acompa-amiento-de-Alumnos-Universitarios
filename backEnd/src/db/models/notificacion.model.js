@@ -18,17 +18,15 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   notificacion.init({
-    id: DataTypes.INTEGER,
-    usuario_id: DataTypes.INTEGER,
     tipo: DataTypes.STRING,
     mensaje: DataTypes.STRING,
     referencia_tipo: DataTypes.STRING,
     referencia_id: DataTypes.INTEGER,
     leida: DataTypes.BOOLEAN,
-    created_at: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'notificacion',
+    timestamps: false,
   });
   return notificacion;
 };

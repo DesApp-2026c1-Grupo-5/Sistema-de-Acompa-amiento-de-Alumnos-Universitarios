@@ -1,11 +1,12 @@
 .header {
+  height: 66px;
+  padding: 0 152px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
-  padding: 0 24px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  color: #020617;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -14,128 +15,138 @@
 .header__left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .header__hamburger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: transparent;
+  width: 36px;
+  height: 36px;
   border: none;
-  border-radius: 8px;
-  color: var(--text);
+  background: transparent;
+  color: #020617;
+  display: grid;
+  place-items: center;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .header__hamburger:hover {
-  background: var(--accent-bg);
-  color: var(--accent);
+  color: #00a8ad;
 }
 
 .header__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.header__brand-icon {
-  color: var(--accent);
+.header__brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #00a8ad;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
 }
 
 .header__brand-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-@media (max-width: 480px) {
-  .header__brand-text {
-    display: none;
-  }
+  color: #020617;
+  font-size: 16px;
+  font-weight: 800;
 }
 
 .header__right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
 }
 
 .header__icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: transparent;
+  width: 36px;
+  height: 36px;
   border: none;
-  border-radius: 8px;
-  color: var(--text);
-  cursor: pointer;
+  background: transparent;
+  color: #020617;
+  display: grid;
+  place-items: center;
   position: relative;
-  transition: all 0.15s ease;
+  cursor: pointer;
 }
 
 .header__icon-btn:hover {
-  background: var(--accent-bg);
-  color: var(--accent);
+  color: #00a8ad;
 }
 
-.header__badge {
+.header__notification-dot {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  background: var(--accent);
-  border-radius: 9px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 8px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #00a8ad;
 }
 
 .header__user-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: var(--accent-bg);
-  border: 1px solid var(--accent-border);
-  border-radius: 50%;
-  color: var(--accent);
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: #00a8ad;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .header__user-btn:hover {
-  background: var(--accent);
-  color: #fff;
+  background: #00949a;
+}
+
+@media (max-width: 1200px) {
+  .header {
+    padding: 0 32px;
+  }
 }
 
 @media (max-width: 768px) {
   .header {
-    padding: 0 16px;
+    padding: 0 20px;
   }
 
-  .header__brand {
-    gap: 8px;
+  .header__brand-text {
+    font-size: 15px;
   }
+}
 
-  .header__right {
-    gap: 4px;
-  }
+/* DARK MODE */
 
-  .header__icon-btn,
-  .header__user-btn {
-    width: 36px;
-    height: 36px;
-  }
+:root.dark .header {
+  background: #111827;
+  border-bottom-color: #334155;
+  color: #ffffff;
+}
+
+:root.dark .header__hamburger,
+:root.dark .header__icon-btn {
+  color: #e5e7eb;
+}
+
+:root.dark .header__hamburger:hover,
+:root.dark .header__icon-btn:hover {
+  color: #22d3ee;
+}
+
+:root.dark .header__brand-text {
+  color: #ffffff;
+}
+
+:root.dark .header__brand-logo {
+  background: #00a8ad;
+  color: #ffffff;
+}
+
+:root.dark .header__user-btn {
+  background: #00a8ad;
+  color: #ffffff;
 }

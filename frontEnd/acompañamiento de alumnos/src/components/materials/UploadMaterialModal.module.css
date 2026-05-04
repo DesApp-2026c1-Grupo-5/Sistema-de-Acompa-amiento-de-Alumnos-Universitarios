@@ -177,3 +177,82 @@
   opacity: 0;
   pointer-events: none;
 }
+
+/* ===== Dark mode ===== */
+:global(.dark) .label {
+  color: #ffffff;
+}
+
+:global(.dark) .hint {
+  color: #94a3b8;
+}
+
+:global(.dark) .input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(.dark) .input::placeholder {
+  color: #94a3b8;
+}
+
+:global(.dark) .input:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.18);
+}
+
+:global(.dark) .inputError,
+:global(.dark) .inputError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+:global(.dark) .select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
+:global(.dark) .typeBtn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+:global(.dark) .typeBtn:hover {
+  background: #1e293b;
+  border-color: #475569;
+  color: #ffffff;
+}
+
+:global(.dark) .typeBtnActive {
+  background: rgba(0, 212, 255, 0.12);
+  border-color: #00d4ff;
+  color: #00d4ff;
+}
+
+:global(.dark) .typeBtnActive:hover {
+  background: rgba(0, 212, 255, 0.2);
+  color: #00d4ff;
+}
+
+:global(.dark) .fileBox {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .fileBox:hover {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark) .fileIcon {
+  color: #94a3b8;
+}
+
+:global(.dark) .fileText {
+  color: #ffffff;
+}
+
+:global(.dark) .fileHint {
+  color: #94a3b8;
+}
