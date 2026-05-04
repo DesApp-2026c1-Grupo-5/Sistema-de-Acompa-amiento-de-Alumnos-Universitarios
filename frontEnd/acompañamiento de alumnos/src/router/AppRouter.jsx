@@ -27,12 +27,12 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: '/student/materials',
-    element: <MaterialRepositoryPage />,
-  },
-  {
     element: <Layout navbarBrand="Estudiante" navbarLinks={studentLinks} />,
     children: [
+      {
+        path: '/student/materials',
+        element: <MaterialRepositoryPage />,
+      },
       {
         path: '/student/home',
         element: <HomeStudent />,

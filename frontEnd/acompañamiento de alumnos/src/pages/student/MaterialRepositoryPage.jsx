@@ -1,52 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../components/materials/Header';
-import Sidebar from '../../components/materials/Sidebar';
 import SearchBar from '../../components/materials/SearchBar';
 import MaterialGrid from '../../components/materials/MaterialGrid';
 import UploadMaterialModal from '../../components/materials/UploadMaterialModal';
 import MaterialDetailModal from '../../components/materials/MaterialDetailModal';
 import ReportModal from '../../components/materials/ReportModal';
-import Button from '../../components/common/Button'
+import Button from '../../components/common/Button';
 import { initialMaterials } from './materials/mockData';
 import { filterMaterials } from './materials/helpers';
 import styles from './MaterialRepositoryPage.module.css';
 
-const ROUTE_BY_ID = {
-  home: '/student/home',
-  profile: '/student/profile',
-  academic: '/student/academic-status',
-  planner: '/student/academic-assistant',
-  sessions: '/student/study-sessions',
-  materials: '/student/materials',
-};
-
 function MaterialRepositoryPage() {
-  const navigate = useNavigate();
-
   const [materials, setMaterials] = useState(initialMaterials);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDark, setIsDark] = useState(false);
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [detailMaterial, setDetailMaterial] = useState(null);
   const [reportMaterial, setReportMaterial] = useState(null);
   const [userVotes, setUserVotes] = useState({});
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-  }, [isDark]);
-
-
-  useEffect(() => {
-    const root = document.getElementById('root');
-    root?.classList.add('fullwidth');
-    return () => root?.classList.remove('fullwidth');
-  }, []);
 
   const filtered = useMemo(
     () => filterMaterials(materials, { query, type: typeFilter }),
@@ -123,29 +95,8 @@ function MaterialRepositoryPage() {
     console.info('[Denuncia enviada]', payload);
   };
 
-  const handleSidebarSelect = (item) => {
-    const route = ROUTE_BY_ID[item.id];
-    if (route && route !== '/student/materials') {
-      navigate(route);
-    }
-  };
-
   return (
     <div className={styles.page}>
-      <Header
-        onMenuToggle={() => setSidebarOpen((v) => !v)}
-        isDark={isDark}
-        onToggleTheme={() => setIsDark((v) => !v)}
-        userInitials="FG"
-      />
-
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        activeId="materials"
-        onSelect={handleSidebarSelect}
-      />
-
       <main className={styles.main}>
         <section className={styles.topbar}>
           <h1 className={styles.title}>Repositorio de Materiales</h1>
