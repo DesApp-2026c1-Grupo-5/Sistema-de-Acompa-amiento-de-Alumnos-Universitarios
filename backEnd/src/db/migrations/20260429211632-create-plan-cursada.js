@@ -12,9 +12,6 @@ module.exports = {
       nombre: {
         type: Sequelize.STRING
       },
-      created_at: {
-        type: Sequelize.DATE
-      },
       activo: {
         type: Sequelize.BOOLEAN
       },

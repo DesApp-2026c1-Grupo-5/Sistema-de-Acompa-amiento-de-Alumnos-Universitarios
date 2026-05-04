@@ -15,9 +15,6 @@ module.exports = {
       estado: {
         type: Sequelize.STRING
       },
-      admin_revisor_id: {
-        type: Sequelize.INTEGER
-      },
       fecha_creacion: {
         type: Sequelize.DATE
       },
