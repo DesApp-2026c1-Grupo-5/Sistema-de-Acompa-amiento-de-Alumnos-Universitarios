@@ -9,12 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      materia_id: {
-        type: Sequelize.INTEGER
-      },
-      estudiante_id: {
-        type: Sequelize.INTEGER
-      },
       valor: {
         type: Sequelize.STRING
       },

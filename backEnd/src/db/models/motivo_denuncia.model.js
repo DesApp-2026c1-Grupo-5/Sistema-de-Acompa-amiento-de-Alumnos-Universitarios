@@ -18,7 +18,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   motivo_denuncia.init({
-    id: DataTypes.INTEGER,
     descripcion: DataTypes.STRING,
     activo: DataTypes.BOOLEAN
   }, {

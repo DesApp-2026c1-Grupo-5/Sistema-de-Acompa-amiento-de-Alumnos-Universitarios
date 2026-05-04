@@ -14,9 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   sesion_estudio.init({
-    id: DataTypes.INTEGER,
-    creador_id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
     tema: DataTypes.STRING,
     tipo: DataTypes.STRING,
     link_ubicacion: DataTypes.STRING,

@@ -14,8 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   final.init({
-    id: DataTypes.INTEGER,
-    estado_materia_id: DataTypes.INTEGER,
     fecha: DataTypes.DATE,
     nota: DataTypes.FLOAT,
     aprobado: DataTypes.BOOLEAN

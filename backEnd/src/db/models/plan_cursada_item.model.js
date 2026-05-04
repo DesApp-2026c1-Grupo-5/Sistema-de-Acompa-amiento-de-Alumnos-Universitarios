@@ -14,9 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   plan_cursada_item.init({
-    id: DataTypes.INTEGER,
-    plan_id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
     anio_proyectado: DataTypes.INTEGER,
     cuatrimestre_proyectado: DataTypes.INTEGER
   }, {

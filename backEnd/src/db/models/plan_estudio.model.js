@@ -14,8 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   plan_estudio.init({
-    id: DataTypes.INTEGER,
-    carrera_id: DataTypes.INTEGER,
     nombre: DataTypes.STRING,
     estado: DataTypes.STRING,
     condiciones_creditos: DataTypes.STRING,

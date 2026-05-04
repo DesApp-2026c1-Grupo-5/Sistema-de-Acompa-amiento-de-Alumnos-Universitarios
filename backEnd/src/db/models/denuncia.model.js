@@ -32,10 +32,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   denuncia.init({
-    id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
-    denunciante_id: DataTypes.INTEGER,
-    motivo_id: DataTypes.INTEGER,
     detalle: DataTypes.STRING,
     estado: DataTypes.STRING,
     admin_revisor_id: DataTypes.INTEGER,

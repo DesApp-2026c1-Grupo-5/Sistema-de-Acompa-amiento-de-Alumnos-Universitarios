@@ -14,8 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   actividad_credito.init({
-    id: DataTypes.INTEGER,
-    situacion_id: DataTypes.INTEGER,
     descripcion: DataTypes.STRING,
     creditos: DataTypes.INTEGER,
     fecha: DataTypes.DATE,

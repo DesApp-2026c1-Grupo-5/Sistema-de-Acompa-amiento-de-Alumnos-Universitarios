@@ -9,9 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      materia_id: {
-        type: Sequelize.INTEGER
-      },
       anio: {
         type: Sequelize.INTEGER
       },

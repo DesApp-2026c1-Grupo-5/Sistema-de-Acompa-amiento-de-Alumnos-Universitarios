@@ -14,9 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   situacion_academica.init({
-    id: DataTypes.INTEGER,
-    estudiante_id: DataTypes.INTEGER,
-    plan_id: DataTypes.INTEGER,
     fecha_inicio: DataTypes.DATE
   }, {
     sequelize,

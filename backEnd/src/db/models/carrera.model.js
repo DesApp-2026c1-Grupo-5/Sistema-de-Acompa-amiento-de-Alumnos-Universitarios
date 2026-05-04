@@ -14,7 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   carrera.init({
-    id: DataTypes.INTEGER,
     nombre: DataTypes.STRING,
     titulo: DataTypes.STRING,
     instituto: DataTypes.STRING,

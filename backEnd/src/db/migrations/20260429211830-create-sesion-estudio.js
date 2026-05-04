@@ -9,12 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      creador_id: {
-        type: Sequelize.INTEGER
-      },
-      materia_id: {
-        type: Sequelize.INTEGER
-      },
       tema: {
         type: Sequelize.STRING
       },

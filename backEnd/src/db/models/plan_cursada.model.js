@@ -14,8 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   plan_cursada.init({
-    id: DataTypes.INTEGER,
-    situacion_id: DataTypes.INTEGER,
     nombre: DataTypes.STRING,
     created_at: DataTypes.DATE,
     activo: DataTypes.BOOLEAN

@@ -20,9 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       material.belongsToMany(models.tag, {
-        through: models.material_tag,
-        foreignKey: 'material_id',
-        otherKey: 'tag_id'
+        through: "material_tag", as: "tags"
       });
 
       material.hasMany(models.valoracion, {
@@ -36,9 +34,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   material.init({
-    id: DataTypes.INTEGER,
-    materia_id: DataTypes.INTEGER,
-    estudiante_id: DataTypes.INTEGER,
     tipo: DataTypes.STRING,
     titulo: DataTypes.STRING,
     descripcion: DataTypes.STRING,
@@ -48,7 +43,6 @@ module.exports = (sequelize, DataTypes) => {
     discord_servidor: DataTypes.STRING,
     discord_canal: DataTypes.STRING,
     size_bytes: DataTypes.INTEGER,
-    created_at: DataTypes.DATE,
     suspendido: DataTypes.BOOLEAN
   }, {
     sequelize,

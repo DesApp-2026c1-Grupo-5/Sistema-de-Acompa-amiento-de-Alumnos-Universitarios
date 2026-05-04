@@ -9,14 +9,8 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      estudiante_id: {
-        type: Sequelize.INTEGER
-      },
       contenido: {
         type: Sequelize.STRING
-      },
-      created_at: {
-        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,

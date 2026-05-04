@@ -21,9 +21,6 @@ module.exports = {
       activo: {
         type: Sequelize.BOOLEAN
       },
-      created_at: {
-        type: Sequelize.DATE
-      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
