@@ -26,3 +26,17 @@
   font-size: 14px;
   line-height: 1.6;
 }
+
+/* Dark Mode */
+
+:global(.dark) .author {
+  color: #f8fafc;
+}
+
+:global(.dark) .date {
+  color: #94a3b8;
+}
+
+:global(.dark) .content {
+  color: #f8fafc;
+}

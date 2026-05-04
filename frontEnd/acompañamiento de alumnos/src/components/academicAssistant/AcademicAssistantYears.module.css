@@ -1,0 +1,70 @@
+.item {
+  background: var(--color-soft);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.item + .item {
+  margin-top: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.header h4 {
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+}
+
+.header span {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+.stats p:first-child {
+  color: var(--text-muted);
+  margin: 0 0 4px;
+}
+
+.stats p:last-child {
+  color: var(--text);
+  font-weight: 600;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .item {
+  background: #1e293b;
+}
+
+:global(.dark) .header h4 {
+  color: #f8fafc;
+}
+
+:global(.dark) .header span {
+  color: #94a3b8;
+}
+
+:global(.dark) .stats p:first-child {
+  color: #94a3b8;
+}

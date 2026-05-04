@@ -30,3 +30,13 @@
   background: rgba(15, 23, 42, 0.25);
   z-index: 80;
 }
+
+/* Dark Mode */
+
+html.dark .layout {
+  background: #0f172a;
+}
+
+html.dark .layout__content {
+  background: #0f172a;
+}

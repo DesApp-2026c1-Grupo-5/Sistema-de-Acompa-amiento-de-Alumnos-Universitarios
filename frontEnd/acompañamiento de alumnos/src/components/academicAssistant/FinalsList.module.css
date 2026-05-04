@@ -1,0 +1,46 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--color-soft);
+  border-radius: 8px;
+}
+
+.info {
+  flex: 1;
+}
+
+.name {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Dark Mode */
+
+:global(.dark) .item {
+  background: #1e293b;
+}
+
+:global(.dark) .name {
+  color: #f8fafc;
+}
+
+:global(.dark) .meta {
+  color: #94a3b8;
+}

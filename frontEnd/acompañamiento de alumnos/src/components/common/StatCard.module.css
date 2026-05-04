@@ -38,3 +38,27 @@
   align-items: center;
   justify-content: center;
 }
+
+@media (max-width: 480px) {
+  .content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .icon {
+    display: none;
+  }
+}
+
+/* Dark Mode */
+
+:global(.dark) .title {
+  color: #94a3b8;
+}
+
+:global(.dark) .value {
+  color: #f8fafc;
+}
+
+:global(.dark) .description {
+  color: #94a3b8;
+}

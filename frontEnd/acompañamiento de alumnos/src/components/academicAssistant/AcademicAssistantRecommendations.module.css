@@ -1,0 +1,81 @@
+.container {
+  background: linear-gradient(to bottom right, rgba(0, 188, 212, 0.1), rgba(0, 105, 92, 0.1));
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--text);
+}
+
+.title svg {
+  color: var(--color-accent);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: var(--card);
+  border-radius: 8px;
+}
+
+.item + .item {
+  margin-top: 16px;
+}
+
+.item svg:first-child {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.iconInfo {
+  color: var(--color-accent);
+}
+
+.iconWarning {
+  color: #eab308;
+}
+
+.item p {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px;
+  }
+  .item {
+    flex-direction: column;
+  }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .container {
+  background: linear-gradient(to bottom right, rgba(0, 188, 212, 0.1), rgba(0, 105, 92, 0.1));
+  border-color: rgba(0, 188, 212, 0.3);
+}
+
+:global(.dark) .item {
+  background: #1e293b;
+}
+
+:global(.dark) .item p {
+  color: #f8fafc;
+}

@@ -1,0 +1,54 @@
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  display: block;
+  color: var(--text);
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.input {
+  width: 100%;
+  max-width: 200px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: rgba(0, 188, 212, 0.5);
+}
+
+@media (max-width: 640px) {
+  .input {
+    max-width: 100%;
+  }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .label {
+  color: #94a3b8;
+}
+
+:global(.dark) .input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}

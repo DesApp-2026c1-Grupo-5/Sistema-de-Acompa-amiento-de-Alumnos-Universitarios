@@ -1,0 +1,36 @@
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--color-soft);
+  border-radius: 8px;
+}
+
+.item + .item {
+  margin-top: 16px;
+}
+
+.name {
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.meta {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .item {
+  background: #1e293b;
+}
+
+:global(.dark) .name {
+  color: #f8fafc;
+}
+
+:global(.dark) .meta {
+  color: #94a3b8;
+}

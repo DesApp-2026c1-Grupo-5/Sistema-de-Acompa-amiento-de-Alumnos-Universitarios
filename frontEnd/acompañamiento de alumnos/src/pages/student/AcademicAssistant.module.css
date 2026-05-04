@@ -1,0 +1,48 @@
+.container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerContent h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.headerContent p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .container {
+  background: #0f172a;
+}
+
+:global(.dark) .headerContent h1 {
+  color: #f8fafc;
+}
+
+:global(.dark) .headerContent p {
+  color: #94a3b8;
+}

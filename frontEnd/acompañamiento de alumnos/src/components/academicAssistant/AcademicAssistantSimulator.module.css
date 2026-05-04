@@ -1,0 +1,77 @@
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--text);
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-soft);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.checkbox + .checkbox {
+  margin-top: 16px;
+}
+
+.checkbox:hover {
+  background: var(--color-soft-hover);
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  accent-color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+  .checkbox {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .desc {
+  color: #94a3b8;
+}
+
+:global(.dark) .checkbox {
+  background: #1e293b;
+}
+
+:global(.dark) .checkbox:hover {
+  background: #273449;
+}
+
+:global(.dark) .checkbox input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+:global(.dark) .checkbox label {
+  color: #f8fafc;
+}
