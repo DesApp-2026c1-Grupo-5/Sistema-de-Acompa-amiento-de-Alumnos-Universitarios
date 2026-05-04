@@ -5,6 +5,7 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 16px;
+  color: var(--text);
 }
 
 .desc {
@@ -45,4 +46,32 @@
     align-items: flex-start;
     gap: 8px;
   }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .desc {
+  color: #94a3b8;
+}
+
+:global(.dark) .checkbox {
+  background: #1e293b;
+}
+
+:global(.dark) .checkbox:hover {
+  background: #273449;
+}
+
+:global(.dark) .checkbox input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+:global(.dark) .checkbox label {
+  color: #f8fafc;
 }

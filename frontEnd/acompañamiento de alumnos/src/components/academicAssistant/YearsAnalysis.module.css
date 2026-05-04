@@ -20,6 +20,7 @@
 .title {
   font-weight: 500;
   margin: 0;
+  color: var(--text);
 }
 
 .percent {
@@ -58,4 +59,30 @@
 .statItem p:last-child {
   font-weight: 600;
   margin: 0;
+}
+
+/* Dark Mode */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .percent {
+  color: #94a3b8;
+}
+
+:global(.dark) .item {
+  background: #1e293b;
+}
+
+:global(.dark) .progressBar {
+  background: #0f172a;
+}
+
+:global(.dark) .statItem p:first-child {
+  color: #94a3b8;
+}
+
+:global(.dark) .statItem p:last-child {
+  color: #f8fafc;
 }

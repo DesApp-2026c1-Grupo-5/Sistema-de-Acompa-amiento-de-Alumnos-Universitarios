@@ -36,3 +36,18 @@
   gap: 4px;
   color: #22c55e;
 }
+
+/* Dark Mode */
+
+:global(.dark) .table th {
+  color: #94a3b8;
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .table td {
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .table tr:hover {
+  background: #1e293b;
+}

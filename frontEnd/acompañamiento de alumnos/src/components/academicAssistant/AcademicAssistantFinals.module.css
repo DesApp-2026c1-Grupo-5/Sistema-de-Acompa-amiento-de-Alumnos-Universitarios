@@ -20,3 +20,17 @@
   font-size: 14px;
   color: var(--text-muted);
 }
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .item {
+  background: #1e293b;
+}
+
+:global(.dark) .name {
+  color: #f8fafc;
+}
+
+:global(.dark) .meta {
+  color: #94a3b8;
+}

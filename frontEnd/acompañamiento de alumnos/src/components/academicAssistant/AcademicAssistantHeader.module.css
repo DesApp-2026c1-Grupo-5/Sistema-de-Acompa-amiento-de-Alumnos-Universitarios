@@ -44,3 +44,17 @@
   color: var(--text-muted);
   margin-top: 8px;
 }
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .description {
+  color: #94a3b8;
+}
+
+:global(.dark) .progressLabel {
+  color: #94a3b8;
+}

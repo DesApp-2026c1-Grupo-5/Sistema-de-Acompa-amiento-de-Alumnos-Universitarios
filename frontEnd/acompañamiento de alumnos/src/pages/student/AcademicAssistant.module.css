@@ -5,6 +5,8 @@
   gap: 24px;
   max-width: 1200px;
   margin: 0 auto;
+  background: #ffffff;
+  min-height: 100vh;
 }
 
 .header {
@@ -29,4 +31,18 @@
     padding: 16px;
     gap: 16px;
   }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .container {
+  background: #0f172a;
+}
+
+:global(.dark) .headerContent h1 {
+  color: #f8fafc;
+}
+
+:global(.dark) .headerContent p {
+  color: #94a3b8;
 }

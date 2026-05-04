@@ -3,6 +3,7 @@
   font-weight: 600;
   margin: 0 0 16px;
   display: block;
+  color: var(--text);
 }
 
 .label {
@@ -34,4 +35,20 @@
   .input {
     max-width: 100%;
   }
+}
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .label {
+  color: #94a3b8;
+}
+
+:global(.dark) .input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
 }

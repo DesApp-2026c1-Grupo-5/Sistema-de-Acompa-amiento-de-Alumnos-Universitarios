@@ -60,3 +60,22 @@
     flex-direction: column;
   }
 }
+
+/* Dark Mode - Following Figma mockup */
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .container {
+  background: linear-gradient(to bottom right, rgba(0, 188, 212, 0.1), rgba(0, 105, 92, 0.1));
+  border-color: rgba(0, 188, 212, 0.3);
+}
+
+:global(.dark) .item {
+  background: #1e293b;
+}
+
+:global(.dark) .item p {
+  color: #f8fafc;
+}

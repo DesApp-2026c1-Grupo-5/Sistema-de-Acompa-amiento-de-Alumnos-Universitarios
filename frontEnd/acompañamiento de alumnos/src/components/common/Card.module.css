@@ -1,6 +1,7 @@
 .card {
   margin-bottom: 24px;
   padding: 20px;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -20,4 +21,19 @@
 
 .content {
   color: var(--text);
+}
+
+/* Dark Mode */
+
+:global(.dark) .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+:global(.dark) .content {
+  color: #f8fafc;
 }
