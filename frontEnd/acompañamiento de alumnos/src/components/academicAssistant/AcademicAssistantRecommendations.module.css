@@ -79,3 +79,13 @@
 :global(.dark) .item p {
   color: #f8fafc;
 }
+
+.container [class*="recommendation"] {
+  background: #e6fbff;
+  border: 1.5px solid #67e8f9;
+}
+
+:global(html.dark) .container [class*="recommendation"] {
+  background: rgba(0, 168, 173, 0.12);
+  border-color: #00a8ad;
+}

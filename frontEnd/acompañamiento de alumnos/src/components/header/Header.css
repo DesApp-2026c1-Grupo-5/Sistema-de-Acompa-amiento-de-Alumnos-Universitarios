@@ -29,8 +29,18 @@
   cursor: pointer;
 }
 
+.header__hamburger svg {
+  color: #020617;
+  stroke: #020617;
+}
+
 .header__hamburger:hover {
   color: #00a8ad;
+}
+
+.header__hamburger:hover svg {
+  color: #00a8ad;
+  stroke: #00a8ad;
 }
 
 .header__brand {
@@ -47,6 +57,11 @@
   color: #ffffff;
   display: grid;
   place-items: center;
+}
+
+.header__brand-logo svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .header__brand-text {
@@ -73,8 +88,18 @@
   cursor: pointer;
 }
 
+.header__icon-btn svg {
+  color: #020617;
+  stroke: #020617;
+}
+
 .header__icon-btn:hover {
   color: #00a8ad;
+}
+
+.header__icon-btn:hover svg {
+  color: #00a8ad;
+  stroke: #00a8ad;
 }
 
 .header__notification-dot {
@@ -85,6 +110,7 @@
   height: 8px;
   border-radius: 999px;
   background: #00a8ad;
+  z-index: 2;
 }
 
 .header__user-btn {
@@ -99,8 +125,71 @@
   cursor: pointer;
 }
 
+.header__user-btn svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
 .header__user-btn:hover {
   background: #00949a;
+}
+
+/* DARK MODE */
+
+html.dark .header {
+  background: #111827;
+  border-bottom-color: #334155;
+  color: #ffffff;
+}
+
+html.dark .header__hamburger,
+html.dark .header__icon-btn {
+  color: #e5e7eb;
+}
+
+html.dark .header__hamburger svg,
+html.dark .header__icon-btn svg {
+  color: #e5e7eb;
+  stroke: #e5e7eb;
+}
+
+html.dark .header__hamburger:hover,
+html.dark .header__icon-btn:hover {
+  color: #22d3ee;
+}
+
+html.dark .header__hamburger:hover svg,
+html.dark .header__icon-btn:hover svg {
+  color: #22d3ee;
+  stroke: #22d3ee;
+}
+
+html.dark .header__brand-text {
+  color: #ffffff;
+}
+
+html.dark .header__brand-logo {
+  background: #00a8ad;
+  color: #ffffff;
+}
+
+html.dark .header__brand-logo svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+html.dark .header__notification-dot {
+  background: #00a8ad;
+}
+
+html.dark .header__user-btn {
+  background: #00a8ad;
+  color: #ffffff;
+}
+
+html.dark .header__user-btn svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 @media (max-width: 1200px) {
@@ -119,34 +208,8 @@
   }
 }
 
-/* DARK MODE */
-
-:root.dark .header {
-  background: #111827;
-  border-bottom-color: #334155;
-  color: #ffffff;
-}
-
-:root.dark .header__hamburger,
-:root.dark .header__icon-btn {
-  color: #e5e7eb;
-}
-
-:root.dark .header__hamburger:hover,
-:root.dark .header__icon-btn:hover {
-  color: #22d3ee;
-}
-
-:root.dark .header__brand-text {
-  color: #ffffff;
-}
-
-:root.dark .header__brand-logo {
-  background: #00a8ad;
-  color: #ffffff;
-}
-
-:root.dark .header__user-btn {
-  background: #00a8ad;
-  color: #ffffff;
+html.dark .header button,
+html.dark .header button svg {
+  color: #e5e7eb !important;
+  stroke: #e5e7eb !important;
 }

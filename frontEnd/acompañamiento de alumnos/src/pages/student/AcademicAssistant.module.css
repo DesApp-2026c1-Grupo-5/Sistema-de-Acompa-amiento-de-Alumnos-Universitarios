@@ -1,29 +1,176 @@
+:root {
+  --text-primary: #020617;
+  --text-secondary: #526987;
+  --border-main: #020617;
+  --card-bg: #ffffff;
+  --soft-bg: #f6f8fb;
+  --accent: #00a8ad;
+  --accent-dark: #00949a;
+}
+
 .container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 24px;
+  min-height: 100vh;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background: #ffffff;
-  min-height: 100vh;
+  color: var(--text-primary);
 }
 
 .header {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-main);
+  border-radius: 12px;
+  padding: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .headerContent h1 {
-  font-size: 24px;
-  font-weight: 600;
   margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
 }
 
 .headerContent p {
-  color: var(--text-muted);
   margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-main);
+  border-radius: 12px;
+  padding: 20px;
+  color: var(--text-primary);
+}
+
+.card h2,
+.card h3,
+.card h4,
+.card strong {
+  color: var(--text-primary);
+}
+
+.card p,
+.card span,
+.card td,
+.card th,
+.card label {
+  color: var(--text-secondary);
+}
+
+.card td:first-child,
+.card strong,
+.card h3 {
+  color: var(--text-primary);
+}
+
+.metricValue,
+.value,
+.number {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.metricTitle,
+.label,
+.subtitle {
+  color: var(--text-secondary);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  color: var(--text-secondary);
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+tbody td {
+  color: var(--text-primary);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 16px;
+}
+
+input,
+select,
+textarea {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid #cbd5e1;
+}
+
+button {
+  font-family: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+.badge,
+.status {
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.available,
+.disponible {
+  background: #d1fae5;
+  color: #008f4c;
+}
+
+.warning,
+.porVencer {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.success,
+.cumple,
+.vigente {
+  color: #00a15d;
+}
+
+.progressBar {
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  background: var(--accent);
+}
+
+.recommendations {
+  background: #e6fbff;
+  border: 1.5px solid #67e8f9;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.recommendations h2,
+.recommendations h3 {
+  color: var(--text-primary);
+}
+
+.recommendations p,
+.recommendations span {
+  color: var(--text-secondary);
 }
 
 @media (max-width: 768px) {
@@ -31,18 +178,110 @@
     padding: 16px;
     gap: 16px;
   }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
 }
 
-/* Dark Mode - Following Figma mockup */
+/* DARK MODE */
 
-:global(.dark) .container {
+:global(html.dark) .container {
   background: #0f172a;
+  color: #ffffff;
 }
 
-:global(.dark) .headerContent h1 {
-  color: #f8fafc;
+:global(html.dark) .header,
+:global(html.dark) .card {
+  background: #1e293b;
+  border-color: #334155;
+  color: #ffffff;
 }
 
-:global(.dark) .headerContent p {
-  color: #94a3b8;
+:global(html.dark) .headerContent h1,
+:global(html.dark) .card h2,
+:global(html.dark) .card h3,
+:global(html.dark) .card h4,
+:global(html.dark) .card strong,
+:global(html.dark) .metricValue,
+:global(html.dark) .value,
+:global(html.dark) .number {
+  color: #ffffff;
+}
+
+:global(html.dark) .headerContent p,
+:global(html.dark) .card p,
+:global(html.dark) .card span,
+:global(html.dark) .card td,
+:global(html.dark) .card th,
+:global(html.dark) .card label,
+:global(html.dark) .metricTitle,
+:global(html.dark) .label,
+:global(html.dark) .subtitle {
+  color: #cbd5e1;
+}
+
+:global(html.dark) thead th,
+:global(html.dark) tbody td {
+  border-bottom-color: #334155;
+}
+
+:global(html.dark) input,
+:global(html.dark) select,
+:global(html.dark) textarea {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #334155;
+}
+
+:global(html.dark) .progressBar {
+  background: #334155;
+}
+
+:global(html.dark) .recommendations {
+  background: rgba(8, 183, 200, 0.12);
+  border-color: #00bcd4;
+}
+
+/* FIX GLOBAL TEXTOS */
+
+.container * {
+  color: #020617;
+}
+
+:global(html.dark) .container * {
+  color: #ffffff;
+}
+
+/* secundarios */
+.container p,
+.container span {
+  color: #526987;
+}
+
+:global(html.dark) .container p,
+:global(html.dark) .container span {
+  color: #cbd5e1;
+}
+
+.container button {
+  color: #ffffff !important;
+}
+
+.container input {
+  background: #ffffff !important;
+  color: #020617 !important;
+}
+
+:global(html.dark) .container button,
+:global(html.dark) .container button span {
+  color: #020617 !important;
+}
+
+/* SOLO botones internos, NO header */
+:global(html.dark) .container button svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
 }

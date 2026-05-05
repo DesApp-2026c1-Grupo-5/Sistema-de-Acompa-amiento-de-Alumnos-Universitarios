@@ -16,4 +16,17 @@
   }
 }
 
+.container table th {
+  color: #526987 !important;
+  font-weight: 700;
+}
+
+.container table td {
+  color: #020617 !important;
+}
+
+:global(html.dark) .container table td {
+  color: #ffffff !important;
+}
+
 /* Dark Mode */

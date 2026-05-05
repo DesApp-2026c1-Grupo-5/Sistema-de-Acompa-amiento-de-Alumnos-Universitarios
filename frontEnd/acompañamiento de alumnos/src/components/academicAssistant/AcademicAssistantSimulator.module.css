@@ -75,3 +75,14 @@
 :global(.dark) .checkbox label {
   color: #f8fafc;
 }
+
+button {
+  color: #ffffff !important;
+}
+
+:global(html.dark) button,
+:global(html.dark) button span,
+:global(html.dark) button svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}

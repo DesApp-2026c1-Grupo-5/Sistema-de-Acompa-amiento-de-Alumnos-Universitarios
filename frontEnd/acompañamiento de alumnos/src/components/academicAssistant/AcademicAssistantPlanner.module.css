@@ -52,3 +52,20 @@
   border-color: #334155;
   color: #f8fafc;
 }
+
+button {
+  color: #ffffff !important;
+}
+
+.input {
+  background: #ffffff !important;
+  color: #020617 !important;
+  border: 1px solid #e5e7eb;
+}
+
+:global(html.dark) button,
+:global(html.dark) button span,
+:global(html.dark) button svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}

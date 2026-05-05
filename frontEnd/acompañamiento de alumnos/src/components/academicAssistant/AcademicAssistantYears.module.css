@@ -68,3 +68,41 @@
 :global(.dark) .stats p:first-child {
   color: #94a3b8;
 }
+
+.container [class*="item"] {
+  background: #f6f8fb;
+}
+
+:global(html.dark) .container [class*="item"] {
+  background: #273449;
+}
+
+.container [class*="header"] h4 {
+  color: #020617 !important;
+}
+
+:global(html.dark) .container [class*="header"] h4 {
+  color: #ffffff !important;
+}
+
+.stat p,
+.stats p,
+.item p,
+.item span {
+  color: #020617 !important;
+}
+
+.header h4,
+.header span {
+  color: #020617 !important;
+}
+
+:global(html.dark) .item,
+:global(html.dark) .item p,
+:global(html.dark) .item span,
+:global(html.dark) .item h4,
+:global(html.dark) .header h4,
+:global(html.dark) .header span,
+:global(html.dark) .stat p {
+  color: #ffffff !important;
+}

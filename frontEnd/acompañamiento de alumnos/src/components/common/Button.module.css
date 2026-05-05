@@ -35,6 +35,11 @@
   align-items: center;
 }
 
+/* 🔥 FIX GLOBAL PARA TEXTO */
+.btn .label {
+  color: inherit;
+}
+
 .fullWidth {
   width: 100%;
 }
@@ -56,66 +61,138 @@
   font-size: 15px;
 }
 
+/* ========================= */
 /* variants */
+/* ========================= */
+
 .variant_primary {
   background: var(--accent);
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(0, 188, 212, 0.25);
 }
+
+.variant_primary .label,
+.variant_primary .icon {
+  color: #ffffff;
+}
+
+.variant_primary svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
 .variant_primary:hover:not(:disabled) {
   background: var(--color-primary-dark);
   box-shadow: 0 6px 18px rgba(0, 188, 212, 0.32);
 }
+
+/* ------------------------- */
 
 .variant_secondary {
   background: var(--accent-border);
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(0, 105, 92, 0.25);
 }
+
+.variant_secondary .label,
+.variant_secondary .icon {
+  color: #ffffff;
+}
+
+.variant_secondary svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
 .variant_secondary:hover:not(:disabled) {
   background: #004d40;
   box-shadow: 0 6px 18px rgba(0, 105, 92, 0.32);
 }
 
+/* ------------------------- */
+
 .variant_primarySoft {
   background: var(--accent-bg);
   color: var(--accent);
 }
+
+.variant_primarySoft .label,
+.variant_primarySoft .icon {
+  color: var(--accent);
+}
+
 .variant_primarySoft:hover:not(:disabled) {
   background: rgba(0, 188, 212, 0.2);
 }
+
+/* ------------------------- */
 
 .variant_outline {
   background: var(--bg);
   color: var(--text);
   border-color: var(--border);
 }
+
+.variant_outline .label,
+.variant_outline .icon {
+  color: var(--text);
+}
+
 .variant_outline:hover:not(:disabled) {
   background: var(--color-soft);
   border-color: #cbd5e1;
 }
 
+/* ------------------------- */
+
 .variant_ghost {
   background: transparent;
   color: var(--text);
 }
+
+.variant_ghost .label,
+.variant_ghost .icon {
+  color: var(--text);
+}
+
 .variant_ghost:hover:not(:disabled) {
   background: var(--color-soft);
 }
+
+/* ------------------------- */
 
 .variant_danger {
   background: #fee2e2;
   color: #b91c1c;
   border-color: #fecaca;
 }
+
+.variant_danger .label,
+.variant_danger .icon {
+  color: #b91c1c;
+}
+
 .variant_danger:hover:not(:disabled) {
   background: #fecaca;
 }
+
+/* ------------------------- */
 
 .variant_dangerSolid {
   background: #ef4444;
   color: #ffffff;
 }
+
+.variant_dangerSolid .label,
+.variant_dangerSolid .icon {
+  color: #ffffff;
+}
+
+.variant_dangerSolid svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
 .variant_dangerSolid:hover:not(:disabled) {
   background: #dc2626;
 }
