@@ -2,8 +2,7 @@
   min-height: 100vh;
   background: #ffffff;
   color: #020617;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: inherit;
 }
 
 .content {
@@ -946,4 +945,14 @@
 :global(html.dark) .formActions button:last-child {
   background: linear-gradient(135deg, #08b7c8, #039b97);
   color: #ffffff;
+}
+
+.titleRow h1,
+.mySessionsBox h2,
+.availableSection h2,
+.mySessionItem h3,
+.cardTop h3 {
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: normal;
 }
