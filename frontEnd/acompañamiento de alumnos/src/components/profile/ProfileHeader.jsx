@@ -2,16 +2,12 @@ import { MapPin, Users, Globe, SquarePen, Mail, Lock } from 'lucide-react';
 import { useState } from 'react';
 import FormModal from '../common/FormModal';
 import Avatar from '../common/Avatar';
-import Card from '../common/Card';
 import styles from './ProfileHeader.module.css';
-import Button from '../common/Button';
 
-function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
+function ProfileHeader({ user, onEditProfile }) {
   const { initials, name, career, location, contactsCount, email, academicStatus } = user;
 
   const [modalOpen, setModalOpen] = useState(false);
-  // TODO: conectar con backend cuando esté implementado
-  // usar onToggleVisibility callback en lugar de estado local
   const [visibility, setVisibility] = useState(false);
 
   const fields = [
@@ -29,13 +25,9 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
   };
 
   return (
-    <Card className={styles.card}>
+    <section className={styles.card}>
       <div className={styles.gradientHeader}>
-        <Avatar
-          initials={initials}
-          size="xl"
-          className={styles.avatar}
-        />
+        <Avatar initials={initials} size="xl" className={styles.avatar} />
       </div>
 
       <div className={styles.content}>
@@ -43,11 +35,13 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
           <div className={styles.info}>
             <h1 className={styles.name}>{name}</h1>
             <p className={styles.career}>{career}</p>
+
             <p className={styles.metaRow}>
               <span className={styles.metaItem}>
                 <MapPin className={styles.metaIcon} />
                 {location}
               </span>
+
               <span className={styles.metaItem}>
                 <Users className={styles.metaIcon} />
                 {contactsCount} contactos
@@ -56,53 +50,54 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
           </div>
 
           <div className={styles.actions}>
-            <Button
-              variant={visibility ? 'outline' : 'primarySoft'}
+            <button
+              type="button"
+              className={styles.btnPublico}
               onClick={() => setVisibility(!visibility)}
             >
               {visibility ? <Lock size={16} /> : <Globe size={16} />}
               {visibility ? 'Privado' : 'Público'}
-            </Button>
-            <Button
-              variant="primary"
+            </button>
+
+            <button
+              type="button"
+              className={styles.btnEdit}
               onClick={() => setModalOpen(true)}
             >
               <SquarePen className={styles.btnIcon} />
               Editar perfil
-            </Button>
+            </button>
           </div>
         </div>
 
         <hr className={styles.divider} />
 
-
         <div className={styles.detailItem}>
           <Mail className={styles.detailIcon} />
-          <dd>
-            <span >Email</span>
-            <span >{email}</span>
-          </dd>
+          <div>
+            <span className={styles.detailLabel}>Email</span>
+            <span className={styles.detailValue}>{email}</span>
+          </div>
         </div>
 
         <div className={styles.detailItem}>
           <Users className={styles.detailIcon} />
-          <dd>
-            <span>Estado académico</span>
-            <span>{academicStatus}</span>
-          </dd>
+          <div>
+            <span className={styles.detailLabel}>Estado académico</span>
+            <span className={styles.detailValue}>{academicStatus}</span>
+          </div>
         </div>
-
       </div>
+
       <FormModal
         open={modalOpen}
-        title="Contacto"
+        title="Editar perfil"
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         fields={fields}
         initialValues={user}
       />
-    </Card>
-
+    </section>
   );
 }
 

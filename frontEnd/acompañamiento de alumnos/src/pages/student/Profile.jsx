@@ -4,19 +4,22 @@ import PendingRequests from '../../components/profile/PendingRequests';
 import PublicationsList from '../../components/profile/PublicationsList';
 import { useState } from 'react';
 
-import { userData, contacts, pendingRequests, publications } from './profile/profileData';
+import {
+  userData,
+  contacts,
+  pendingRequests,
+  publications,
+} from './profile/profileData';
 
 import styles from './Profile.module.css';
-import Card from '../../components/common/Card';
 
 function Profile({
   contactList = contacts,
   posts = publications,
-  onEditProfile,
   onViewAllContacts,
   onToggleVisibility,
   onLike,
-  onComment
+  onComment,
 }) {
   const [currentUser, setCurrentUser] = useState(userData);
 
@@ -26,27 +29,22 @@ function Profile({
 
   return (
     <div className={styles.container}>
-      <ProfileHeader 
+      <ProfileHeader
         user={currentUser}
         onEditProfile={handleEditProfile}
         onToggleVisibility={onToggleVisibility}
       />
-      
 
-      <ContactList 
-        contacts={contactList}
-        onViewAll={onViewAllContacts}
-      />
+      <ContactList contacts={contactList} onViewAll={onViewAllContacts} />
 
-      <PendingRequests 
-        requests={pendingRequests}
-      />
+      <PendingRequests requests={pendingRequests} />
 
-      <Card title={"Acerca de"}>
+      <section className={styles.aboutCard}>
+        <h2>Acerca de</h2>
         <p>{currentUser.bio}</p>
-      </Card>
+      </section>
 
-      <PublicationsList 
+      <PublicationsList
         publications={posts}
         onLike={onLike}
         onComment={onComment}

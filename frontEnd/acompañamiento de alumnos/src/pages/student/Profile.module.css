@@ -1,5 +1,86 @@
 .container {
-  max-width: 800px;
+  max-width: 760px;
   margin: 0 auto;
+  padding: 24px 24px 64px;
+}
+
+.aboutCard {
+  margin-bottom: 24px;
   padding: 24px;
+  background: #ffffff;
+  border: 1px solid #020617;
+  border-radius: 8px;
+}
+
+.aboutCard h2 {
+  margin: 0 0 18px;
+  color: #020617 !important;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.aboutCard p {
+  margin: 0;
+  color: #020617 !important;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.dark .card {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.dark .content {
+  background: transparent;
+}
+
+.dark .name {
+  color: #ffffff;
+}
+
+.dark .career {
+  color: #94a3b8;
+}
+
+.dark .metaRow {
+  color: #94a3b8;
+}
+
+.dark .divider {
+  border-top: 1px solid #334155;
+}
+
+.dark .detailLabel {
+  color: #94a3b8;
+}
+
+.dark .detailValue {
+  color: #ffffff;
+}
+
+.dark .detailIcon {
+  color: #94a3b8;
+}
+
+/* BOTONES */
+.dark .btnPublico {
+  background: transparent;
+  border: 1px solid #00cfe8;
+  color: #00cfe8;
+}
+
+.dark .btnEdit {
+  background: linear-gradient(135deg, #00cfe8, #00a8ad);
+  color: #ffffff;
+}
+
+:global(html.dark) .aboutCard {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(html.dark) .aboutCard h2,
+:global(html.dark) .aboutCard p {
+  color: #ffffff !important;
 }

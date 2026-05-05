@@ -1,56 +1,59 @@
-import Avatar from '../common/Avatar';
-import Card from '../common/Card';
-import styles from './PendingRequests.module.css';
 import { useState } from 'react';
-import Button from '../common/Button';
+import Avatar from '../common/Avatar';
+import styles from './PendingRequests.module.css';
 
 function RequestItem({ request, onAccept, onIgnore }) {
   return (
     <li className={styles.item}>
-      <Avatar
-        initials={request.initials}
-        size="md"
-        className={styles.avatar}
-      />
+      <Avatar initials={request.initials} size="md" />
+
       <div className={styles.info}>
         <span className={styles.name}>{request.name}</span>
         <span className={styles.common}>
           {request.commonContacts} contactos en común
         </span>
       </div>
+
       <div className={styles.actions}>
-        <Button
-          variant="primary"
+        <button
+          type="button"
+          className={styles.btnAccept}
           onClick={() => onAccept?.(request.id)}
         >
           Aceptar
-        </Button>
-        <Button
-          variant="outline"
+        </button>
+
+        <button
+          type="button"
+          className={styles.btnIgnore}
           onClick={() => onIgnore?.(request.id)}
         >
           Ignorar
-        </Button>
+        </button>
       </div>
     </li>
   );
 }
 
 function PendingRequests({ requests }) {
-  const hasRequests = requests && requests.length > 0;
-
-  const [currentRequests, setCurrentRequests] = useState(requests)
+  const [currentRequests, setCurrentRequests] = useState(requests || []);
+  const hasRequests = currentRequests.length > 0;
 
   const handleOnAccept = (id) => {
-    setCurrentRequests(prev => prev.filter(r => r.id !== id));
+    setCurrentRequests((prev) => prev.filter((r) => r.id !== id));
   };
 
   const handleOnIgnore = (id) => {
-    setCurrentRequests(prev => prev.filter(r => r.id !== id));
+    setCurrentRequests((prev) => prev.filter((r) => r.id !== id));
   };
 
   return (
-    <Card title={"Solicitudes pendientes"}>
+    <section className={styles.section}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Solicitudes pendientes</h2>
+        <span className={styles.count}>{currentRequests.length}</span>
+      </div>
+
       {hasRequests ? (
         <ul className={styles.list}>
           {currentRequests.map((request) => (
@@ -65,7 +68,7 @@ function PendingRequests({ requests }) {
       ) : (
         <p className={styles.empty}>No hay solicitudes pendientes</p>
       )}
-    </Card>
+    </section>
   );
 }
 

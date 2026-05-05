@@ -1,74 +1,115 @@
 .section {
   margin-bottom: 24px;
-  padding: 20px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #020617;
+  border-radius: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
 }
 
 .title {
-  color: var(--text-h);
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 16px;
+  margin: 0;
+  color: #020617 !important;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.count {
+  color: #526987;
+  font-size: 14px;
 }
 
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--color-soft);
-  border-radius: 8px;
+  gap: 16px;
+  background: transparent;
 }
 
 .info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .name {
-  color: var(--text-h);
-  font-weight: 500;
+  color: #020617 !important;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .common {
-  color: var(--color-muted);
-  font-size: 12px;
+  color: #526987;
+  font-size: 14px;
 }
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .btnAccept {
-  background: var(--accent);
-  color: white;
+  height: 36px;
+  min-width: 82px;
   border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 10px;
+  background: #00a8ad;
+  color: #ffffff;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 700;
 }
 
 .btnIgnore {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 6px 12px;
-  border-radius: 6px;
+  height: 36px;
+  min-width: 82px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #020617;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 700;
+}
+
+:global(html.dark) .section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(html.dark) .title,
+:global(html.dark) .name {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .common,
+:global(html.dark) .count {
+  color: #94a3b8;
+}
+
+:global(html.dark) .btnAccept {
+  background: #00a8ad;
+  color: #ffffff;
+}
+
+:global(html.dark) .btnIgnore {
+  background: transparent;
+  border-color: #475569;
+  color: #ffffff;
 }

@@ -1,62 +1,70 @@
 .section {
   margin-bottom: 24px;
-  padding: 20px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #020617;
+  border-radius: 8px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 22px;
 }
 
 .title {
-  color: var(--text-h);
-  font-size: 18px;
-  font-weight: 600;
   margin: 0;
+  color: #020617 !important;
+  font-size: 22px;
+  font-weight: 700;
 }
 
 .linkBtn {
-  background: none;
   border: none;
-  color: var(--accent);
+  background: transparent;
+  color: #00a8ad;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 700;
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
   list-style: none;
   margin: 0;
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 22px;
 }
 
 .item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 8px;
-  border-radius: 8px;
   cursor: pointer;
 }
 
-.item:hover {
-  background: var(--color-soft);
-}
-
 .name {
-  color: var(--text);
-  font-size: 14px;
+  color: #020617 !important;
+  font-size: 13px;
+  text-align: center;
 }
 
-@media (max-width: 640px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+:global(html.dark) .section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(html.dark) .title {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .name {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .linkBtn {
+  color: #00cfe8;
 }

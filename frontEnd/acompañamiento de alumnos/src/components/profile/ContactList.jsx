@@ -1,17 +1,10 @@
 import Avatar from '../common/Avatar';
-import Card from '../common/Card';
 import styles from './ContactList.module.css';
-
-const VIEW_ALL_TEXT = 'Ver todos';
 
 function ContactItem({ contact }) {
   return (
     <li className={styles.item}>
-      <Avatar 
-        initials={contact.initials} 
-        size="sm" 
-        className={styles.avatar}
-      />
+      <Avatar initials={contact.initials} size="md" />
       <span className={styles.name}>{contact.name}</span>
     </li>
   );
@@ -21,7 +14,15 @@ function ContactList({ contacts, onViewAll }) {
   const hasContacts = contacts && contacts.length > 0;
 
   return (
-    <Card title={"Contactos"}>
+    <section className={styles.section}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Contactos</h2>
+
+        <button type="button" className={styles.linkBtn} onClick={onViewAll}>
+          Ver todos
+        </button>
+      </div>
+
       {hasContacts ? (
         <ul className={styles.grid}>
           {contacts.map((contact) => (
@@ -31,7 +32,7 @@ function ContactList({ contacts, onViewAll }) {
       ) : (
         <p className={styles.empty}>No hay contactos</p>
       )}
-    </Card>
+    </section>
   );
 }
 
