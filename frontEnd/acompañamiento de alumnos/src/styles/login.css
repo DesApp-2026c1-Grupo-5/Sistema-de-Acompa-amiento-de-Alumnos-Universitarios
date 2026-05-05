@@ -244,3 +244,23 @@
     left: 24px;
   }
 }
+
+.auth-error {
+  margin: -8px 0 0;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.auth-demo-users {
+  margin-top: 32px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(8, 183, 200, 0.1);
+  color: #0f172a;
+}
+
+.auth-demo-users p {
+  margin: 6px 0;
+  font-size: 14px;
+}
