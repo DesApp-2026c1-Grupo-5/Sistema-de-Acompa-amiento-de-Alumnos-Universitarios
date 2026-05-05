@@ -2,7 +2,116 @@ const {
   material,
   estudiante,
   valoracion,
+  materia,
 } = require("../db/models");
+const { Op } = require("sequelize");
+
+const listarMateriales = async (req, res, next) => {
+  try {
+    const { q, tipo, materia_id, suspendido = "false" } = req.query;
+
+    const where = {};
+
+    if (tipo) {
+      where.tipo = tipo;
+    }
+
+    if (materia_id) {
+      where.materia_id = materia_id;
+    }
+
+    if (suspendido !== "all") {
+      where.suspendido = suspendido === "true";
+    }
+
+    if (q) {
+      where[Op.or] = [
+        { titulo: { [Op.like]: `%${q}%` } },
+        { descripcion: { [Op.like]: `%${q}%` } },
+      ];
+    }
+
+    const materiales = await material.findAll({
+      where,
+      include: [
+        {
+          model: estudiante,
+          attributes: ["id", "nombre", "apellido"],
+        },
+        {
+          model: materia,
+          attributes: ["id", "nombre", "anio_cursada"],
+        },
+        {
+          model: valoracion,
+          attributes: ["valor"],
+        },
+      ],
+      order: [["id", "DESC"]],
+    });
+
+    const data = materiales.map((item) => {
+      const plain = item.get({ plain: true });
+      const likes = plain.valoracions.filter((v) => v.valor === "like").length;
+      const dislikes = plain.valoracions.filter((v) => v.valor === "dislike").length;
+
+      return {
+        ...plain,
+        likes,
+        dislikes,
+      };
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const obtenerMaterialPorId = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const materialData = await material.findByPk(id, {
+      include: [
+        {
+          model: estudiante,
+          attributes: ["id", "nombre", "apellido"],
+        },
+        {
+          model: materia,
+          attributes: ["id", "nombre", "anio_cursada"],
+        },
+        {
+          model: valoracion,
+          attributes: ["id", "valor", "fecha", "estudiante_id"],
+        },
+      ],
+    });
+
+    if (!materialData) {
+      const error = new Error("Material no encontrado");
+      error.statusCode = 404;
+      return next(error);
+    }
+
+    const plain = materialData.get({ plain: true });
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        ...plain,
+        likes: plain.valoracions.filter((v) => v.valor === "like").length,
+        dislikes: plain.valoracions.filter((v) => v.valor === "dislike").length,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
 
 const crearMaterial = async (req, res, next) => {
   const {
@@ -86,6 +195,8 @@ const votarMaterial = async (req, res, next) => {
 };
 
 module.exports = {
+  listarMateriales,
+  obtenerMaterialPorId,
   crearMaterial,
   votarMaterial,
 };

@@ -1,13 +1,7 @@
 const { signToken } = require("../utils/jwt");
+const { usuario, estudiante, administrador } = require("../db/models");
 
-const DEMO_USER = {
-  id: "1",
-  email: "admin@demo.com",
-  password: "123456",
-  tipo: "administrador",
-};
-
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -17,16 +11,42 @@ const login = (req, res, next) => {
       throw error;
     }
 
-    if (email !== DEMO_USER.email || password !== DEMO_USER.password) {
+    const usuarioData = await usuario.findOne({
+      where: { email },
+      include: [
+        {
+          model: estudiante,
+          attributes: ["id", "nombre", "apellido"],
+        },
+        {
+          model: administrador,
+          attributes: ["id", "nombre", "apellido"],
+        },
+      ],
+    });
+
+    if (!usuarioData) {
+      const error = new Error("Credenciales invalidas");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    if (!usuarioData.activo) {
+      const error = new Error("Usuario inactivo");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (usuarioData.password_hash !== password) {
       const error = new Error("Credenciales invalidas");
       error.statusCode = 401;
       throw error;
     }
 
     const payload = {
-      sub: DEMO_USER.id,
-      email: DEMO_USER.email,
-      tipo: DEMO_USER.tipo,
+      sub: usuarioData.id,
+      email: usuarioData.email,
+      tipo: usuarioData.tipo,
     };
 
     const token = signToken(payload);
@@ -35,9 +55,11 @@ const login = (req, res, next) => {
       ok: true,
       token,
       user: {
-        id: DEMO_USER.id,
-        email: DEMO_USER.email,
-        tipo: DEMO_USER.tipo,
+        id: usuarioData.id,
+        email: usuarioData.email,
+        tipo: usuarioData.tipo,
+        estudiante: usuarioData.estudiante,
+        administrador: usuarioData.administrador,
       },
     });
   } catch (error) {

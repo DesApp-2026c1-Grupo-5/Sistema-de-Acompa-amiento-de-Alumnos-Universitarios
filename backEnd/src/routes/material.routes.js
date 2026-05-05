@@ -6,6 +6,9 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const materialController = require("../controllers/material.controller");
 
+router.get("/materiales", authMiddleware, materialController.listarMateriales);
+router.get("/materiales/:id", authMiddleware, materialController.obtenerMaterialPorId);
+
 router.post(
   "/materiales",
   authMiddleware,
