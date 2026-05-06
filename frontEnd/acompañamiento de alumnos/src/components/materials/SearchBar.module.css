@@ -285,3 +285,87 @@
 :global(.dark) .clearBtn:hover {
   background: rgba(239, 68, 68, 0.12);
 }
+
+/* ===== Fix botón Filtros ===== */
+
+.filterBtn,
+.filterBtn span,
+.filterBtn svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+.filterBtnActive,
+.filterBtnActive span,
+.filterBtnActive svg {
+  color: #0aa5a0 !important;
+  stroke: #0aa5a0 !important;
+}
+
+:global(html.dark) .filterBtn,
+:global(html.dark) .filterBtn span,
+:global(html.dark) .filterBtn svg,
+:global(.dark) .filterBtn,
+:global(.dark) .filterBtn span,
+:global(.dark) .filterBtn svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(html.dark) .filterBtnActive,
+:global(html.dark) .filterBtnActive span,
+:global(html.dark) .filterBtnActive svg,
+:global(.dark) .filterBtnActive,
+:global(.dark) .filterBtnActive span,
+:global(.dark) .filterBtnActive svg {
+  color: #00d4ff !important;
+  stroke: #00d4ff !important;
+}
+
+/* ===== Fix popover filtros ===== */
+
+.popoverTitle {
+  color: #526987 !important;
+}
+
+.popoverItem,
+.popoverItem span,
+.popoverItem svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+.popoverItemSelected,
+.popoverItemSelected span,
+.popoverItemSelected svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+  background: #dff7f7 !important;
+}
+
+/* Dark mode */
+:global(html.dark) .popoverTitle,
+:global(.dark) .popoverTitle {
+  color: #cbd5e1 !important;
+}
+
+:global(html.dark) .popoverItem,
+:global(html.dark) .popoverItem span,
+:global(html.dark) .popoverItem svg,
+:global(.dark) .popoverItem,
+:global(.dark) .popoverItem span,
+:global(.dark) .popoverItem svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(html.dark) .popoverItemSelected,
+:global(html.dark) .popoverItemSelected span,
+:global(html.dark) .popoverItemSelected svg,
+:global(.dark) .popoverItemSelected,
+:global(.dark) .popoverItemSelected span,
+:global(.dark) .popoverItemSelected svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  background: rgba(0, 212, 255, 0.14) !important;
+}

@@ -197,21 +197,28 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: transparent;
   border: none;
-  border-radius: 10px;
-  color: #1f2a37;
+  color: #020617;
   font-family: inherit;
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.viewBtn svg {
+  color: #020617;
+  stroke: #020617;
 }
 
 .viewBtn:hover {
-  background: #f1f5f9;
-  color: #0aa5a0;
+  color: #00a8ad;
+}
+
+.viewBtn:hover svg {
+  color: #00a8ad;
+  stroke: #00a8ad;
 }
 
 /* ===== Dark mode ===== */
@@ -306,3 +313,49 @@
   background: #0f172a;
   color: #00d4ff;
 }
+
+.viewBtn,
+.viewBtn span,
+.viewBtn svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+.viewBtn {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.viewBtn span {
+  display: inline-flex !important;
+  font-weight: 700;
+}
+
+/* Dark mode */
+:global(html.dark) .viewBtn,
+:global(html.dark) .viewBtn span,
+:global(html.dark) .viewBtn svg,
+:global(.dark) .viewBtn,
+:global(.dark) .viewBtn span,
+:global(.dark) .viewBtn svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.viewBtn:hover,
+.viewBtn:hover span,
+.viewBtn:hover svg {
+  color: #00a8ad !important;
+  stroke: #00a8ad !important;
+}
+
+:global(html.dark) .viewBtn:hover,
+:global(html.dark) .viewBtn:hover span,
+:global(html.dark) .viewBtn:hover svg,
+:global(.dark) .viewBtn:hover,
+:global(.dark) .viewBtn:hover span,
+:global(.dark) .viewBtn:hover svg {
+  color: #00d4ff !important;
+  stroke: #00d4ff !important;
+}
+

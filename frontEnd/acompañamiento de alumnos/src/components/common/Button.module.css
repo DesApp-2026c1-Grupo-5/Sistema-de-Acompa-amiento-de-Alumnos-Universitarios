@@ -196,3 +196,68 @@
 .variant_dangerSolid:hover:not(:disabled) {
   background: #dc2626;
 }
+
+/* ===== Material Repository buttons ===== */
+
+.variant_iconCircle {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 12px;
+  background: #00a8ad;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.variant_iconCircle .label,
+.variant_iconCircle .icon {
+  color: #ffffff;
+}
+
+.variant_iconCircle svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+.variant_iconCircle:hover:not(:disabled) {
+  background: #00949a;
+}
+
+.variant_discord {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: #635bff;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.variant_discord .label,
+.variant_discord .icon {
+  color: #ffffff;
+}
+
+.variant_discord svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+.variant_discord:hover:not(:disabled) {
+  background: #5146e5;
+}
+
+.variant_primarySoft,
+.variant_primarySoft .label,
+.variant_primarySoft .icon {
+  background: #bfeff1;
+  color: #ffffff !important;
+}
+
+.variant_primarySoft svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.variant_primarySoft:hover:not(:disabled) {
+  background: #92dfe4;
+}
