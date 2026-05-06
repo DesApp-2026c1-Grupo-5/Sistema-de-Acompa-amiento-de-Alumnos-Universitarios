@@ -285,3 +285,18 @@ button:not(:disabled) {
   color: #020617 !important;
   stroke: #020617 !important;
 }
+
+/* FIX - Badge Disponible en tabla de materias */
+
+:global(html.dark) .container table .disponible,
+:global(html.dark) .container table .available,
+:global(html.dark) .container table [class*="success"] {
+  background: #064e3b !important;
+  color: #22c55e !important;
+}
+
+:global(html.dark) .container table .disponible *,
+:global(html.dark) .container table .available *,
+:global(html.dark) .container table [class*="success"] * {
+  color: #22c55e !important;
+}
