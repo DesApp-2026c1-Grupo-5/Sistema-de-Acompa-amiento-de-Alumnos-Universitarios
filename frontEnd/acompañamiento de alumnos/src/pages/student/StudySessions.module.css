@@ -200,24 +200,30 @@
 
 .tabs {
   display: flex;
-  gap: 28px;
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 16px;
+  gap: 24px;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 18px;
 }
 
 .tabs button {
-  border: none;
   background: transparent;
-  color: #526987;
-  padding: 0 0 13px;
+  border: none;
+  padding: 12px 0;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
+  color: #64748b;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tabs button:hover {
+  color: #0ea5e9;
 }
 
 .tabs .activeTab {
-  color: #00a8c2;
-  border-bottom: 2px solid #00a8c2;
+  color: #06b6d4 !important;
+  border-bottom: 2px solid #06b6d4 !important;
 }
 
 .mySessionItem {
@@ -427,15 +433,17 @@
 }
 
 .fullButton {
-  background: #ffd7dc;
-  color: #ff001f;
+  background: #ffe2e5;
+  color: #ef4444 !important;
   cursor: not-allowed;
+  font-weight: 700;
 }
 
 .pendingButton {
-  background: #fdecc8;
-  color: #d97706;
+  background: #fef3c7;
+  color: #d97706 !important;
   cursor: not-allowed;
+  font-weight: 700;
 }
 
 .joinedButton {
@@ -750,17 +758,17 @@
 
 /* Tabs */
 
-:global(.dark) .tabs {
-  border-bottom-color: #334155;
-}
-
 :global(.dark) .tabs button {
   color: #94a3b8;
 }
 
-:global(.dark) .tabs .activeTab {
-  color: #00d4ff;
-  border-bottom-color: #00d4ff;
+:global(.dark) .tabs button:hover {
+  color: #22d3ee;
+}
+
+:global(.dark) .activeTab {
+  color: #22d3ee !important;
+  border-bottom: 2px solid #22d3ee !important;
 }
 
 /* Mis sesiones */
@@ -955,4 +963,147 @@
   font-family: inherit;
   font-weight: 700;
   letter-spacing: normal;
+}
+
+/* FIX DEFINITIVO - Botón Filtros */
+
+.filtersButton,
+.filtersButton svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+.filtersButtonActive,
+.filtersButtonActive svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+:global(html.dark) .filtersButton,
+:global(html.dark) .filtersButton svg,
+:global(.dark) .filtersButton,
+:global(.dark) .filtersButton svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(html.dark) .filtersButtonActive,
+:global(html.dark) .filtersButtonActive svg,
+:global(.dark) .filtersButtonActive,
+:global(.dark) .filtersButtonActive svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* FIX - Mis sesiones / Tabs / Ver detalle */
+
+.tabs {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tabs button {
+  color: #526987 !important;
+  background: transparent;
+}
+
+.tabs button:hover {
+  color: #00a8c2 !important;
+}
+
+.tabs .activeTab {
+  color: #00a8c2 !important;
+  border-bottom: 2px solid #00a8c2 !important;
+}
+
+.myActions button {
+  background: #ffffff;
+  color: #020617 !important;
+  cursor: pointer;
+}
+
+.myActions button:hover {
+  background: #f8fafc;
+}
+
+/* Dark mode */
+
+:global(html.dark) .tabs,
+:global(.dark) .tabs {
+  border-bottom-color: #334155;
+}
+
+:global(html.dark) .tabs button,
+:global(.dark) .tabs button {
+  color: #94a3b8 !important;
+  background: transparent;
+}
+
+:global(html.dark) .tabs button:hover,
+:global(.dark) .tabs button:hover {
+  color: #22d3ee !important;
+}
+
+:global(html.dark) .tabs .activeTab,
+:global(.dark) .tabs .activeTab {
+  color: #22d3ee !important;
+  border-bottom: 2px solid #22d3ee !important;
+}
+
+:global(html.dark) .myActions button,
+:global(.dark) .myActions button {
+  background: #0f172a;
+  color: #ffffff !important;
+}
+
+:global(html.dark) .myActions button:hover,
+:global(.dark) .myActions button:hover {
+  background: #111827;
+}
+
+/* =========================================
+   BOTONES FIJOS - NO CAMBIAN EN DARK MODE
+========================================= */
+
+.joinButton,
+.joinButton * {
+  background: #0ea5b7 !important;
+  color: #ffffff !important;
+}
+
+.fullButton,
+.fullButton * {
+  background: #ffe2e5 !important;
+  color: #ef4444 !important;
+}
+
+.pendingButton,
+.pendingButton * {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
+}
+
+/* Dark mode - mantener mismos colores */
+
+:global(html.dark) .joinButton,
+:global(.dark) .joinButton,
+:global(html.dark) .joinButton *,
+:global(.dark) .joinButton * {
+  background: #0ea5b7 !important;
+  color: #ffffff !important;
+}
+
+:global(html.dark) .fullButton,
+:global(.dark) .fullButton,
+:global(html.dark) .fullButton *,
+:global(.dark) .fullButton * {
+  background: #ffe2e5 !important;
+  color: #ef4444 !important;
+}
+
+:global(html.dark) .pendingButton,
+:global(.dark) .pendingButton,
+:global(html.dark) .pendingButton *,
+:global(.dark) .pendingButton * {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
 }
