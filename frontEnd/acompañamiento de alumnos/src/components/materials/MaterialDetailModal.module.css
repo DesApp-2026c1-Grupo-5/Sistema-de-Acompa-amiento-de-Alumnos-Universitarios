@@ -163,14 +163,20 @@
   height: 44px;
   padding: 0 14px;
   background: #ffffff;
-  border: 1px solid #eef2f6;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
-  color: #1f2a37;
+  color: #020617 !important;
   font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.actionBtn span,
+.actionBtn svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
 }
 
 .actionBtn:hover {
@@ -178,129 +184,102 @@
   border-color: #cbd5e1;
 }
 
-.actionBtnLike {
-  background: #dcfce7;
-  border-color: #bbf7d0;
-  color: #15803d;
-}
-
-.actionBtnLike:hover {
-  background: #bbf7d0;
-  border-color: #86efac;
-  color: #166534;
-}
-
-.actionBtnDislike {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #b91c1c;
-}
-
-.actionBtnDislike:hover {
-  background: #fecaca;
-  border-color: #fca5a5;
-  color: #991b1b;
-}
-
 .reportBtn {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #ef4444;
+  background: #ffd6dc;
+  border-color: #ffd6dc;
+  color: #ef4444 !important;
+}
+
+.reportBtn span,
+.reportBtn svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
 }
 
 .reportBtn:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #dc2626;
+  background: #ffc4cc;
+  border-color: #ffc4cc;
 }
 
-/* ===== Dark mode ===== */
-:global(.dark) .title {
+/* DARK MODE */
+
+:global(html.dark) .title {
   color: #ffffff;
 }
 
-:global(.dark) .subject {
+:global(html.dark) .subject {
   color: #00d4ff;
 }
 
-:global(.dark) .description {
+:global(html.dark) .description {
   background: #0f172a;
   border-color: #334155;
   color: #cbd5e1;
 }
 
-:global(.dark) .infoLabel {
+:global(html.dark) .infoLabel {
   color: #94a3b8;
 }
 
-:global(.dark) .infoValue {
+:global(html.dark) .infoValue,
+:global(html.dark) .authorName {
   color: #ffffff;
 }
 
-:global(.dark) .authorName {
+:global(html.dark) .likeStat,
+:global(html.dark) .dislikeStat {
   color: #ffffff;
 }
 
-:global(.dark) .likeStat,
-:global(.dark) .dislikeStat {
-  color: #ffffff;
+:global(html.dark) .likeIcon {
+  color: #22c55e;
+  stroke: #22c55e;
 }
 
-:global(.dark) .likeIcon { color: #22c55e; }
-:global(.dark) .dislikeIcon { color: #ef4444; }
+:global(html.dark) .dislikeIcon {
+  color: #ef4444;
+  stroke: #ef4444;
+}
 
-:global(.dark) .ratio {
+:global(html.dark) .ratio {
   color: #94a3b8;
 }
 
-:global(.dark) .divider {
+:global(html.dark) .divider {
   background: #334155;
 }
 
-:global(.dark) .actionBtn {
+:global(html.dark) .actionBtn {
   background: #0f172a;
-  border-color: #334155;
-  color: #cbd5e1;
+  border-color: #0f172a;
+  color: #ffffff !important;
 }
 
-:global(.dark) .actionBtn:hover {
-  background: #1e293b;
-  border-color: #475569;
+:global(html.dark) .actionBtn span,
+:global(html.dark) .actionBtn svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
-:global(.dark) .actionBtnLike {
-  background: rgba(16, 185, 129, 0.18);
-  border-color: rgba(16, 185, 129, 0.4);
-  color: #22c55e;
+:global(html.dark) .actionBtn:hover {
+  background: #111827;
+  border-color: #111827;
 }
 
-:global(.dark) .actionBtnLike:hover {
-  background: rgba(16, 185, 129, 0.28);
-  border-color: rgba(16, 185, 129, 0.6);
-  color: #22c55e;
+:global(html.dark) .reportBtn {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.28);
+  color: #ef4444 !important;
 }
 
-:global(.dark) .actionBtnDislike {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #ef4444;
+:global(html.dark) .reportBtn span,
+:global(html.dark) .reportBtn svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
 }
 
-:global(.dark) .actionBtnDislike:hover {
-  background: rgba(239, 68, 68, 0.3);
-  border-color: rgba(239, 68, 68, 0.6);
-  color: #ef4444;
-}
-
-:global(.dark) .reportBtn {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #ef4444;
-}
-
-:global(.dark) .reportBtn:hover {
-  background: rgba(239, 68, 68, 0.22);
-  border-color: rgba(239, 68, 68, 0.55);
-  color: #ef4444;
+:global(html.dark) .reportBtn:hover {
+  background: rgba(239, 68, 68, 0.38);
+  border-color: rgba(239, 68, 68, 0.38);
 }
 
