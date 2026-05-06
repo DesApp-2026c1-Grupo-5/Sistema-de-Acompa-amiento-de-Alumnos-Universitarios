@@ -69,14 +69,34 @@
   gap: 14px;
 }
 
+.moreBtn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #020617 !important;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moreBtn:hover {
+  opacity: 0.8;
+}
+
 .socialBtn {
   height: 34px;
   padding: 0 14px;
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #526987;
+  color: #020617 !important;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -85,8 +105,10 @@
 
 .socialBtn:hover {
   background: #e6fbff;
-  color: #00a8ad;
+  color: #00a8ad !important;
 }
+
+/* DARK MODE */
 
 :global(html.dark) .section {
   background: #1e293b;
@@ -94,17 +116,26 @@
 }
 
 :global(html.dark) .title,
-:global(html.dark) .author {
+:global(html.dark) .author,
+:global(html.dark) .content {
   color: #ffffff !important;
 }
 
-:global(html.dark) .date,
-:global(html.dark) .socialBtn {
+:global(html.dark) .date {
   color: #94a3b8;
 }
 
-:global(html.dark) .content {
+:global(html.dark) .moreBtn {
   color: #ffffff !important;
+}
+
+:global(html.dark) .socialBtn {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .socialBtn:hover {
+  background: rgba(0, 168, 173, 0.18);
+  color: #00d4ff !important;
 }
 
 :global(html.dark) .publication {

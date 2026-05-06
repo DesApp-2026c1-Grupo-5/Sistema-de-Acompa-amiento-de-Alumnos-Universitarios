@@ -82,7 +82,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #ffffff;
-  color: #020617;
+  color: #020617 !important;
   cursor: pointer;
   font-size: 14px;
   font-weight: 700;
@@ -111,5 +111,5 @@
 :global(html.dark) .btnIgnore {
   background: transparent;
   border-color: #475569;
-  color: #ffffff;
+  color: #ffffff !important;
 }

@@ -84,14 +84,19 @@
   padding: 0 16px;
   border-radius: 10px;
   border: 1px solid #00bcd4;
-  background: #e6fbff;
-  color: #008fa1;
+  background: #ffffff;
+  color: #020617 !important;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
   font-size: 15px;
   font-weight: 700;
+}
+
+.btnPublico svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
 }
 
 .btnEdit,
@@ -207,7 +212,12 @@
 :global(html.dark) .btnPublico {
   background: transparent;
   border-color: #00cfe8;
-  color: #00cfe8;
+  color: #ffffff !important;
+}
+
+:global(html.dark) .btnPublico svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 :global(html.dark) .btnEdit {

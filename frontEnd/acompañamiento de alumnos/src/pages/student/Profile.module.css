@@ -84,3 +84,31 @@
 :global(html.dark) .aboutCard p {
   color: #ffffff !important;
 }
+
+/* =========================================
+   PERFIL - BOTON PUBLICO
+========================================= */
+
+:global(.variant_primarySoft) {
+  background: #ffffff !important;
+  color: #020617 !important;
+  border: 1px solid #00cfe8 !important;
+}
+
+:global(.variant_primarySoft svg) {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+:global(html.dark) :global(.variant_primarySoft),
+:global(.dark) :global(.variant_primarySoft) {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid #00cfe8 !important;
+}
+
+:global(html.dark) :global(.variant_primarySoft svg),
+:global(.dark) :global(.variant_primarySoft svg) {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}

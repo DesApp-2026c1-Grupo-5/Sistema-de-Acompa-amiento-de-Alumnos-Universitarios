@@ -23,7 +23,7 @@
 .linkBtn {
   border: none;
   background: transparent;
-  color: #00a8ad;
+  color: #020617 !important;
   cursor: pointer;
   font-size: 14px;
   font-weight: 700;
@@ -66,5 +66,5 @@
 }
 
 :global(html.dark) .linkBtn {
-  color: #00cfe8;
+  color: #ffffff !important;
 }
