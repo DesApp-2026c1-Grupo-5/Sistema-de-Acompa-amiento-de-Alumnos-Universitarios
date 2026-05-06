@@ -110,7 +110,7 @@
   border: none;
   background: transparent;
   padding: 0 16px 16px;
-  color: #526987;
+  color: #020617 !important;
   font-weight: 800;
   font-size: 16px;
   cursor: pointer;
@@ -118,7 +118,7 @@
 }
 
 .auth-tabs button.active {
-  color: #08aeb8;
+  color: #020617 !important;
 }
 
 .auth-tabs button.active::after {

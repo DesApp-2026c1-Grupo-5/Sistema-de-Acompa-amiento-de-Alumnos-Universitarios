@@ -30,7 +30,7 @@
   box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
+/*@media (prefers-color-scheme: dark) {
   :root {
     --text: #a0aec0;
     --text-h: #e6fffa;
@@ -49,7 +49,7 @@
   #social .button-icon {
     filter: invert(1) brightness(2);
   }
-}
+}*/
 
 /* Manual dark mode toggle - matches Figma mockup */
 html.dark {
