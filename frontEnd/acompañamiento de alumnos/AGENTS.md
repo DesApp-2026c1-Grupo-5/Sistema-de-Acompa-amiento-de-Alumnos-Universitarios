@@ -53,6 +53,7 @@ src/
 - Use components from `src/components/common/` before creating new ones
 - Use CSS modules (`*.module.css`) for page-specific styles, not Tailwind utility classes
 - Use separate JSON files for mock data (e.g., `pageNameData.json`)
+- Use `lucide-react` for icons (already installed)
 
 ## Current Gaps
 
