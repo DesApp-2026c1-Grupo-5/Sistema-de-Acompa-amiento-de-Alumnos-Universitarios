@@ -10,7 +10,7 @@ import SituacionAcademica from '../pages/student/SituacionAcademica';
 import AcademicAssistant from '../pages/student/AcademicAssistant';
 import StudySessions from '../pages/student/StudySessions';
 import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
-import HomeAdmin from '../pages/admin/HomeAdmin';
+import HomeAdmin from '../pages/admin/Home/HomeAdmin';
 import Careers from '../pages/admin/Careers';
 import StudyPlan from '../pages/admin/StudyPlan';
 import Reports from '../pages/admin/Reports';
