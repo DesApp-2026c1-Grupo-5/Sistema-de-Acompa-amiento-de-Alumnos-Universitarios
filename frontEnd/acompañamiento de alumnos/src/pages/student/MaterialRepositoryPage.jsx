@@ -144,15 +144,7 @@ function MaterialRepositoryPage() {
           onReport={(m) => setReportMaterial(m)}
           userVote={userVotes[detailMaterial.id]}
         />
-      )}
-
-      {reportMaterial && (
-        <ReportModal
-          material={reportMaterial}
-          onClose={() => setReportMaterial(null)}
-          onSubmit={handleReportSubmit}
-        />
-      )}
+      )}d
     </div>
   );
 }
