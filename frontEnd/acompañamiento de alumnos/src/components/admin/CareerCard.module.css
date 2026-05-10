@@ -49,11 +49,14 @@
 }
 
 .menuButton:hover {
-  background: var(--color-soft);
+  background: var(--accent-bg);
 }
 
 .menuButton svg {
-  color: var(--text-muted);
+  stroke: grey !important;
+}
+:global(html.dark) .menuButton svg {
+  stroke: grey !important;
 }
 
 .cardMeta {
@@ -126,7 +129,7 @@
 
 .transicion {
   background: rgba(234, 179, 8, 0.2);
-  color: var(--text-h);
+  color: #ca8a04;
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
@@ -140,4 +143,7 @@
   display: flex;
   gap: 0.5rem;
   padding-top: 0.5rem;
+  margin-top: auto;
 }
+
+

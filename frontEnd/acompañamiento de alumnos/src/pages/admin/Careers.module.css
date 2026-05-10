@@ -80,7 +80,7 @@
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
-  background: linear-gradient(to bottom right, var(--color-soft-blue), rgba(0, 105, 92, 0.1));
+  background: var(--accent-bg);
   display: flex;
   align-items: center;
   justify-content: center;
