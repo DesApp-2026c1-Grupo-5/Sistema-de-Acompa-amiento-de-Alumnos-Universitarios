@@ -1,0 +1,308 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  background: var(--background-color);
+}
+
+.card {
+  width: 100%;
+  max-width: 760px;
+
+  background: var(--card-background);
+
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+
+  overflow: hidden;
+}
+
+.header {
+  height: 84px;
+  padding: 0 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header h1 {
+  margin: 0;
+
+  font-size: 32px;
+  font-weight: 700;
+
+  color: #0f172a;
+}
+
+.closeButton {
+  width: 42px;
+  height: 42px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #0f172a !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.content {
+  padding: 32px 28px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.material {
+  margin: 0;
+
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.material span {
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.field select,
+.field textarea {
+  width: 100%;
+
+  border: 1px solid #dbe2ea;
+  border-radius: 14px;
+
+  background: #ffffff;
+  color: #0f172a;
+
+  font-size: 15px;
+
+  outline: none;
+
+  transition: 0.2s ease;
+
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.08),
+    0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.field select {
+  height: 54px;
+  padding: 0 18px;
+}
+
+.field textarea {
+  min-height: 150px;
+  padding: 18px;
+  resize: none;
+}
+
+.field select:focus,
+.field textarea:focus {
+  border-color: #22c7d6;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 199, 214, 0.15);
+}
+
+.footer {
+  height: 92px;
+  padding: 0 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+
+  border-top: 1px solid var(--border-color);
+}
+
+.cancelButton {
+  height: 48px;
+  padding: 0 22px;
+
+  border: none;
+  background: transparent;
+
+  color: #0f172a !important;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.cancelButton:hover {
+  text-decoration: underline;
+}
+
+.submitButton {
+  height: 48px;
+  padding: 0 28px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #ef7d8b;
+  color: #7f1d1d !important;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.submitButton:hover {
+  background: #ec6f80;
+}
+
+.loading {
+  padding: 40px;
+  color: var(--text-color);
+}
+
+/* Dark mode */
+:global(.dark) .page,
+:global(.dark-mode) .page,
+:global([data-theme='dark']) .page {
+  background: #0f172a;
+}
+
+:global(.dark) .card,
+:global(.dark-mode) .card,
+:global([data-theme='dark']) .card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .header,
+:global(.dark-mode) .header,
+:global([data-theme='dark']) .header {
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .header h1,
+:global(.dark-mode) .header h1,
+:global([data-theme='dark']) .header h1 {
+  color: #ffffff;
+}
+
+:global(.dark) .closeButton,
+:global(.dark-mode) .closeButton,
+:global([data-theme='dark']) .closeButton {
+  color: #ffffff !important;
+}
+
+:global(.dark) .closeButton:hover,
+:global(.dark-mode) .closeButton:hover,
+:global([data-theme='dark']) .closeButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .material,
+:global(.dark-mode) .material,
+:global([data-theme='dark']) .material {
+  color: #9db3d6;
+}
+
+:global(.dark) .material span,
+:global(.dark-mode) .material span,
+:global([data-theme='dark']) .material span {
+  color: #b7c8e6;
+}
+
+:global(.dark) .field label,
+:global(.dark-mode) .field label,
+:global([data-theme='dark']) .field label {
+  color: #ffffff;
+}
+
+:global(.dark) .field select,
+:global(.dark-mode) .field select,
+:global([data-theme='dark']) .field select,
+:global(.dark) .field textarea,
+:global(.dark-mode) .field textarea,
+:global([data-theme='dark']) .field textarea {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #ffffff;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+:global(.dark) .field select:focus,
+:global(.dark-mode) .field select:focus,
+:global([data-theme='dark']) .field select:focus,
+:global(.dark) .field textarea:focus,
+:global(.dark-mode) .field textarea:focus,
+:global([data-theme='dark']) .field textarea:focus {
+  border-color: #22c7d6;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 199, 214, 0.2);
+}
+
+:global(.dark) .field textarea::placeholder,
+:global(.dark-mode) .field textarea::placeholder,
+:global([data-theme='dark']) .field textarea::placeholder {
+  color: #94a3b8;
+}
+
+:global(.dark) .footer,
+:global(.dark-mode) .footer,
+:global([data-theme='dark']) .footer {
+  border-top-color: #334155;
+}
+
+:global(.dark) .cancelButton,
+:global(.dark-mode) .cancelButton,
+:global([data-theme='dark']) .cancelButton {
+  color: #ffffff !important;
+}
+
+:global(.dark) .submitButton,
+:global(.dark-mode) .submitButton,
+:global([data-theme='dark']) .submitButton {
+  background: #ef7d8b;
+  color: #7f1d1d !important;
+}

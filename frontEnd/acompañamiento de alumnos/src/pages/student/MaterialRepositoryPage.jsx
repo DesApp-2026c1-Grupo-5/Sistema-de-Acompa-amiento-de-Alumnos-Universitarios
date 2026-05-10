@@ -4,7 +4,6 @@ import SearchBar from '../../components/materials/SearchBar';
 import MaterialGrid from '../../components/materials/MaterialGrid';
 import UploadMaterialModal from '../../components/materials/UploadMaterialModal';
 import MaterialDetailModal from '../../components/materials/MaterialDetailModal';
-import ReportModal from '../../components/materials/ReportModal';
 import Button from '../../components/common/Button';
 import { initialMaterials } from './materials/mockData';
 import { filterMaterials } from './materials/helpers';
@@ -145,15 +144,7 @@ function MaterialRepositoryPage() {
           onReport={(m) => setReportMaterial(m)}
           userVote={userVotes[detailMaterial.id]}
         />
-      )}
-
-      {reportMaterial && (
-        <ReportModal
-          material={reportMaterial}
-          onClose={() => setReportMaterial(null)}
-          onSubmit={handleReportSubmit}
-        />
-      )}
+      )}d
     </div>
   );
 }

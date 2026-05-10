@@ -134,8 +134,9 @@
 }
 
 .variant_outline .label,
-.variant_outline .icon {
-  color: var(--text);
+.variant_outline .icon svg {
+  color: var(--text-h) !important;
+  stroke: var(--text-h) !important;
 }
 
 .variant_outline:hover:not(:disabled) {
@@ -260,5 +261,26 @@
 
 .variant_primarySoft:hover:not(:disabled) {
   background: #92dfe4;
+}
+
+/* ------------------------- */
+
+.variant_gradient {
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  color: #ffffff;
+}
+
+.variant_gradient .label,
+.variant_gradient .icon {
+  color: #ffffff;
+}
+
+.variant_gradient svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+.variant_gradient:hover:not(:disabled) {
+  filter: brightness(1.1);
 }
 

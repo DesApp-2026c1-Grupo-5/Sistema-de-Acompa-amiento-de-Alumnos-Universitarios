@@ -283,3 +283,14 @@
   border-color: rgba(239, 68, 68, 0.38);
 }
 
+.reportBtn {
+  background: #fde2e4;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+
+  transition: 0.2s ease;
+}
+
+.reportBtn:hover {
+  background: #fecdd3;
+}

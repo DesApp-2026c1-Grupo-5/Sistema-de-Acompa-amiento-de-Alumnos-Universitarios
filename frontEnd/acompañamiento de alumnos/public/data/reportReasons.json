@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "nombre": "Contenido inapropiado"
+  },
+  {
+    "id": 2,
+    "nombre": "Lenguaje ofensivo"
+  },
+  {
+    "id": 3,
+    "nombre": "Derechos de autor"
+  },
+  {
+    "id": 4,
+    "nombre": "Spam"
+  },
+  {
+    "id": 5,
+    "nombre": "Información incorrecta"
+  },
+  {
+    "id": 6,
+    "nombre": "Otro"
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "resumen": {
+    "avance": 65,
+    "materiasAprobadas": 28,
+    "materiasRegularizadas": 5,
+    "materiasPendientes": 12,
+    "creditosObtenidos": 168,
+    "creditosTotales": 260
+  },
+  "materias": [
+    {
+      "id": 1,
+      "nombre": "Algoritmos y Estructuras de Datos I",
+      "estado": "Aprobada",
+      "anio": 1,
+      "cuatrimestre": 1,
+      "nota": 8,
+      "tieneCreditos": true,
+      "creditos": 6
+    },
+    {
+      "id": 2,
+      "nombre": "Análisis Matemático I",
+      "estado": "Aprobada",
+      "anio": 1,
+      "cuatrimestre": 1,
+      "nota": 7,
+      "tieneCreditos": true,
+      "creditos": 6
+    },
+    {
+      "id": 3,
+      "nombre": "Programación Orientada a Objetos",
+      "estado": "Regularizada",
+      "anio": 2,
+      "cuatrimestre": 1,
+      "nota": null,
+      "tieneCreditos": true,
+      "creditos": 6
+    },
+    {
+      "id": 4,
+      "nombre": "Base de Datos",
+      "estado": "Regularizada",
+      "anio": 2,
+      "cuatrimestre": 2,
+      "nota": null,
+      "tieneCreditos": true,
+      "creditos": 8
+    },
+    {
+      "id": 5,
+      "nombre": "Redes y Comunicaciones",
+      "estado": "Pendiente",
+      "anio": 3,
+      "cuatrimestre": 1,
+      "nota": null,
+      "tieneCreditos": false,
+      "creditos": null
+    }
+  ]
+}

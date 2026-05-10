@@ -6,16 +6,17 @@ import { adminLinks } from '../components/navbar/AdminNavbar';
 import { studentLinks } from '../components/navbar/StudentNavbar';
 import HomeStudent from '../pages/student/HomeStudent';
 import Profile from '../pages/student/Profile';
-import AcademicStatus from '../pages/student/AcademicStatus';
+import SituacionAcademica from '../pages/student/SituacionAcademica';
 import AcademicAssistant from '../pages/student/AcademicAssistant';
 import StudySessions from '../pages/student/StudySessions';
 import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
-import HomeAdmin from '../pages/admin/HomeAdmin';
+import HomeAdmin from '../pages/admin/Home/HomeAdmin';
 import Careers from '../pages/admin/Careers';
 import StudyPlan from '../pages/admin/StudyPlan';
 import Reports from '../pages/admin/Reports';
 import Admins from '../pages/admin/Admins';
 import Statistics from '../pages/admin/Statistics';
+import ReportMaterial from '../pages/student/ReportMaterial';
 
 const router = createBrowserRouter([
   {
@@ -43,7 +44,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/student/academic-status',
-        element: <AcademicStatus />,
+        element: <SituacionAcademica />,
       },
       {
         path: '/student/academic-assistant',
@@ -52,6 +53,10 @@ const router = createBrowserRouter([
       {
         path: '/student/study-sessions',
         element: <StudySessions />,
+      },
+      {
+        path: '/student/report-material/:id',
+        element: <ReportMaterial />,
       },
     ],
   },
