@@ -262,3 +262,24 @@
   background: #92dfe4;
 }
 
+/* ------------------------- */
+
+.variant_gradient {
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  color: #ffffff;
+}
+
+.variant_gradient .label,
+.variant_gradient .icon {
+  color: #ffffff;
+}
+
+.variant_gradient svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+.variant_gradient:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
