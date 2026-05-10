@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import CareerCard from '../../components/admin/CareerCard';
@@ -60,6 +61,12 @@ const careersData = [
 ];
 
 function Careers() {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredCareers = careersData.filter((career) =>
+    career.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className={styles.container}>
       <PageTitle
@@ -73,11 +80,13 @@ function Careers() {
           type="text"
           placeholder="Buscar carrera..."
           className={styles.searchInput}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
       <div className={styles.grid}>
-        {careersData.map((career) => (
+        {filteredCareers.map((career) => (
           <CareerCard key={career.id} career={career} />
         ))}
 
