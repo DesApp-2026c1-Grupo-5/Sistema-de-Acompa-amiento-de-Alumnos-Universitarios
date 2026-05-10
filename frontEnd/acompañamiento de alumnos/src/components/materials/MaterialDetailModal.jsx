@@ -1,4 +1,5 @@
 import { ThumbsUp, ThumbsDown, Flag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
 import {
@@ -17,6 +18,8 @@ function MaterialDetailModal({
   onReport,
   userVote = null,
 }) {
+  const navigate = useNavigate();
+
   if (!material) return null;
 
   const ratio = calcRatio(material.likes, material.dislikes);
@@ -95,6 +98,7 @@ function MaterialDetailModal({
             <ThumbsUp size={18} />
             <span>Me gusta</span>
           </button>
+
           <button
             type="button"
             className={`${styles.actionBtn} ${userVote === 'dislike' ? styles.actionBtnDislike : ''}`}
@@ -103,10 +107,14 @@ function MaterialDetailModal({
             <ThumbsDown size={18} />
             <span>No me gusta</span>
           </button>
+
           <button
             type="button"
             className={`${styles.actionBtn} ${styles.reportBtn}`}
-            onClick={() => onReport?.(material)}
+            onClick={() => {
+              onClose?.();
+              navigate(`/student/report-material/${material.id}`);
+            }}
           >
             <Flag size={18} />
             <span>Denunciar</span>
