@@ -50,6 +50,8 @@ src/
 
 ## Notes
 
+- **NO editar `src/index.css`** - contiene las variables CSS globales del proyecto
+- Para dark mode usar las variables CSS existentes (`--bg`, `--text-h`, `--text-muted`, `--border`, `--color-soft`, etc.) que cambian automáticamente en `html.dark`
 - The app uses layouts that include Header and Navbar (e.g., `DashboardLayout`) - do not add them manually to pages
 - Use components from `src/components/common/` before creating new ones
 - Use CSS modules (`*.module.css`) for page-specific styles, not Tailwind utility classes

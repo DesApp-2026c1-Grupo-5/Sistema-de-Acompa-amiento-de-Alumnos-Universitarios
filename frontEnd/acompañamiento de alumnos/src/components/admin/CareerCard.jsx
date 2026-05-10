@@ -1,4 +1,5 @@
 import { Eye, SquarePen, MoreVertical } from 'lucide-react';
+import Button from '../common/Button';
 import styles from './CareerCard.module.css';
 
 function CareerCard({ career, onViewPlan, onEdit }) {
@@ -44,14 +45,23 @@ function CareerCard({ career, onViewPlan, onEdit }) {
       </div>
 
       <div className={styles.cardActions}>
-        <button className={styles.viewButton} onClick={() => onViewPlan?.(career)}>
-          <Eye size={16} />
+        <Button
+          variant="gradient"
+          size="sm"
+          fullWidth
+          iconLeft={<Eye size={16} />}
+          onClick={() => onViewPlan?.(career)}
+        >
           Ver plan activo
-        </button>
-        <button className={styles.editButton} onClick={() => onEdit?.(career)}>
-          <SquarePen size={16} />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          iconLeft={<SquarePen size={16} />}
+          onClick={() => onEdit?.(career)}
+        >
           Editar
-        </button>
+        </Button>
       </div>
     </div>
   );
