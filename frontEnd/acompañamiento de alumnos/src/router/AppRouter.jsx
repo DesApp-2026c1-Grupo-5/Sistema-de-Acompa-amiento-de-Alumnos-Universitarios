@@ -6,7 +6,7 @@ import { adminLinks } from '../components/navbar/AdminNavbar';
 import { studentLinks } from '../components/navbar/StudentNavbar';
 import HomeStudent from '../pages/student/HomeStudent';
 import Profile from '../pages/student/Profile';
-import AcademicStatus from '../pages/student/AcademicStatus';
+import SituacionAcademica from '../pages/student/SituacionAcademica';
 import AcademicAssistant from '../pages/student/AcademicAssistant';
 import StudySessions from '../pages/student/StudySessions';
 import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/student/academic-status',
-        element: <AcademicStatus />,
+        element: <SituacionAcademica />,
       },
       {
         path: '/student/academic-assistant',

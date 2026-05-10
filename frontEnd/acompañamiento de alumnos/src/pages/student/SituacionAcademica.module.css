@@ -1,0 +1,415 @@
+.page {
+  width: 100%;
+  padding: 18px 38px 40px;
+  background: #ffffff;
+  color: #020617;
+}
+
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.pageHeader h1 {
+  margin: 0 0 6px;
+  font-size: 25px;
+  font-weight: 700;
+  color: #020617;
+}
+
+.pageHeader p {
+  margin: 0;
+  font-size: 13px;
+  color: #405a7a;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 13px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  min-height: 106px;
+  position: relative;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.statCard strong {
+  position: absolute;
+  top: 26px;
+  right: 20px;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 700;
+  color: #020617;
+}
+
+.statCard small {
+  margin-left: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #405a7a;
+}
+
+.statCard span {
+  position: absolute;
+  left: 20px;
+  bottom: 21px;
+  font-size: 11px;
+  color: #405a7a;
+}
+
+.creditsCard {
+  grid-column: span 2;
+}
+
+.iconBox {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.iconPrimary {
+  background: #06a9b5;
+  color: #ffffff;
+}
+
+.iconSuccess {
+  background: #bbf7d0;
+  color: #16a34a;
+}
+
+.iconWarning {
+  background: #fdecc8;
+  color: #f59e0b;
+}
+
+.iconDanger {
+  background: #fecdd3;
+  color: #ef4444;
+}
+
+.tableCard {
+  padding: 20px 20px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 27px;
+}
+
+.tableHeader h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #020617;
+}
+
+.updateButton {
+  height: 35px;
+  padding: 0 16px;
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #000000 !important;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  transition: 0.2s ease;
+}
+
+.updateButton:hover {
+  background: #f8fafc;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.primaryButton,
+.secondaryButton,
+.addButton {
+  height: 32px;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton {
+  padding: 0 21px;
+  background: #08aeb8;
+  color: #ffffff;
+}
+
+.secondaryButton {
+  height: 32px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 9px;
+
+  background: #f1f5f9;
+  color: #000000 !important;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background: #e2e8f0;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 0 14px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  color: #405a7a;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table td {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #020617;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.table th:first-child,
+.table td:first-child {
+  width: 250px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 9px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.badgeAprobada {
+  background: #bbf7d0;
+  color: #16a34a;
+  border: 1px solid #86efac;
+}
+
+.badgeRegularizada {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+}
+
+.badgePendiente {
+  background: #fecdd3;
+  color: #ef4444;
+  border: 1px solid #fda4af;
+}
+
+.formRow input,
+.formRow select {
+  width: 100%;
+  max-width: 175px;
+  height: 25px;
+  padding: 0 11px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 11px;
+  outline: none;
+}
+
+.formRow select {
+  max-width: 95px;
+}
+
+.addButton {
+  margin-top: 14px;
+  padding: 0 16px;
+  background: #08aeb8;
+  color: #ffffff;
+}
+
+.loading {
+  padding: 30px;
+  color: #020617;
+}
+
+@media (max-width: 900px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .creditsCard {
+    grid-column: span 1;
+  }
+
+  .page {
+    padding: 18px;
+  }
+}
+
+.table input,
+.table select {
+  height: 25px;
+  padding: 0 11px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 11px;
+  outline: none;
+}
+
+.table input {
+  width: 100%;
+  max-width: 130px;
+}
+
+.table select {
+  width: 100%;
+  max-width: 95px;
+  cursor: pointer;
+}
+
+:global(.dark) .page,
+:global(.dark-mode) .page,
+:global([data-theme='dark']) .page {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(.dark) .pageHeader h1,
+:global(.dark-mode) .pageHeader h1,
+:global([data-theme='dark']) .pageHeader h1 {
+  color: #ffffff;
+}
+
+:global(.dark) .pageHeader p,
+:global(.dark-mode) .pageHeader p,
+:global([data-theme='dark']) .pageHeader p {
+  color: #b7c8e6;
+}
+
+:global(.dark) .statCard,
+:global(.dark-mode) .statCard,
+:global([data-theme='dark']) .statCard,
+:global(.dark) .tableCard,
+:global(.dark-mode) .tableCard,
+:global([data-theme='dark']) .tableCard {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .statCard strong,
+:global(.dark-mode) .statCard strong,
+:global([data-theme='dark']) .statCard strong {
+  color: #ffffff;
+}
+
+:global(.dark) .statCard span,
+:global(.dark-mode) .statCard span,
+:global([data-theme='dark']) .statCard span,
+:global(.dark) .statCard small,
+:global(.dark-mode) .statCard small,
+:global([data-theme='dark']) .statCard small {
+  color: #b7c8e6;
+}
+
+:global(.dark) .tableHeader h2,
+:global(.dark-mode) .tableHeader h2,
+:global([data-theme='dark']) .tableHeader h2 {
+  color: #ffffff;
+}
+
+:global(.dark) .updateButton,
+:global(.dark-mode) .updateButton,
+:global([data-theme='dark']) .updateButton {
+  background: #1e293b;
+  border-color: #334155;
+  color: #ffffff !important;
+}
+
+:global(.dark) .secondaryButton,
+:global(.dark-mode) .secondaryButton,
+:global([data-theme='dark']) .secondaryButton {
+  background: #334155;
+  color: #ffffff !important;
+}
+
+:global(.dark) .table th,
+:global(.dark-mode) .table th,
+:global([data-theme='dark']) .table th {
+  color: #b7c8e6;
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .table td,
+:global(.dark-mode) .table td,
+:global([data-theme='dark']) .table td {
+  color: #ffffff;
+  border-bottom-color: #334155;
+}
+
+:global(.dark) .table input,
+:global(.dark-mode) .table input,
+:global([data-theme='dark']) .table input,
+:global(.dark) .table select,
+:global(.dark-mode) .table select,
+:global([data-theme='dark']) .table select {
+  background: #0f172a;
+  border-color: #1e293b;
+  color: #ffffff;
+}
+
+:global(.dark) .table input::placeholder,
+:global(.dark-mode) .table input::placeholder,
+:global([data-theme='dark']) .table input::placeholder {
+  color: #94a3b8;
+}
