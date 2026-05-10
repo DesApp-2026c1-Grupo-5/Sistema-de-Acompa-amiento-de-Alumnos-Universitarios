@@ -134,8 +134,9 @@
 }
 
 .variant_outline .label,
-.variant_outline .icon {
-  color: var(--text);
+.variant_outline .icon svg {
+  color: var(--text-h) !important;
+  stroke: var(--text-h) !important;
 }
 
 .variant_outline:hover:not(:disabled) {
