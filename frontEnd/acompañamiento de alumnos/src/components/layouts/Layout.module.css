@@ -33,10 +33,10 @@
 
 /* Dark Mode */
 
-html.dark .layout {
+:global(html.dark) .layout {
   background: #0f172a;
 }
 
-html.dark .layout__content {
+:global(html.dark) .layout__content {
   background: #0f172a;
 }
