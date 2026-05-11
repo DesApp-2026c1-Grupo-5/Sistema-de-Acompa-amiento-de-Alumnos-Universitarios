@@ -1,6 +1,24 @@
+/**
+ * BACKEND TODO:
+ * - GET /api/study-plans - Listar todos los planes de estudio
+ * - GET /api/study-plans/:id - Obtener plan por ID con sus materias
+ * - POST /api/study-plans - Crear nuevo plan (recibe careerId, planYear, conditions, subjects[])
+ * - PUT /api/study-plans/:id - Actualizar plan completo (conditions + subjects)
+ * - DELETE /api/study-plans/:id - Eliminar plan
+ * - POST /api/study-plans/:id/subjects - Agregar materia al plan
+ * - PUT /api/study-plans/:id/subjects/:code - Actualizar materia
+ * - DELETE /api/study-plans/:id/subjects/:code - Eliminar materia
+ * - GET /api/careers - Listar carreras (para mostrar en selector)
+ * 
+ * Estructura de datos esperada:
+ * - studyPlan: { id, careerId, careerName, planYear, status, conditions: {...}, subjects: [...] }
+ * - conditions: { englishRequired, englishCertification, electiveCredits, electiveLabel, unahurSubjects, unahurLabel }
+ * - subject: { code, name, year, semester, type, correlatives: [], credits }
+ */
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X } from 'lucide-react';
+import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X, Check } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
@@ -13,6 +31,11 @@ function StudyPlan() {
   const [selectedYear, setSelectedYear] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectToDelete, setSubjectToDelete] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedSubjects, setEditedSubjects] = useState(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [pendingDeleteCode, setPendingDeleteCode] = useState(null);
 
   const state = location.state || {};
   const { careerId, planYear } = state;
@@ -32,14 +55,45 @@ function StudyPlan() {
       .catch(() => setLoading(false));
   }, [careerId, planYear]);
 
+  const handleStartEdit = () => {
+    setEditedSubjects(studyPlan.subjects.map(s => ({ ...s })));
+    setIsEditing(true);
+  };
+
+  const handleSaveAll = () => {
+    setShowSaveModal(true);
+  };
+
+  const confirmSave = () => {
+    setStudyPlan({ ...studyPlan, subjects: editedSubjects });
+    setEditedSubjects(null);
+    setIsEditing(false);
+    setShowSaveModal(false);
+  };
+
+  const handleDiscardAll = () => {
+    setShowDiscardModal(true);
+  };
+
+  const confirmDiscard = () => {
+    setEditedSubjects(null);
+    setIsEditing(false);
+    setShowDiscardModal(false);
+  };
+
   const handleDeleteSubject = (code) => {
     setSubjectToDelete(code);
   };
 
   const confirmDeleteSubject = () => {
-    if (subjectToDelete && studyPlan) {
-      const updatedSubjects = studyPlan.subjects.filter(s => s.code !== subjectToDelete);
-      setStudyPlan({ ...studyPlan, subjects: updatedSubjects });
+    if (subjectToDelete) {
+      if (isEditing && editedSubjects) {
+        const updated = editedSubjects.filter(s => s.code !== subjectToDelete);
+        setEditedSubjects(updated);
+      } else if (studyPlan) {
+        const updatedSubjects = studyPlan.subjects.filter(s => s.code !== subjectToDelete);
+        setStudyPlan({ ...studyPlan, subjects: updatedSubjects });
+      }
       setSubjectToDelete(null);
     }
   };
@@ -48,13 +102,27 @@ function StudyPlan() {
     setSubjectToDelete(null);
   };
 
-  const filteredSubjects = studyPlan?.subjects?.filter(subject => {
+  const handleEditedFieldChange = (code, field, value) => {
+    setEditedSubjects(editedSubjects.map(s => 
+      s.code === code ? { ...s, [field]: value } : s
+    ));
+  };
+
+  const handleEditedCorrelativesChange = (code, value) => {
+    setEditedSubjects(editedSubjects.map(s => 
+      s.code === code ? { ...s, correlatives: value.split(',').map(s => s.trim()).filter(s => s) } : s
+    ));
+  };
+
+  const subjectsToFilter = isEditing && editedSubjects ? editedSubjects : studyPlan?.subjects || [];
+
+  const filteredSubjects = subjectsToFilter.filter(subject => {
     const matchesYear = selectedYear === 0 || subject.year === selectedYear;
     const matchesSearch = searchTerm === '' || 
       subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       subject.code.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesYear && matchesSearch;
-  }) || [];
+  });
 
   const getTypeBadgeClass = (type) => {
     return type === 'Obligatoria' ? styles.typeBadgeMandatory : styles.typeBadgeOptional;
@@ -135,6 +203,23 @@ function StudyPlan() {
         </div>
       </div>
 
+      <div className={styles.editActions}>
+        {isEditing ? (
+          <>
+            <Button variant="outlineSoft" iconLeft={<X size={16} />} onClick={handleDiscardAll}>
+              Descartar
+            </Button>
+            <Button variant="gradient" iconLeft={<Check size={16} />} onClick={handleSaveAll}>
+              Guardar
+            </Button>
+          </>
+        ) : (
+          <Button variant="outlineSoft" iconLeft={<FilePen size={16} />} onClick={handleStartEdit}>
+            Editar plan
+          </Button>
+        )}
+      </div>
+
       <div className={styles.filters}>
         <div className={styles.filterButtons}>
           <Button 
@@ -179,60 +264,138 @@ function StudyPlan() {
                 <th>Tipo</th>
                 <th>Correlativas</th>
                 <th>Créditos</th>
-                <th>Acciones</th>
+                {isEditing && <th>Acciones</th>}
               </tr>
             </thead>
             <tbody>
               {filteredSubjects.length > 0 ? (
-                filteredSubjects.map(subject => (
-                  <tr key={subject.code}>
-                    <td>
-                      <span className={styles.code}>{subject.code}</span>
-                    </td>
-                    <td>
-                      <span className={styles.subjectName}>{subject.name}</span>
-                    </td>
-                    <td>
-                      <span className={styles.year}>{subject.year}°</span>
-                    </td>
-                    <td>
-                      <span className={styles.semesterBadge}>{subject.semester}</span>
-                    </td>
-                    <td>
-                      <span className={`${styles.typeBadge} ${getTypeBadgeClass(subject.type)}`}>
-                        {subject.type}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.correlatives}>
-                        {subject.correlatives.length > 0 ? (
-                          subject.correlatives.map(corr => (
-                            <span key={corr} className={styles.correlativeTag}>{corr}</span>
-                          ))
+                filteredSubjects.map(subject => {
+                  const displaySubject = isEditing && editedSubjects 
+                    ? editedSubjects.find(s => s.code === subject.code) 
+                    : subject;
+                  
+                  return (
+                    <tr key={subject.code}>
+                      <td>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className={styles.editInput}
+                            value={displaySubject.code}
+                            onChange={(e) => handleEditedFieldChange(subject.code, 'code', e.target.value)}
+                          />
                         ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          <span className={styles.code}>{subject.code}</span>
                         )}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={styles.credits}>{subject.credits}</span>
-                    </td>
-                    <td>
-                      <div className={styles.actions}>
-                        <Button variant="iconSquare" title="Editar" iconLeft={<SquarePen size={16} />} />
-                        <Button 
-                          variant="iconSquareDanger" 
-                          title="Eliminar" 
-                          iconLeft={<Trash2 size={16} />}
-                          onClick={() => handleDeleteSubject(subject.code)}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className={styles.editInput}
+                            value={displaySubject.name}
+                            onChange={(e) => handleEditedFieldChange(subject.code, 'name', e.target.value)}
+                          />
+                        ) : (
+                          <span className={styles.subjectName}>{subject.name}</span>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <select
+                            className={styles.editSelect}
+                            value={displaySubject.year}
+                            onChange={(e) => handleEditedFieldChange(subject.code, 'year', parseInt(e.target.value))}
+                          >
+                            {[1, 2, 3, 4, 5].map(y => (
+                              <option key={y} value={y}>{y}°</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className={styles.year}>{subject.year}°</span>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <select
+                            className={styles.editSelect}
+                            value={displaySubject.semester}
+                            onChange={(e) => handleEditedFieldChange(subject.code, 'semester', e.target.value)}
+                          >
+                            <option value="Cuatrimestral">Cuatrimestral</option>
+                            <option value="Anual">Anual</option>
+                          </select>
+                        ) : (
+                          <span className={styles.semesterBadge}>{subject.semester}</span>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <select
+                            className={styles.editSelect}
+                            value={displaySubject.type}
+                            onChange={(e) => handleEditedFieldChange(subject.code, 'type', e.target.value)}
+                          >
+                            <option value="Obligatoria">Obligatoria</option>
+                            <option value="Optativa">Optativa</option>
+                          </select>
+                        ) : (
+                          <span className={`${styles.typeBadge} ${getTypeBadgeClass(subject.type)}`}>
+                            {subject.type}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className={styles.editInput}
+                            value={displaySubject.correlatives.join(', ')}
+                            onChange={(e) => handleEditedCorrelativesChange(subject.code, e.target.value)}
+                            placeholder="INF101, INF102"
+                          />
+                        ) : (
+                          <div className={styles.correlatives}>
+                            {subject.correlatives.length > 0 ? (
+                              subject.correlatives.map(corr => (
+                                <span key={corr} className={styles.correlativeTag}>{corr}</span>
+                              ))
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>—</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            className={styles.editInput}
+                            value={displaySubject.credits}
+                            onChange={(e) => handleEditedFieldChange(subject.code, 'credits', parseInt(e.target.value) || 0)}
+                          />
+                        ) : (
+                          <span className={styles.credits}>{subject.credits}</span>
+                        )}
+                      </td>
+                      {isEditing && (
+                        <td>
+                          <div className={styles.actions}>
+                            <Button 
+                              variant="iconSquareDanger" 
+                              title="Eliminar" 
+                              iconLeft={<Trash2 size={16} />}
+                              onClick={() => handleDeleteSubject(subject.code)}
+                            />
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="8" className={styles.emptyState}>
+                  <td colSpan={isEditing ? 8 : 7} className={styles.emptyState}>
                     No se encontraron materias
                   </td>
                 </tr>
@@ -259,11 +422,47 @@ function StudyPlan() {
         }
       >
         <p>¿Estás seguro de que deseas eliminar esta materia del plan de estudios?</p>
-        {subjectToDelete && (
-          <p className={styles.deleteWarning}>
-            Esta acción no se puede deshacer.
-          </p>
-        )}
+      </Modal>
+
+      <Modal
+        open={showSaveModal}
+        title="Guardar cambios"
+        onClose={() => setShowSaveModal(false)}
+        size="sm"
+        footer={
+          <div className={styles.modalFooter}>
+            <Button variant="outline" onClick={() => setShowSaveModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="gradient" onClick={confirmSave}>
+              Guardar
+            </Button>
+          </div>
+        }
+      >
+        <p>¿Estás seguro de que deseas guardar los cambios realizados en el plan de estudios?</p>
+      </Modal>
+
+      <Modal
+        open={showDiscardModal}
+        title="Descartar cambios"
+        onClose={() => setShowDiscardModal(false)}
+        size="sm"
+        footer={
+          <div className={styles.modalFooter}>
+            <Button variant="outline" onClick={() => setShowDiscardModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="dangerSolid" onClick={confirmDiscard}>
+              Descartar
+            </Button>
+          </div>
+        }
+      >
+        <p>¿Estás seguro de que deseas descartar todos los cambios realizados?</p>
+        <p className={styles.deleteWarning}>
+          Esta acción no se puede deshacer.
+        </p>
       </Modal>
     </div>
   );
