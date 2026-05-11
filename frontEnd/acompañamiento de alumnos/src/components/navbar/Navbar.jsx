@@ -1,15 +1,15 @@
 import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
-import './Navbar.css';
+import styles from './Navbar.module.css';
 
 function Navbar({ brand, links = [], onClose }) {
   return (
-    <nav className="navbar">
-      <div className="navbar__header">
-        <span className="navbar__brand">{brand}</span>
+    <nav className={styles.navbar}>
+      <div className={styles.navbar__header}>
+        <span className={styles.navbar__brand}>{brand}</span>
 
         <button
-          className="navbar__close"
+          className={styles.navbar__close}
           onClick={onClose}
           aria-label="Cerrar menú"
         >
@@ -17,7 +17,7 @@ function Navbar({ brand, links = [], onClose }) {
         </button>
       </div>
 
-      <ul className="navbar__list">
+      <ul className={styles.navbar__list}>
         {links.map((link) => {
           const Icon = link.icon;
 
@@ -26,7 +26,7 @@ function Navbar({ brand, links = [], onClose }) {
               <NavLink
                 to={link.path}
                 className={({ isActive }) =>
-                  `navbar__link ${isActive ? 'navbar__link--active' : ''}`
+                  `${styles.navbar__link}${isActive ? ' ' + styles['navbar__link--active'] : ''}`
                 }
               >
                 {Icon && <Icon size={20} />}
