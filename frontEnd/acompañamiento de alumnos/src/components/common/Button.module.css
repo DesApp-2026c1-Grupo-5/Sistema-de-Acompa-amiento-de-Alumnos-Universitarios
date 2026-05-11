@@ -349,12 +349,12 @@
 
 .variant_iconSquare .label,
 .variant_iconSquare .icon {
-  color: grey!important;
+  color: var(--text-muted);
 }
 
 .variant_iconSquare svg {
-  color: grey !important;
-  stroke: grey !important;
+  color: var(--text-muted);
+  stroke: var(--text-muted);
 }
 
 .variant_iconSquare:hover:not(:disabled) {

@@ -52,6 +52,7 @@ src/
 
 - **NO editar `src/index.css`** - contiene las variables CSS globales del proyecto
 - Para dark mode usar las variables CSS existentes (`--bg`, `--text-h`, `--text-muted`, `--border`, `--color-soft`, etc.) que cambian automáticamente en `html.dark`
+- **NO usar `:global()` en CSS modules** - Las reglas globales afectan a toda la aplicación y pueden romper componentes en modo oscuro. Usar siempre selectores con prefijo de clase (ej: `:global(html.dark) .miComponente button`)
 - The app uses layouts that include Header and Navbar (e.g., `DashboardLayout`) - do not add them manually to pages
 - Use components from `src/components/common/` before creating new ones
 - Use CSS modules (`*.module.css`) for page-specific styles, not Tailwind utility classes

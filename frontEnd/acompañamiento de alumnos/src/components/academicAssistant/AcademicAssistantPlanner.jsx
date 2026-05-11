@@ -12,8 +12,9 @@ function AcademicAssistantPlanner() {
   };
 
   return (
-    <Card>
-      <h3 className={styles.title}>Planificador de cursada</h3>
+    <div className={styles.planner}>
+      <Card>
+        <h3 className={styles.title}>Planificador de cursada</h3>
       <label className={styles.label}>
         Horas disponibles por semana
         <input
@@ -26,7 +27,8 @@ function AcademicAssistantPlanner() {
       <Button variant="primary" onClick={handleGenerate} iconLeft={<Calendar size={20} />}>
         Generar plan
       </Button>
-    </Card>
+      </Card>
+    </div>
   );
 }
 
