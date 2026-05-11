@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen } from 'lucide-react';
+import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
+import Modal from '../../components/common/Modal';
 import styles from './StudyPlan.module.css';
 
 function StudyPlan() {
@@ -11,6 +12,7 @@ function StudyPlan() {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [subjectToDelete, setSubjectToDelete] = useState(null);
 
   const state = location.state || {};
   const { careerId, planYear } = state;
@@ -21,12 +23,30 @@ function StudyPlan() {
       .then((data) => {
         if (careerId && planYear) {
           const plan = data.find(p => p.careerId === careerId && p.planYear === planYear);
-          setStudyPlan(plan || null);
+          if (plan) {
+            setStudyPlan({ ...plan, subjects: [...plan.subjects] });
+          }
         }
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [careerId, planYear]);
+
+  const handleDeleteSubject = (code) => {
+    setSubjectToDelete(code);
+  };
+
+  const confirmDeleteSubject = () => {
+    if (subjectToDelete && studyPlan) {
+      const updatedSubjects = studyPlan.subjects.filter(s => s.code !== subjectToDelete);
+      setStudyPlan({ ...studyPlan, subjects: updatedSubjects });
+      setSubjectToDelete(null);
+    }
+  };
+
+  const cancelDeleteSubject = () => {
+    setSubjectToDelete(null);
+  };
 
   const filteredSubjects = studyPlan?.subjects?.filter(subject => {
     const matchesYear = selectedYear === 0 || subject.year === selectedYear;
@@ -200,7 +220,12 @@ function StudyPlan() {
                     <td>
                       <div className={styles.actions}>
                         <Button variant="iconSquare" title="Editar" iconLeft={<SquarePen size={16} />} />
-                        <Button variant="iconSquareDanger" title="Eliminar" iconLeft={<Trash2 size={16} />} />
+                        <Button 
+                          variant="iconSquareDanger" 
+                          title="Eliminar" 
+                          iconLeft={<Trash2 size={16} />}
+                          onClick={() => handleDeleteSubject(subject.code)}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -216,6 +241,30 @@ function StudyPlan() {
           </table>
         </div>
       </div>
+
+      <Modal
+        open={subjectToDelete !== null}
+        title="Eliminar materia"
+        onClose={cancelDeleteSubject}
+        size="sm"
+        footer={
+          <div className={styles.modalFooter}>
+            <Button variant="outline" onClick={cancelDeleteSubject}>
+              Cancelar
+            </Button>
+            <Button variant="dangerSolid" onClick={confirmDeleteSubject}>
+              Eliminar
+            </Button>
+          </div>
+        }
+      >
+        <p>¿Estás seguro de que deseas eliminar esta materia del plan de estudios?</p>
+        {subjectToDelete && (
+          <p className={styles.deleteWarning}>
+            Esta acción no se puede deshacer.
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }

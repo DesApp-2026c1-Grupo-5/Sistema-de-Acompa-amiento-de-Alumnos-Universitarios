@@ -364,8 +364,40 @@
 .variant_iconSquare:hover:not(:disabled) .label,
 .variant_iconSquare:hover:not(:disabled) .icon,
 .variant_iconSquare:hover:not(:disabled) svg {
-  color: var(--text);
-  stroke: var(--text);
+  color: #ef4444;
+  stroke: #ef4444;
+}
+
+/* variant_iconSquareDanger: Red delete button */
+.variant_iconSquareDanger {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 0.5rem;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.variant_iconSquareDanger .label,
+.variant_iconSquareDanger .icon {
+  color: var(--text-muted);
+}
+
+.variant_iconSquareDanger svg {
+  color: var(--text-muted);
+  stroke: var(--text-muted);
+}
+
+.variant_iconSquareDanger:hover:not(:disabled) {
+  background: var(--accent-bg);
+}
+
+.variant_iconSquareDanger:hover:not(:disabled) .label,
+.variant_iconSquareDanger:hover:not(:disabled) .icon,
+.variant_iconSquareDanger:hover:not(:disabled) svg {
+  color: #ef4444;
+  stroke: #ef4444;
 }
 
 .variant_iconSquareDanger:hover:not(:disabled) svg {
