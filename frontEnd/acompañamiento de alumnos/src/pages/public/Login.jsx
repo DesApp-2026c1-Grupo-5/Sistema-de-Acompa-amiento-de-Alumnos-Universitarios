@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/common/Button";
-import "../../styles/login.css";
+import styles from "../../styles/login.module.css";
 
 const MOCK_USERS = [
   {
@@ -66,10 +66,10 @@ const Login = () => {
   };
 
   return (
-    <section className="auth-page">
-      <div className="auth-left">
-        <div className="auth-left__content">
-          <div className="auth-logo">S</div>
+    <section className={styles.authPage}>
+      <div className={styles.authLeft}>
+        <div className={styles.authLeft__content}>
+          <div className={styles.authLogo}>S</div>
 
           <h1>Bienvenido a SIVA UNAHUR</h1>
 
@@ -78,40 +78,40 @@ const Login = () => {
             objetivos académicos.
           </p>
 
-          <div className="auth-benefits">
-            <div className="auth-benefit">
+          <div className={styles.authBenefits}>
+            <div className={styles.authBenefit}>
               <span>✓</span>
               <p>Planificador académico inteligente</p>
             </div>
 
-            <div className="auth-benefit">
+            <div className={styles.authBenefit}>
               <span>✓</span>
               <p>Sesiones de estudio colaborativas</p>
             </div>
 
-            <div className="auth-benefit">
+            <div className={styles.authBenefit}>
               <span>✓</span>
               <p>Repositorio de materiales académicos</p>
             </div>
           </div>
 
-          <div className="auth-demo-users">
+          <div className={styles.authDemoUsers}>
             <p><strong>Usuario estudiante:</strong> estudiante@siva.com / 123456</p>
             <p><strong>Usuario admin:</strong> admin@siva.com / admin123</p>
           </div>
         </div>
       </div>
 
-      <div className="auth-right">
-        <Link to="/" className="auth-back">
+      <div className={styles.authRight}>
+        <Link to="/" className={styles.authBack}>
           ← Volver
         </Link>
 
-        <div className="auth-form-wrapper">
-          <div className="auth-tabs">
+        <div className={styles.authFormWrapper}>
+          <div className={styles.authTabs}>
             <button
               type="button"
-              className={activeTab === "login" ? "active" : ""}
+              className={activeTab === "login" ? styles.active : ""}
               onClick={() => setActiveTab("login")}
             >
               Iniciar sesión
@@ -119,7 +119,7 @@ const Login = () => {
 
             <button
               type="button"
-              className={activeTab === "register" ? "active" : ""}
+              className={activeTab === "register" ? styles.active : ""}
               onClick={() => setActiveTab("register")}
             >
               Registrarse
@@ -127,11 +127,11 @@ const Login = () => {
           </div>
 
           {activeTab === "login" ? (
-            <form className="auth-form" onSubmit={handleLoginSubmit}>
-              <div className="auth-field">
+            <form className={styles.authForm} onSubmit={handleLoginSubmit}>
+              <div className={styles.authField}>
                 <label>Email</label>
 
-                <div className="auth-input">
+                <div className={styles.authInput}>
                   <span>✉</span>
                   <input
                     type="email"
@@ -144,10 +144,10 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="auth-field">
+              <div className={styles.authField}>
                 <label>Contraseña</label>
 
-                <div className="auth-input">
+                <div className={styles.authInput}>
                   <span>🔒</span>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -160,7 +160,7 @@ const Login = () => {
 
                   <button
                     type="button"
-                    className="auth-password-toggle"
+                    className={styles.authPasswordToggle}
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? "🙈" : "👁"}
@@ -168,33 +168,33 @@ const Login = () => {
                 </div>
               </div>
 
-              {loginError && <p className="auth-error">{loginError}</p>}
+              {loginError && <p className={styles.authError}>{loginError}</p>}
 
-              <button type="submit" className="auth-submit">
+              <button type="submit" className={styles.authSubmit}>
                 Iniciar sesión
               </button>
             </form>
           ) : (
-            <form className="auth-form">
-              <div className="auth-field">
+            <form className={styles.authForm}>
+              <div className={styles.authField}>
                 <label>Nombre completo</label>
-                <div className="auth-input">
+                <div className={styles.authInput}>
                   <span>👤</span>
                   <input type="text" placeholder="Juan Pérez" />
                 </div>
               </div>
 
-              <div className="auth-field">
+              <div className={styles.authField}>
                 <label>Email</label>
-                <div className="auth-input">
+                <div className={styles.authInput}>
                   <span>✉</span>
                   <input type="email" placeholder="tu@email.com" />
                 </div>
               </div>
 
-              <div className="auth-field">
+              <div className={styles.authField}>
                 <label>Contraseña</label>
-                <div className="auth-input">
+                <div className={styles.authInput}>
                   <span>🔒</span>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -203,7 +203,7 @@ const Login = () => {
 
                   <button
                     type="button"
-                    className="auth-password-toggle"
+                    className={styles.authPasswordToggle}
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? "🙈" : "👁"}

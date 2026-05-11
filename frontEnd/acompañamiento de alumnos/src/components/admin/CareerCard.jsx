@@ -1,8 +1,31 @@
+import { useNavigate } from 'react-router-dom';
 import { Eye, SquarePen, MoreVertical } from 'lucide-react';
 import Button from '../common/Button';
 import styles from './CareerCard.module.css';
 
-function CareerCard({ career, onViewPlan, onEdit }) {
+function CareerCard({ career }) {
+  const navigate = useNavigate();
+
+  const handleViewPlan = () => {
+    const activePlan = career.plans.find(p => p.status === 'Vigente') || career.plans[0];
+    navigate('/admin/study-plan', { 
+      state: { 
+        careerId: career.id, 
+        planYear: activePlan.year 
+      } 
+    });
+  };
+
+  const handleEdit = () => {
+    const activePlan = career.plans.find(p => p.status === 'Vigente') || career.plans[0];
+    navigate('/admin/study-plan', { 
+      state: { 
+        careerId: career.id, 
+        planYear: activePlan.year 
+      } 
+    });
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -50,7 +73,7 @@ function CareerCard({ career, onViewPlan, onEdit }) {
           size="sm"
           fullWidth
           iconLeft={<Eye size={16} />}
-          onClick={() => onViewPlan?.(career)}
+          onClick={handleViewPlan}
         >
           Ver plan activo
         </Button>
@@ -58,7 +81,7 @@ function CareerCard({ career, onViewPlan, onEdit }) {
           variant="outline"
           size="sm"
           iconLeft={<SquarePen size={16} />}
-          onClick={() => onEdit?.(career)}
+          onClick={handleEdit}
         >
           Editar
         </Button>

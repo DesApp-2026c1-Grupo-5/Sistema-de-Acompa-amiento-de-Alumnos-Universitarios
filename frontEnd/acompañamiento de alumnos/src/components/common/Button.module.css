@@ -284,3 +284,124 @@
   filter: brightness(1.1);
 }
 
+/* ===== Study Plan variants ===== */
+
+/* variant_outlineSoft: Secondary actions like "Nuevo plan", "Editar condiciones" */
+.variant_outlineSoft {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.variant_outlineSoft .label,
+.variant_outlineSoft .icon svg {
+  color: var(--text-h)!important;
+  stroke: var(--text-h)!important;
+}
+
+.variant_outlineSoft:hover:not(:disabled) {
+  background: var(--accent-bg);
+  border-color: var(--border);
+}
+
+/* variant_filter: Year filter buttons */
+.variant_filter {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--border);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.variant_filter .label,
+.variant_filter .icon {
+  color: var(--text);
+}
+
+.variant_filter:hover:not(:disabled) {
+  background: var(--accent-bg);
+}
+
+.variant_filterActive {
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.variant_filterActive .label,
+.variant_filterActive .icon {
+  color: #ffffff;
+}
+
+.variant_filterActive:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* variant_iconSquare: Square icon buttons for table actions */
+.variant_iconSquare {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: none;
+}
+
+.variant_iconSquare .label,
+.variant_iconSquare .icon {
+  color: var(--text-muted);
+}
+
+.variant_iconSquare svg {
+  color: var(--text-muted);
+  stroke: var(--text-muted);
+}
+
+.variant_iconSquare:hover:not(:disabled) {
+  background: var(--accent-bg);
+}
+
+.variant_iconSquare:hover:not(:disabled) .label,
+.variant_iconSquare:hover:not(:disabled) .icon,
+.variant_iconSquare:hover:not(:disabled) svg {
+  color: #ef4444;
+  stroke: #ef4444;
+}
+
+/* variant_iconSquareDanger: Red delete button */
+.variant_iconSquareDanger {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 0.5rem;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.variant_iconSquareDanger .label,
+.variant_iconSquareDanger .icon {
+  color: var(--text-muted);
+}
+
+.variant_iconSquareDanger svg {
+  color: var(--text-muted);
+  stroke: var(--text-muted);
+}
+
+.variant_iconSquareDanger:hover:not(:disabled) {
+  background: var(--accent-bg);
+}
+
+.variant_iconSquareDanger:hover:not(:disabled) .label,
+.variant_iconSquareDanger:hover:not(:disabled) .icon,
+.variant_iconSquareDanger:hover:not(:disabled) svg {
+  color: #ef4444;
+  stroke: #ef4444;
+}
+
+.variant_iconSquareDanger:hover:not(:disabled) svg {
+  color: #ef4444;
+  stroke: #ef4444;
+}
+

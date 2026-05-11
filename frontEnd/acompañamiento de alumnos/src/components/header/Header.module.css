@@ -49,7 +49,7 @@
   gap: 10px;
 }
 
-.header__brand-logo {
+.header__brandLogo {
   width: 34px;
   height: 34px;
   border-radius: 999px;
@@ -59,12 +59,12 @@
   place-items: center;
 }
 
-.header__brand-logo svg {
+.header__brandLogo svg {
   color: #ffffff;
   stroke: #ffffff;
 }
 
-.header__brand-text {
+.header__brandText {
   color: #020617;
   font-size: 16px;
   font-weight: 800;
@@ -76,7 +76,7 @@
   gap: 14px;
 }
 
-.header__icon-btn {
+.header__iconBtn {
   width: 36px;
   height: 36px;
   border: none;
@@ -88,21 +88,21 @@
   cursor: pointer;
 }
 
-.header__icon-btn svg {
+.header__iconBtn svg {
   color: #020617;
   stroke: #020617;
 }
 
-.header__icon-btn:hover {
+.header__iconBtn:hover {
   color: #00a8ad;
 }
 
-.header__icon-btn:hover svg {
+.header__iconBtn:hover svg {
   color: #00a8ad;
   stroke: #00a8ad;
 }
 
-.header__notification-dot {
+.header__notificationDot {
   position: absolute;
   top: 8px;
   right: 7px;
@@ -113,7 +113,7 @@
   z-index: 2;
 }
 
-.header__user-btn {
+.header__userBtn {
   width: 42px;
   height: 42px;
   border: none;
@@ -125,69 +125,69 @@
   cursor: pointer;
 }
 
-.header__user-btn svg {
+.header__userBtn svg {
   color: #ffffff;
   stroke: #ffffff;
 }
 
-.header__user-btn:hover {
+.header__userBtn:hover {
   background: #00949a;
 }
 
 /* DARK MODE */
 
-html.dark .header {
+:global(html.dark) .header {
   background: #111827;
   border-bottom-color: #334155;
   color: #ffffff;
 }
 
-html.dark .header__hamburger,
-html.dark .header__icon-btn {
+:global(html.dark) .header__hamburger,
+:global(html.dark) .header__iconBtn {
   color: #e5e7eb;
 }
 
-html.dark .header__hamburger svg,
-html.dark .header__icon-btn svg {
+:global(html.dark) .header__hamburger svg,
+:global(html.dark) .header__iconBtn svg {
   color: #e5e7eb;
   stroke: #e5e7eb;
 }
 
-html.dark .header__hamburger:hover,
-html.dark .header__icon-btn:hover {
+:global(html.dark) .header__hamburger:hover,
+:global(html.dark) .header__iconBtn:hover {
   color: #22d3ee;
 }
 
-html.dark .header__hamburger:hover svg,
-html.dark .header__icon-btn:hover svg {
+:global(html.dark) .header__hamburger:hover svg,
+:global(html.dark) .header__iconBtn:hover svg {
   color: #22d3ee;
   stroke: #22d3ee;
 }
 
-html.dark .header__brand-text {
+:global(html.dark) .header__brandText {
   color: #ffffff;
 }
 
-html.dark .header__brand-logo {
+:global(html.dark) .header__brandLogo {
   background: #00a8ad;
   color: #ffffff;
 }
 
-html.dark .header__brand-logo svg {
+:global(html.dark) .header__brandLogo svg {
   color: #ffffff;
   stroke: #ffffff;
 }
 
-html.dark .header__notification-dot {
+:global(html.dark) .header__notificationDot {
   background: #00a8ad;
 }
 
-html.dark .header__user-btn {
+:global(html.dark) .header__userBtn {
   background: #00a8ad;
   color: #ffffff;
 }
 
-html.dark .header__user-btn svg {
+:global(html.dark) .header__userBtn svg {
   color: #ffffff;
   stroke: #ffffff;
 }
@@ -203,13 +203,13 @@ html.dark .header__user-btn svg {
     padding: 0 20px;
   }
 
-  .header__brand-text {
+  .header__brandText {
     font-size: 15px;
   }
 }
 
-html.dark .header button,
-html.dark .header button svg {
+:global(html.dark) .header button,
+:global(html.dark) .header button svg {
   color: #e5e7eb !important;
   stroke: #e5e7eb !important;
 }

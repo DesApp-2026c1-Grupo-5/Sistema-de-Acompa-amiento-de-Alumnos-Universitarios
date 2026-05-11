@@ -63,9 +63,9 @@ button {
   border: 1px solid #e5e7eb;
 }
 
-:global(html.dark) button,
-:global(html.dark) button span,
-:global(html.dark) button svg {
+:global(html.dark) .planner button,
+:global(html.dark) .planner button span,
+:global(html.dark) .planner button svg {
   color: #020617 !important;
   stroke: #020617 !important;
 }

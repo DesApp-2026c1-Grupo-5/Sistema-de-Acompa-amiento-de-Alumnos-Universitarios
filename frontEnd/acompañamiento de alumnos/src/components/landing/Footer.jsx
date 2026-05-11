@@ -1,10 +1,12 @@
+import styles from "../../styles/landing.module.css";
+
 const Footer = () => {
   return (
-    <footer className="landing-footer">
-      <div className="landing-footer__content">
-        <div className="landing-footer__brand">
-          <div className="landing-logo">
-            <div className="landing-logo__icon">🎓</div>
+    <footer className={styles.landingFooter}>
+      <div className={styles.landingFooter__content}>
+        <div className={styles.landingFooter__brand}>
+          <div className={styles.landingLogo}>
+            <div className={styles.landingLogo__icon}>🎓</div>
             <span>SIVA UNAHUR</span>
           </div>
 
@@ -13,13 +15,13 @@ const Footer = () => {
             optimizar su trayectoria académica y conectar con su comunidad.
           </p>
 
-          <div className="landing-footer__social">
+          <div className={styles.landingFooter__social}>
             <span>𝕏</span>
             <span>Instagram</span>
           </div>
         </div>
 
-        <div className="landing-footer__bottom">
+        <div className={styles.landingFooter__bottom}>
           <p>© 2026 SIVA UNAHUR. Todos los derechos reservados.</p>
 
           <div>

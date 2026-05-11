@@ -1,0 +1,288 @@
+[
+  {
+    "id": 1,
+    "careerId": 1,
+    "careerName": "Ingeniería en Sistemas",
+    "planYear": 2023,
+    "status": "Vigente",
+    "conditions": {
+      "englishRequired": "Nivel B2",
+      "englishCertification": "Certificación internacional",
+      "electiveCredits": 12,
+      "electiveLabel": "Materias electivas",
+      "unahurSubjects": 4,
+      "unahurLabel": "Formación general"
+    },
+    "subjects": [
+      {
+        "code": "INF101",
+        "name": "Algoritmos y Estructuras de Datos I",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": [],
+        "credits": 6
+      },
+      {
+        "code": "MAT101",
+        "name": "Análisis Matemático I",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": [],
+        "credits": 6
+      },
+      {
+        "code": "INF102",
+        "name": "Programación Orientada a Objetos",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF101"],
+        "credits": 6
+      },
+      {
+        "code": "MAT102",
+        "name": "Álgebra Lineal",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["MAT101"],
+        "credits": 4
+      },
+      {
+        "code": "INF103",
+        "name": "Introducción a la Computación",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": [],
+        "credits": 4
+      },
+      {
+        "code": "INF201",
+        "name": "Algoritmos y Estructuras de Datos II",
+        "year": 2,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF101", "INF102"],
+        "credits": 6
+      },
+      {
+        "code": "INF202",
+        "name": "Bases de Datos I",
+        "year": 2,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF102"],
+        "credits": 5
+      },
+      {
+        "code": "MAT201",
+        "name": "Análisis Matemático II",
+        "year": 2,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["MAT101", "MAT102"],
+        "credits": 6
+      },
+      {
+        "code": "INF203",
+        "name": "Arquitectura de Computadoras",
+        "year": 2,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF103"],
+        "credits": 4
+      },
+      {
+        "code": "INF204",
+        "name": "Sistemas Operativos",
+        "year": 2,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF103", "INF203"],
+        "credits": 5
+      },
+      {
+        "code": "INF301",
+        "name": "Redes de Computadoras",
+        "year": 3,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF204"],
+        "credits": 5
+      },
+      {
+        "code": "INF302",
+        "name": "Ingeniería de Software I",
+        "year": 3,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF201", "INF202"],
+        "credits": 6
+      },
+      {
+        "code": "INF303",
+        "name": "Bases de Datos II",
+        "year": 3,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF202"],
+        "credits": 5
+      },
+      {
+        "code": "MAT301",
+        "name": "Probabilidad y Estadística",
+        "year": 3,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["MAT201"],
+        "credits": 4
+      },
+      {
+        "code": "INF304",
+        "name": "Compiladores",
+        "year": 3,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF201"],
+        "credits": 4
+      },
+      {
+        "code": "INF401",
+        "name": "Ingeniería de Software II",
+        "year": 4,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF302"],
+        "credits": 6
+      },
+      {
+        "code": "INF402",
+        "name": "Sistemas Distribuidos",
+        "year": 4,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF301", "INF204"],
+        "credits": 5
+      },
+      {
+        "code": "INF403",
+        "name": "Inteligencia Artificial",
+        "year": 4,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF201", "MAT301"],
+        "credits": 5
+      },
+      {
+        "code": "INF404",
+        "name": "Gestión de Proyectos",
+        "year": 4,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF302"],
+        "credits": 4
+      },
+      {
+        "code": "INF405",
+        "name": "Optativa I",
+        "year": 4,
+        "semester": "Cuatrimestral",
+        "type": "Optativa",
+        "correlatives": [],
+        "credits": 4
+      },
+      {
+        "code": "INF501",
+        "name": "Proyecto Final",
+        "year": 5,
+        "semester": "Anual",
+        "type": "Obligatoria",
+        "correlatives": ["INF401", "INF402"],
+        "credits": 12
+      },
+      {
+        "code": "INF502",
+        "name": "Ética y Profession",
+        "year": 5,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": [],
+        "credits": 3
+      },
+      {
+        "code": "INF503",
+        "name": "Seguridad Informática",
+        "year": 5,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": ["INF301", "INF402"],
+        "credits": 4
+      },
+      {
+        "code": "INF504",
+        "name": "Optativa II",
+        "year": 5,
+        "semester": "Cuatrimestral",
+        "type": "Optativa",
+        "correlatives": [],
+        "credits": 4
+      },
+      {
+        "code": "INF505",
+        "name": "Optativa III",
+        "year": 5,
+        "semester": "Cuatrimestral",
+        "type": "Optativa",
+        "correlatives": [],
+        "credits": 4
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "careerId": 2,
+    "careerName": "Licenciatura en Administración",
+    "planYear": 2022,
+    "status": "Vigente",
+    "conditions": {
+      "englishRequired": "Nivel B1",
+      "englishCertification": "Certificación internacional",
+      "electiveCredits": 8,
+      "electiveLabel": "Materias electivas",
+      "unahurSubjects": 3,
+      "unahurLabel": "Formación general"
+    },
+    "subjects": [
+      {
+        "code": "ADM101",
+        "name": "Introducción a la Administración",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": [],
+        "credits": 4
+      },
+      {
+        "code": "ECO101",
+        "name": "Economía I",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": [],
+        "credits": 4
+      },
+      {
+        "code": "MAT101",
+        "name": "Matemática para Administradores",
+        "year": 1,
+        "semester": "Cuatrimestral",
+        "type": "Obligatoria",
+        "correlatives": [],
+        "credits": 4
+      }
+    ]
+  }
+]

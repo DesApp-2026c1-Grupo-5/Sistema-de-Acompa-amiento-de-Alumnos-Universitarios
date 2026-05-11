@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from '../header/Header';
 import Navbar from '../navbar/Navbar';
-import './Layout.css';
+import styles from './Layout.module.css';
 
 function Layout({
   navbarBrand,
@@ -26,7 +26,7 @@ function Layout({
   };
 
   return (
-    <div className="layout">
+    <div className={styles.layout}>
       <Header
         brand={headerBrand}
         onMenuToggle={handleMenuToggle}
@@ -35,7 +35,7 @@ function Layout({
         isSidebarOpen={sidebarOpen}
       />
 
-      <aside className={`layout__sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`${styles.layout__sidebar}${sidebarOpen ? ' ' + styles.open : ''}`}>
         <Navbar
           brand={navbarBrand}
           links={navbarLinks}
@@ -44,10 +44,10 @@ function Layout({
       </aside>
 
       {sidebarOpen && (
-        <div className="layout__overlay" onClick={handleClose} />
+        <div className={styles.layout__overlay} onClick={handleClose} />
       )}
 
-      <main className="layout__content">
+      <main className={styles.layout__content}>
         <Outlet />
       </main>
     </div>

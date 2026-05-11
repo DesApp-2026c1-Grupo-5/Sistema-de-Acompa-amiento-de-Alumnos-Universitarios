@@ -72,7 +72,7 @@ const router = createBrowserRouter([
         element: <Careers />,
       },
       {
-        path: '/admin/study-plan',
+        path: '/admin/study-plan/:id?',
         element: <StudyPlan />,
       },
       {
