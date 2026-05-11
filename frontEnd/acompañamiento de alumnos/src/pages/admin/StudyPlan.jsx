@@ -33,6 +33,7 @@ function StudyPlan() {
   const [subjectToDelete, setSubjectToDelete] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedSubjects, setEditedSubjects] = useState(null);
+  const [editedConditions, setEditedConditions] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [pendingDeleteCode, setPendingDeleteCode] = useState(null);
@@ -66,6 +67,7 @@ function StudyPlan() {
 
   const handleStartEdit = () => {
     setEditedSubjects(studyPlan.subjects.map(s => ({ ...s })));
+    setEditedConditions({ ...studyPlan.conditions });
     setIsEditing(true);
   };
 
@@ -74,8 +76,9 @@ function StudyPlan() {
   };
 
   const confirmSave = () => {
-    setStudyPlan({ ...studyPlan, subjects: editedSubjects });
+    setStudyPlan({ ...studyPlan, subjects: editedSubjects, conditions: editedConditions });
     setEditedSubjects(null);
+    setEditedConditions(null);
     setIsEditing(false);
     setShowSaveModal(false);
   };
@@ -86,6 +89,7 @@ function StudyPlan() {
 
   const confirmDiscard = () => {
     setEditedSubjects(null);
+    setEditedConditions(null);
     setIsEditing(false);
     setShowDiscardModal(false);
     setNewSubject({
@@ -97,6 +101,10 @@ function StudyPlan() {
       correlatives: [],
       credits: 0
     });
+  };
+
+  const handleConditionChange = (field, value) => {
+    setEditedConditions({ ...editedConditions, [field]: value });
   };
 
   const handleAddNewSubject = () => {
@@ -217,32 +225,6 @@ function StudyPlan() {
         </div>
       </div>
 
-      <div className={styles.conditionsCard}>
-        <div className={styles.conditionsHeader}>
-          <h2 className={styles.conditionsTitle}>Condiciones del plan</h2>
-          <Button variant="outlineSoft" iconLeft={<FilePen size={16} />} size="sm">
-            Editar condiciones
-          </Button>
-        </div>
-        <div className={styles.conditionsGrid}>
-          <div className={styles.conditionItem}>
-            <p className={styles.conditionLabel}>Inglés requerido</p>
-            <p className={styles.conditionValue}>{studyPlan.conditions.englishRequired}</p>
-            <p className={styles.conditionHint}>{studyPlan.conditions.englishCertification}</p>
-          </div>
-          <div className={styles.conditionItem}>
-            <p className={styles.conditionLabel}>Créditos optativos</p>
-            <p className={styles.conditionValue}>{studyPlan.conditions.electiveCredits} créditos</p>
-            <p className={styles.conditionHint}>{studyPlan.conditions.electiveLabel}</p>
-          </div>
-          <div className={styles.conditionItem}>
-            <p className={styles.conditionLabel}>Materias UNAHUR</p>
-            <p className={styles.conditionValue}>{studyPlan.conditions.unahurSubjects} materias</p>
-            <p className={styles.conditionHint}>{studyPlan.conditions.unahurLabel}</p>
-          </div>
-        </div>
-      </div>
-
       <div className={styles.editActions}>
         {isEditing ? (
           <>
@@ -258,6 +240,92 @@ function StudyPlan() {
             Editar plan
           </Button>
         )}
+      </div>
+
+      <div className={styles.conditionsCard}>
+        <div className={styles.conditionsHeader}>
+          <h2 className={styles.conditionsTitle}>Condiciones del plan</h2>
+        </div>
+        <div className={styles.conditionsGrid}>
+          <div className={styles.conditionItem}>
+            <p className={styles.conditionLabel}>Inglés requerido</p>
+            {isEditing ? (
+              <>
+                <input
+                  type="text"
+                  className={styles.editInput}
+                  value={editedConditions?.englishRequired || ''}
+                  onChange={(e) => handleConditionChange('englishRequired', e.target.value)}
+                />
+                <input
+                  type="text"
+                  className={styles.editInput}
+                  placeholder="Certificación"
+                  value={editedConditions?.englishCertification || ''}
+                  onChange={(e) => handleConditionChange('englishCertification', e.target.value)}
+                  style={{ marginTop: '0.5rem' }}
+                />
+              </>
+            ) : (
+              <>
+                <p className={styles.conditionValue}>{studyPlan.conditions.englishRequired}</p>
+                <p className={styles.conditionHint}>{studyPlan.conditions.englishCertification}</p>
+              </>
+            )}
+          </div>
+          <div className={styles.conditionItem}>
+            <p className={styles.conditionLabel}>Créditos optativos</p>
+            {isEditing ? (
+              <>
+                <input
+                  type="number"
+                  className={styles.editInput}
+                  value={editedConditions?.electiveCredits || 0}
+                  onChange={(e) => handleConditionChange('electiveCredits', parseInt(e.target.value) || 0)}
+                />
+                <input
+                  type="text"
+                  className={styles.editInput}
+                  placeholder="Label"
+                  value={editedConditions?.electiveLabel || ''}
+                  onChange={(e) => handleConditionChange('electiveLabel', e.target.value)}
+                  style={{ marginTop: '0.5rem' }}
+                />
+              </>
+            ) : (
+              <>
+                <p className={styles.conditionValue}>{studyPlan.conditions.electiveCredits} créditos</p>
+                <p className={styles.conditionHint}>{studyPlan.conditions.electiveLabel}</p>
+              </>
+            )}
+          </div>
+          <div className={styles.conditionItem}>
+            <p className={styles.conditionLabel}>Materias UNAHUR</p>
+            {isEditing ? (
+              <>
+                <input
+                  type="number"
+                  className={styles.editInput}
+                  value={editedConditions?.unahurSubjects || 0}
+                  onChange={(e) => handleConditionChange('unahurSubjects', parseInt(e.target.value) || 0)}
+                />
+                <input
+                  type="text"
+                  className={styles.editInput}
+                  placeholder="Label"
+                  value={editedConditions?.unahurLabel || ''}
+                  onChange={(e) => handleConditionChange('unahurLabel', e.target.value)}
+                  style={{ marginTop: '0.5rem' }}
+                />
+              </>
+            ) : (
+              <>
+                <p className={styles.conditionValue}>{studyPlan.conditions.unahurSubjects} materias</p>
+                <p className={styles.conditionHint}>{studyPlan.conditions.unahurLabel}</p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className={styles.filters}>
