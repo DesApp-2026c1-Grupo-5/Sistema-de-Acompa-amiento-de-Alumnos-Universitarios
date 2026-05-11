@@ -1,13 +1,13 @@
 /* AUTH PAGE */
 
-.auth-page {
+.authPage {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
   background: #ffffff;
 }
 
-.auth-left {
+.authLeft {
   background: #e6fbff;
   display: flex;
   align-items: center;
@@ -15,11 +15,11 @@
   padding: 48px;
 }
 
-.auth-left__content {
+.authLeft__content {
   max-width: 520px;
 }
 
-.auth-logo {
+.authLogo {
   width: 80px;
   height: 80px;
   border-radius: 18px;
@@ -32,34 +32,34 @@
   margin-bottom: 28px;
 }
 
-.auth-left h1 {
+.authLeft h1 {
   margin: 0 0 18px;
   font-size: 34px;
   line-height: 1.15;
   color: #0f172a;
 }
 
-.auth-left > div > p {
+.authLeft > div > p {
   margin: 0;
   color: #55708d;
   font-size: 19px;
   line-height: 1.6;
 }
 
-.auth-benefits {
+.authBenefits {
   margin-top: 42px;
   display: flex;
   flex-direction: column;
   gap: 22px;
 }
 
-.auth-benefit {
+.authBenefit {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.auth-benefit span {
+.authBenefit span {
   width: 40px;
   height: 40px;
   border-radius: 999px;
@@ -71,13 +71,13 @@
   font-size: 20px;
 }
 
-.auth-benefit p {
+.authBenefit p {
   margin: 0;
   color: #0f172a;
   font-size: 17px;
 }
 
-.auth-right {
+.authRight {
   position: relative;
   display: flex;
   align-items: center;
@@ -85,7 +85,7 @@
   padding: 48px;
 }
 
-.auth-back {
+.authBack {
   position: absolute;
   top: 32px;
   left: 32px;
@@ -94,19 +94,19 @@
   font-size: 16px;
 }
 
-.auth-form-wrapper {
+.authFormWrapper {
   width: 100%;
   max-width: 460px;
 }
 
-.auth-tabs {
+.authTabs {
   display: flex;
   align-items: center;
   border-bottom: 1px solid #e5e7eb;
   margin-bottom: 34px;
 }
 
-.auth-tabs button {
+.authTabs button {
   border: none;
   background: transparent;
   padding: 0 16px 16px;
@@ -117,11 +117,11 @@
   position: relative;
 }
 
-.auth-tabs button.active {
+.authTabs button.active {
   color: #020617 !important;
 }
 
-.auth-tabs button.active::after {
+.authTabs button.active::after {
   content: "";
   position: absolute;
   height: 2px;
@@ -131,19 +131,23 @@
   background: #08aeb8;
 }
 
-.auth-form {
+.active {
+  color: #020617 !important;
+}
+
+.authForm {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-.auth-field {
+.authField {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.auth-field label {
+.authField label {
   color: #526987;
   font-weight: 800;
   font-size: 14px;
@@ -151,7 +155,7 @@
 
 /* INPUT CON ÍCONO */
 
-.auth-input {
+.authInput {
   height: 52px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -162,12 +166,12 @@
   background: white;
 }
 
-.auth-input span {
+.authInput span {
   color: #64748b;
   font-size: 18px;
 }
 
-.auth-input input {
+.authInput input {
   flex: 1;
   border: none;
   outline: none;
@@ -176,11 +180,11 @@
   background: transparent;
 }
 
-.auth-input input::placeholder {
+.authInput input::placeholder {
   color: #64748b;
 }
 
-.auth-password-toggle {
+.authPasswordToggle {
   border: none;
   background: transparent;
   cursor: pointer;
@@ -189,7 +193,7 @@
 
 /* BOTÓN ORIGINAL DEL LOGIN */
 
-.auth-submit {
+.authSubmit {
   height: 52px;
   border: none;
   border-radius: 12px;
@@ -201,58 +205,58 @@
   cursor: pointer;
 }
 
-.auth-submit:hover {
+.authSubmit:hover {
   opacity: 0.94;
 }
 
 /* RESPONSIVE */
 
 @media (max-width: 900px) {
-  .auth-page {
+  .authPage {
     grid-template-columns: 1fr;
   }
 
-  .auth-left {
+  .authLeft {
     padding: 56px 24px;
   }
 
-  .auth-right {
+  .authRight {
     padding: 72px 24px 48px;
   }
 }
 
 @media (max-width: 520px) {
-  .auth-logo {
+  .authLogo {
     width: 68px;
     height: 68px;
     font-size: 26px;
   }
 
-  .auth-left h1 {
+  .authLeft h1 {
     font-size: 28px;
   }
 
-  .auth-left > div > p {
+  .authLeft > div > p {
     font-size: 17px;
   }
 
-  .auth-benefit p {
+  .authBenefit p {
     font-size: 15px;
   }
 
-  .auth-back {
+  .authBack {
     left: 24px;
   }
 }
 
-.auth-error {
+.authError {
   margin: -8px 0 0;
   color: #dc2626;
   font-size: 14px;
   font-weight: 700;
 }
 
-.auth-demo-users {
+.authDemoUsers {
   margin-top: 32px;
   padding: 16px;
   border-radius: 12px;
@@ -260,7 +264,7 @@
   color: #0f172a;
 }
 
-.auth-demo-users p {
+.authDemoUsers p {
   margin: 6px 0;
   font-size: 14px;
 }
