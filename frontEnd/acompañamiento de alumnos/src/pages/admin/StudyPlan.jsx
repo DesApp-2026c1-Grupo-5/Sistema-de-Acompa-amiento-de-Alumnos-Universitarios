@@ -72,10 +72,7 @@ function StudyPlan() {
 
   return (
     <div className={styles.container}>
-      <PageTitle
-        title={`${studyPlan.careerName} — Plan ${studyPlan.planYear}`}
-        description="Gestión del plan de estudios"
-      />
+      
 
       <div className={styles.header}>
         <div className={styles.headerLeft}>
