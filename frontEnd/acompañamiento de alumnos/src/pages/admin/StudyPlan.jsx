@@ -36,6 +36,15 @@ function StudyPlan() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [pendingDeleteCode, setPendingDeleteCode] = useState(null);
+  const [newSubject, setNewSubject] = useState({
+    code: '',
+    name: '',
+    year: 1,
+    semester: 'Cuatrimestral',
+    type: 'Obligatoria',
+    correlatives: [],
+    credits: 0
+  });
 
   const state = location.state || {};
   const { careerId, planYear } = state;
@@ -79,6 +88,40 @@ function StudyPlan() {
     setEditedSubjects(null);
     setIsEditing(false);
     setShowDiscardModal(false);
+    setNewSubject({
+      code: '',
+      name: '',
+      year: 1,
+      semester: 'Cuatrimestral',
+      type: 'Obligatoria',
+      correlatives: [],
+      credits: 0
+    });
+  };
+
+  const handleAddNewSubject = () => {
+    if (newSubject.code && newSubject.name) {
+      const subjectToAdd = {
+        ...newSubject,
+        correlatives: typeof newSubject.correlatives === 'string' 
+          ? newSubject.correlatives.split(',').map(s => s.trim()).filter(s => s)
+          : newSubject.correlatives
+      };
+      setEditedSubjects([...editedSubjects, subjectToAdd]);
+      setNewSubject({
+        code: '',
+        name: '',
+        year: 1,
+        semester: 'Cuatrimestral',
+        type: 'Obligatoria',
+        correlatives: [],
+        credits: 0
+      });
+    }
+  };
+
+  const handleNewSubjectChange = (field, value) => {
+    setNewSubject({ ...newSubject, [field]: value });
   };
 
   const handleDeleteSubject = (code) => {
@@ -170,9 +213,6 @@ function StudyPlan() {
         <div className={styles.headerActions}>
           <Button variant="outlineSoft" iconLeft={<Plus size={16} />}>
             Nuevo plan
-          </Button>
-          <Button variant="gradient" iconLeft={<Plus size={16} />}>
-            Materia
           </Button>
         </div>
       </div>
@@ -268,6 +308,85 @@ function StudyPlan() {
               </tr>
             </thead>
             <tbody>
+              {isEditing && (
+                <tr className={styles.newSubjectRow}>
+                  <td>
+                    <input
+                      type="text"
+                      className={styles.editInput}
+                      placeholder="Código"
+                      value={newSubject.code}
+                      onChange={(e) => handleNewSubjectChange('code', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className={styles.editInput}
+                      placeholder="Nombre"
+                      value={newSubject.name}
+                      onChange={(e) => handleNewSubjectChange('name', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      className={styles.editSelect}
+                      value={newSubject.year}
+                      onChange={(e) => handleNewSubjectChange('year', parseInt(e.target.value))}
+                    >
+                      {[1, 2, 3, 4, 5].map(y => (
+                        <option key={y} value={y}>{y}°</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      className={styles.editSelect}
+                      value={newSubject.semester}
+                      onChange={(e) => handleNewSubjectChange('semester', e.target.value)}
+                    >
+                      <option value="Cuatrimestral">Cuatrimestral</option>
+                      <option value="Anual">Anual</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      className={styles.editSelect}
+                      value={newSubject.type}
+                      onChange={(e) => handleNewSubjectChange('type', e.target.value)}
+                    >
+                      <option value="Obligatoria">Obligatoria</option>
+                      <option value="Optativa">Optativa</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className={styles.editInput}
+                      placeholder="INF101, INF102"
+                      value={newSubject.correlatives}
+                      onChange={(e) => handleNewSubjectChange('correlatives', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      className={styles.editInput}
+                      placeholder="0"
+                      value={newSubject.credits}
+                      onChange={(e) => handleNewSubjectChange('credits', parseInt(e.target.value) || 0)}
+                    />
+                  </td>
+                  <td>
+                    <Button 
+                      variant="iconSquare" 
+                      title="Agregar" 
+                      iconLeft={<Plus size={16} />}
+                      onClick={handleAddNewSubject}
+                    />
+                  </td>
+                </tr>
+              )}
               {filteredSubjects.length > 0 ? (
                 filteredSubjects.map(subject => {
                   const displaySubject = isEditing && editedSubjects 
