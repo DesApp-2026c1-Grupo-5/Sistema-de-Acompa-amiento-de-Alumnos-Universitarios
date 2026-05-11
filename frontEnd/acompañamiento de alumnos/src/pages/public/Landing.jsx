@@ -4,6 +4,7 @@ import HeroSection from "../../components/landing/HeroSection";
 import FeaturesSection from "../../components/landing/FeaturesSection";
 import FunctionalitiesSection from "../../components/landing/FunctionalitiesSection";
 import Footer from "../../components/landing/Footer";
+import styles from "../../styles/landing.module.css";
 
 const Landing = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -13,7 +14,7 @@ const Landing = () => {
   };
 
   return (
-    <div className={`landing-page ${isDarkMode ? "dark-mode" : ""}`}>
+    <div className={`${styles.landingPage}${isDarkMode ? ' ' + styles.darkMode : ''}`}>
       <LandingNavbar isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
 
       <main>
