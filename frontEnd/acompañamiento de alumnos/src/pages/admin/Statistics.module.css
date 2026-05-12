@@ -1,0 +1,755 @@
+.page {
+  padding: 22px 18px 40px;
+  background: #ffffff;
+  color: #020617;
+}
+
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.pageHeader h1 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.pageHeader p {
+  margin: 0;
+  color: #405a7a;
+  font-size: 14px;
+}
+
+.filtersCard {
+  min-height: 92px;
+  padding: 18px;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  gap: 14px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterGroup label {
+  color: #405a7a;
+  font-size: 12px;
+}
+
+.filterGroup select {
+  height: 32px;
+  padding: 0 12px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #020617;
+
+  font-size: 13px;
+}
+
+.exportButton {
+  height: 32px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #08a8a8;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  cursor: pointer;
+}
+
+.tabs {
+  height: 54px;
+
+  display: flex;
+  align-items: end;
+  gap: 28px;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tabs button {
+  height: 38px;
+
+  border: none;
+  border-bottom: 2px solid transparent;
+
+  background: transparent;
+  color: #020617 !important;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.tabs .activeTab {
+  color: #00a8c7 !important;
+  border-bottom-color: #00a8c7;
+  font-weight: 700;
+}
+
+.metricsGrid {
+  margin: 20px 0 20px;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.metricCard {
+  height: 140px;
+  padding: 20px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.metricTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.metricIcon {
+  width: 38px;
+  height: 38px;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.users,
+.link {
+  background: #cffafe;
+  color: #06b6d4;
+}
+
+.file {
+  background: #e9d5ff;
+  color: #a855f7;
+}
+
+.calendar {
+  background: #bbf7d0;
+  color: #22c55e;
+}
+
+.flag {
+  background: #fecdd3;
+  color: #ef4444;
+}
+
+.chart {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.trend {
+  height: 22px;
+  padding: 0 10px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+
+  display: flex;
+  align-items: center;
+}
+
+.positive {
+  background: #bbf7d0;
+  color: #16a34a;
+}
+
+.negative {
+  background: #fecdd3;
+  color: #ef4444;
+}
+
+.metricCard strong {
+  display: block;
+  margin-bottom: 5px;
+
+  font-size: 25px;
+  color: #020617;
+}
+
+.metricCard p {
+  margin: 0;
+  font-size: 12px;
+  color: #405a7a;
+}
+
+.card,
+.chartCard {
+  margin-bottom: 20px;
+  padding: 24px 20px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.card h2,
+.chartCard h2 {
+  margin: 0 0 22px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.emptyChart {
+  height: 220px;
+
+  display: flex;
+  align-items: end;
+}
+
+.chartLabels {
+  width: 100%;
+
+  display: flex;
+  justify-content: space-around;
+
+  color: #405a7a;
+  font-size: 11px;
+}
+
+.chartFooter {
+  margin-top: 12px;
+
+  display: flex;
+  justify-content: space-between;
+
+  color: #405a7a;
+  font-size: 12px;
+}
+
+.chartFooter span:first-child::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+
+  display: inline-block;
+
+  border-radius: 999px;
+
+  background: #22c55e;
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.distributionList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.distributionHeader {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 6px;
+
+  font-size: 12px;
+}
+
+.distributionHeader span:last-child {
+  color: #405a7a;
+}
+
+.barTrack {
+  width: 46%;
+  height: 7px;
+
+  border-radius: 999px;
+
+  background: transparent;
+}
+
+.barFill {
+  height: 7px;
+
+  border-radius: 999px;
+
+  background: #00a896;
+}
+
+.careerList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.careerRow h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.careerBars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.careerBars span {
+  display: block;
+  margin-bottom: 5px;
+
+  font-size: 11px;
+  color: #405a7a;
+}
+
+.barLine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.barLine strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.barCyan,
+.barGreen {
+  height: 6px;
+
+  border-radius: 999px;
+}
+
+.barCyan {
+  background: #06b6d4;
+}
+
+.barGreen {
+  background: #22c55e;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 0 12px 12px;
+
+  text-align: left;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  color: #405a7a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.table td {
+  padding: 12px;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  font-size: 13px;
+}
+
+.positionBadge,
+.purpleBadge {
+  width: 26px;
+  height: 26px;
+
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.positionBadge {
+  background: #08a8a8;
+}
+
+.purpleBadge {
+  background: #a855f7;
+}
+
+.rating {
+  color: #22c55e;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.moderationRows {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.moderationRows p,
+.occupancyRows p {
+  margin: 0;
+
+  display: flex;
+  justify-content: space-between;
+
+  color: #405a7a;
+}
+
+.moderationRows strong {
+  font-size: 20px;
+  color: #020617;
+}
+
+.orange {
+  color: #f59e0b !important;
+}
+
+.red {
+  color: #ef4444 !important;
+}
+
+.green {
+  color: #22c55e !important;
+}
+
+.donutWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.donut,
+.occupancyDonut {
+  width: 155px;
+  height: 155px;
+
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut {
+  background: conic-gradient(#ef4444 0 30%, #22c55e 30% 100%);
+}
+
+.occupancyDonut {
+  background: conic-gradient(#06b6d4 0 78%, #f1f5f9 78% 100%);
+}
+
+.donut > div,
+.occupancyDonut > div {
+  width: 82px;
+  height: 82px;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut strong,
+.occupancyDonut strong {
+  font-size: 23px;
+}
+
+.donut span,
+.occupancyDonut span {
+  color: #405a7a;
+  font-size: 11px;
+}
+
+.legend {
+  margin-top: 18px;
+
+  display: flex;
+  justify-content: space-around;
+
+  color: #405a7a;
+  font-size: 11px;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend i {
+  width: 10px;
+  height: 10px;
+
+  border-radius: 999px;
+}
+
+.legendOrange {
+  background: #f59e0b;
+}
+
+.legendRed {
+  background: #ef4444;
+}
+
+.legendGreen {
+  background: #22c55e;
+}
+
+.occupancyRows {
+  margin-top: 18px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scoreCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scoreCell span {
+  max-width: 32px;
+  height: 6px;
+
+  border-radius: 999px;
+
+  display: block;
+
+  background: #a855f7;
+}
+
+.scoreCell strong {
+  font-size: 12px;
+}
+
+.loading {
+  padding: 30px;
+}
+
+@media (max-width: 900px) {
+  .filtersCard,
+  .metricsGrid,
+  .twoColumns,
+  .careerBars {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================= */
+/*        DARK MODE          */
+/* ========================= */
+
+:global(html.dark) .page {
+  background: #081226;
+  color: #ffffff;
+}
+
+:global(html.dark) .pageHeader h1 {
+  color: #ffffff;
+}
+
+:global(html.dark) .pageHeader p {
+  color: #8aa0c2;
+}
+
+/* FILTERS */
+
+:global(html.dark) .filtersCard {
+  background: #1b2942;
+  border-color: #31415f;
+}
+
+:global(html.dark) .filterGroup label {
+  color: #9db1ce;
+}
+
+:global(html.dark) .filterGroup select {
+  background: #081226;
+  border-color: #31415f;
+  color: #ffffff;
+}
+
+:global(html.dark) .filterGroup select,
+:global(html.dark) .filterGroup select option {
+  background: #081226 !important;
+  color: #ffffff !important;
+}
+
+:global(html.dark) .filterGroup select:focus {
+  border-color: #22d3ee !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+}
+
+/* TABS */
+
+:global(html.dark) .tabs {
+  border-bottom-color: #24344f;
+}
+
+:global(html.dark) .tabs button {
+  color: #8ea5c7 !important;
+}
+
+:global(html.dark) .tabs .activeTab {
+  color: #00d2ff !important;
+  border-bottom-color: #00d2ff;
+}
+
+/* CARDS */
+
+:global(html.dark) .metricCard,
+:global(html.dark) .card,
+:global(html.dark) .chartCard {
+  background: #1b2942;
+  border-color: #31415f;
+}
+
+:global(html.dark) .metricCard strong,
+:global(html.dark) .card h2,
+:global(html.dark) .chartCard h2,
+:global(html.dark) .table td,
+:global(html.dark) .careerRow h3,
+:global(html.dark) .barLine strong,
+:global(html.dark) .scoreCell strong,
+:global(html.dark) .moderationRows strong,
+:global(html.dark) .donut strong,
+:global(html.dark) .occupancyDonut strong {
+  color: #ffffff;
+}
+
+:global(html.dark) .metricCard p,
+:global(html.dark) .distributionHeader span:last-child,
+:global(html.dark) .careerBars span,
+:global(html.dark) .table th,
+:global(html.dark) .chartLabels,
+:global(html.dark) .chartFooter,
+:global(html.dark) .legend,
+:global(html.dark) .moderationRows p,
+:global(html.dark) .occupancyRows p,
+:global(html.dark) .donut span,
+:global(html.dark) .occupancyDonut span {
+  color: #9db1ce;
+}
+
+/* TABLE */
+
+:global(html.dark) .table th,
+:global(html.dark) .table td {
+  border-bottom-color: #31415f;
+}
+
+/* BARS */
+
+:global(html.dark) .barTrack {
+  background: #081226;
+}
+
+:global(html.dark) .barCyan {
+  background: #14c8e3;
+}
+
+:global(html.dark) .barGreen {
+  background: #00d65a;
+}
+
+/* DONUTS */
+
+:global(html.dark) .donut > div,
+:global(html.dark) .occupancyDonut > div {
+  background: #1b2942;
+}
+
+/* OCCUPATION DONUT */
+
+:global(html.dark) .occupancyDonut {
+  background:
+    conic-gradient(
+      #14c8e3 0 78%,
+      #334155 78% 100%
+    );
+}
+
+/* DISTRIBUCION DONUT */
+
+:global(html.dark) .donut {
+  background:
+    conic-gradient(
+      #ff2d3f 0 30%,
+      #00d65a 30% 100%
+    );
+}
+
+/* SCORE */
+
+:global(html.dark) .scoreCell span {
+  background: #a855f7;
+}
+
+/* LEGENDS */
+
+:global(html.dark) .legendOrange {
+  background: #f59e0b;
+}
+
+:global(html.dark) .legendRed {
+  background: #ff2d3f;
+}
+
+:global(html.dark) .legendGreen {
+  background: #00d65a;
+}
+
+/* EMPTY CHARTS */
+
+:global(html.dark) .emptyChart {
+  background: transparent;
+}
+
+/* LOADING */
+
+:global(html.dark) .loading {
+  color: #ffffff;
+}
