@@ -5,20 +5,18 @@ const router = express.Router();
 const authMiddleware = require("../middlewares/auth.middleware");
 
 const materialController = require("../controllers/material.controller");
+const {
+  listarMateriales,
+  obtenerMaterialPorId,
+  crearMaterial,
+  votarMaterial,
+} = materialController;
 
-router.get("/materiales", authMiddleware, materialController.listarMateriales);
-router.get("/materiales/:id", authMiddleware, materialController.obtenerMaterialPorId);
+router.get("/materiales", authMiddleware, listarMateriales);
+router.get("/materiales/:id", authMiddleware, obtenerMaterialPorId);
 
-router.post(
-  "/materiales",
-  authMiddleware,
-  materialController.crearMaterial
-);
+router.post("/materiales", authMiddleware, crearMaterial);
 
-router.post(
-  "/materiales/votar",
-  authMiddleware,
-  materialController.votarMaterial
-);
+router.post("/materiales/votar", authMiddleware, votarMaterial);
 
 module.exports = router;
