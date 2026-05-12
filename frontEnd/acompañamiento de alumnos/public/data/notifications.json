@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "type": "academic",
+    "category": "Académica",
+    "title": "Vencimiento de regularidad próximo",
+    "message": "La regularidad de Programación II vence en 5 días. Recordá inscribirte al final antes del 30/04/2026.",
+    "date": "2026-04-20T10:00:00",
+    "read": false,
+    "actionUrl": "/student/academic-status"
+  },
+  {
+    "id": 2,
+    "type": "session",
+    "category": "Sesión",
+    "title": "Confirmación de inscripción",
+    "message": "Te inscribiste exitosamente a la sesión de estudio “Árboles binarios y recorridos” programada para el 24/04/2026 a las 18:00.",
+    "date": "2026-04-20T09:00:00",
+    "read": false,
+    "actionUrl": "/student/study-sessions"
+  },
+  {
+    "id": 3,
+    "type": "material",
+    "category": "Material",
+    "title": "Denuncia recibida",
+    "message": "Tu material “Guía completa de Árboles Binarios” recibió una denuncia por posible plagio. El equipo de moderación está revisando el caso.",
+    "date": "2026-04-19T14:30:00",
+    "read": true,
+    "actionUrl": "/student/materials"
+  },
+  {
+    "id": 4,
+    "type": "session",
+    "category": "Sesión",
+    "title": "Sesión cancelada",
+    "message": "La sesión de estudio “Protocolos TCP/IP” programada para el 26/04/2026 fue cancelada por el organizador.",
+    "date": "2026-04-19T11:15:00",
+    "read": true,
+    "actionUrl": "/student/study-sessions"
+  },
+  {
+    "id": 5,
+    "type": "material",
+    "category": "Material",
+    "title": "Resolución de denuncia",
+    "message": "La denuncia sobre tu material “Repositorio de ejercicios resueltos” fue rechazada. Tu material sigue activo.",
+    "date": "2026-04-18T16:45:00",
+    "read": true,
+    "actionUrl": "/student/materials"
+  }
+]

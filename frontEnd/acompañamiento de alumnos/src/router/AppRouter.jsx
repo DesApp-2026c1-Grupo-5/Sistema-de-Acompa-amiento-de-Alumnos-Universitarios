@@ -17,6 +17,7 @@ import Reports from '../pages/admin/Reports';
 import Admins from '../pages/admin/Admins';
 import Statistics from '../pages/admin/Statistics';
 import ReportMaterial from '../pages/student/ReportMaterial';
+import Notifications from '../pages/student/Notifications';
 
 const router = createBrowserRouter([
   {
@@ -57,6 +58,10 @@ const router = createBrowserRouter([
       {
         path: '/student/report-material/:id',
         element: <ReportMaterial />,
+      },
+      {
+        path: '/student/notifications',
+        element: <Notifications />,
       },
     ],
   },

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Menu, Bell, Moon, User, GraduationCap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 
 function Header({
@@ -8,7 +9,50 @@ function Header({
   isSidebarOpen,
   brand = 'SIVA UNAHUR',
 }) {
-  const [notifications] = useState(3);
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState(0);
+
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      try {
+        const savedNotifications = localStorage.getItem('student_notifications');
+
+        if (savedNotifications) {
+          const parsedNotifications = JSON.parse(savedNotifications);
+
+          setNotifications(
+            parsedNotifications.filter((notification) => !notification.read).length
+          );
+
+          return;
+        }
+
+        const response = await fetch('/data/notifications.json');
+
+        if (!response.ok) {
+          throw new Error('No se pudieron cargar las notificaciones');
+        }
+
+        const data = await response.json();
+
+        localStorage.setItem('student_notifications', JSON.stringify(data));
+
+        setNotifications(
+          data.filter((notification) => !notification.read).length
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadUnreadCount();
+
+    window.addEventListener('notifications-updated', loadUnreadCount);
+
+    return () => {
+      window.removeEventListener('notifications-updated', loadUnreadCount);
+    };
+  }, []);
 
   return (
     <header className={styles.header}>
@@ -33,9 +77,18 @@ function Header({
       </div>
 
       <div className={styles.header__right}>
-        <button className={styles.header__iconBtn} aria-label="Notificaciones">
+        <button
+          className={styles.header__iconBtn}
+          aria-label="Notificaciones"
+          onClick={() => navigate('/student/notifications')}
+        >
           <Bell size={20} />
-          {notifications > 0 && <span className={styles.header__notificationDot} />}
+
+          {notifications > 0 && (
+            <span className={styles.header__notificationBadge}>
+              {notifications}
+            </span>
+          )}
         </button>
 
         <button
