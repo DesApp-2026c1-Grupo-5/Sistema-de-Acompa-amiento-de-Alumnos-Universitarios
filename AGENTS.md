@@ -15,7 +15,37 @@ npm run build    # Production build
 npm run preview # Preview production build
 npm run lint     # ESLint (flat config)
 ```
+<Button
+  variant="primary"      // primary, secondary, outline, ghost, danger, dangerSolid, primarySoft, gradient, filter, filterActive, iconSquare, iconSquareDanger
+  size="md"             // sm, md, lg
+  type="button"         // button, submit, reset
+  disabled={false}
+  fullWidth={false}
+  iconLeft={null}       // elemento React (ej: <Icon size={16} />)
+  iconRight={null}
+  onClick={handler}
+>
+  Texto del botón
+</Button>
+```
 
+### ModalConfirmation (`src/components/common/ModalConfirmation.jsx`)
+Componente de modal de confirmación reutilizable.
+
+```jsx
+import ModalConfirmation from '../../components/common/ModalConfirmation';
+
+<ModalConfirmation
+  open={showModal}           // boolean - controlar visibilidad
+  title="Confirmar acción"   // titulo del modal
+  message="¿Está seguro?"   // mensaje de confirmación
+  confirmText="Confirmar"    // texto del botón confirmar
+  cancelText="Cancelar"      // texto del botón cancelar
+  onConfirm={handler}        // callback al confirmar
+  onCancel={handler}         // callback al cancelar
+  variant="danger"          // 'danger' (rojo) o 'primary' (azul)
+/>
+```
 ### Backend
 - No entry point yet (`index.js` missing). Create it and add `"dev": "nodemon index.js"` to scripts.
 - Sequelize CLI available: `npx sequelize-cli` for migrations/seeders.
