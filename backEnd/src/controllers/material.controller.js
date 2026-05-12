@@ -140,6 +140,10 @@ const crearMaterial = async (req, res, next) => {
     return next(error);
   }
 
+  const tipoNormalizado = String(tipo).trim();
+  const tituloNormalizado = String(titulo).trim();
+  const urlPathNormalizado = String(url_o_path).trim();
+
   if (size_bytes !== undefined) {
     const parsedSize = Number(size_bytes);
 
@@ -168,20 +172,25 @@ const crearMaterial = async (req, res, next) => {
     return next(error);
   }
 
-  const nuevoMaterial = await material.create({
+  const payload = {
     materia_id: materiaId,
     estudiante_id: estudianteData.id,
-    tipo,
-    titulo,
+    tipo: tipoNormalizado,
+    titulo: tituloNormalizado,
     descripcion,
-    url_o_path,
+    url_o_path: urlPathNormalizado,
     formato,
     subtipo_link,
     discord_servidor,
     discord_canal,
-    size_bytes,
     suspendido: suspendido ?? false,
-  });
+  };
+
+  if (size_bytes !== undefined) {
+    payload.size_bytes = Number(size_bytes);
+  }
+
+  const nuevoMaterial = await material.create(payload);
 
   return res.status(201).json({
     ok: true,
