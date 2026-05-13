@@ -83,11 +83,13 @@ function HomeStudent() {
 
       <div className={styles.grid}>
         <div className={styles.main}>
-          <SearchBar
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar publicaciones..."
-          />
+          <div className={styles.searchWrapper}>
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar publicaciones..."
+            />
+          </div>
 
           <CreatePostCard user={currentUser} onPublish={handlePublish} />
 
