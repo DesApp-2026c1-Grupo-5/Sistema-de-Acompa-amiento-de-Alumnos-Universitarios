@@ -43,12 +43,26 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+}
+
+.authorRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .author {
   color: #020617 !important;
   font-size: 16px;
   font-weight: 700;
+}
+
+.eventBadge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
 }
 
 .date {
@@ -101,11 +115,29 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.socialBtn svg {
+  flex-shrink: 0;
 }
 
 .socialBtn:hover {
   background: #e6fbff;
   color: #00a8ad !important;
+}
+
+.socialBtnActive {
+  background: rgba(0, 188, 212, 0.12);
+  color: #00a8ad !important;
+}
+
+.empty {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  color: #526987;
+  font-size: 14px;
 }
 
 /* DARK MODE */
@@ -136,6 +168,15 @@
 :global(html.dark) .socialBtn:hover {
   background: rgba(0, 168, 173, 0.18);
   color: #00d4ff !important;
+}
+
+:global(html.dark) .socialBtnActive {
+  background: rgba(34, 211, 238, 0.18);
+  color: #22d3ee !important;
+}
+
+:global(html.dark) .empty {
+  color: #94a3b8;
 }
 
 :global(html.dark) .publication {
