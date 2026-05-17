@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import PageTitle from '../../components/common/PageTitle';
 import SearchBar from '../../components/common/SearchBar';
-import PublicationsList from '../../components/profile/PublicationsList';
+import EmptyState from '../../components/common/EmptyState';
 import CreatePostCard from '../../components/home/CreatePostCard';
+import FeedPost from '../../components/home/FeedPost';
 import UpcomingSessionsCard from '../../components/home/UpcomingSessionsCard';
 import {
   currentUser,
@@ -10,10 +11,6 @@ import {
   upcomingSessions,
 } from './home/mockData';
 import styles from './HomeStudent.module.css';
-
-function formatTodayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function HomeStudent() {
   const [publications, setPublications] = useState(initialPublications);
@@ -39,7 +36,7 @@ function HomeStudent() {
       authorId: currentUser.id,
       authorName: currentUser.name,
       authorInitials: currentUser.initials,
-      date: formatTodayISO(),
+      createdAt: new Date().toISOString(),
       content,
       likes: 0,
       dislikes: 0,
@@ -93,18 +90,28 @@ function HomeStudent() {
 
           <CreatePostCard user={currentUser} onPublish={handlePublish} />
 
-          <PublicationsList
-            publications={filteredPublications}
-            userReactions={userReactions}
-            onLike={handleLike}
-            onDislike={handleDislike}
-            title="Feed"
-            emptyMessage={
-              searchTerm
-                ? 'No encontramos publicaciones que coincidan con tu búsqueda.'
-                : 'Todavía no hay publicaciones. ¡Sé el primero en compartir algo!'
-            }
-          />
+          <div className={styles.feed}>
+            {filteredPublications.length > 0 ? (
+              filteredPublications.map((post) => (
+                <FeedPost
+                  key={post.id}
+                  post={post}
+                  userReaction={userReactions[post.id] ?? null}
+                  onLike={handleLike}
+                  onDislike={handleDislike}
+                />
+              ))
+            ) : (
+              <EmptyState
+                title={searchTerm ? 'Sin resultados' : 'El feed está vacío'}
+                description={
+                  searchTerm
+                    ? 'No encontramos publicaciones que coincidan con tu búsqueda.'
+                    : 'Cuando vos o tus compañeros publiquen algo, aparecerá acá.'
+                }
+              />
+            )}
+          </div>
         </div>
 
         <aside className={styles.aside}>
