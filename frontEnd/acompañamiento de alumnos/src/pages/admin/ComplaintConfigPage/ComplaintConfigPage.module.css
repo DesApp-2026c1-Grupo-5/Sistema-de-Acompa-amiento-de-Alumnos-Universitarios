@@ -1,0 +1,351 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px;
+  background: #ffffff;
+  color: #020617;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.backButton {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #020617;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.header h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #020617;
+}
+
+.header p {
+  margin: 0;
+  font-size: 13px;
+  color: #405a7a;
+}
+
+.reasonCard,
+.infoCard,
+.thresholdCard {
+  padding: 20px;
+  margin-bottom: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.reasonHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.reasonHeader h2,
+.thresholdCard h2,
+.infoCard h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #020617;
+}
+
+.addButton {
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: #08a8b8;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.newReasonBox {
+  min-height: 58px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.newReasonBox input {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 13px;
+  outline: none;
+}
+
+.newReasonActions {
+  display: flex;
+  gap: 10px;
+}
+
+.reasonList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reasonItem {
+  min-height: 56px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reasonText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #020617;
+}
+
+.reasonActions {
+  display: flex;
+  gap: 12px;
+}
+
+.iconButton {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.saveButton {
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 9px;
+  background: #00c853;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancelButton {
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.thresholdGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin: 18px 0;
+}
+
+.thresholdGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #405a7a;
+  font-size: 13px;
+}
+
+.thresholdGrid input {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 14px;
+  outline: none;
+}
+
+.infoCard {
+  background: #f8fafc;
+}
+
+.infoCard ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: #405a7a;
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+/* DARK MODE */
+:global(html.dark) .page {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(html.dark) .header h1,
+:global(html.dark) .reasonHeader h2,
+:global(html.dark) .thresholdCard h2,
+:global(html.dark) .infoCard h2,
+:global(html.dark) .reasonText {
+  color: #ffffff;
+}
+
+:global(html.dark) .header p,
+:global(html.dark) .thresholdGrid label,
+:global(html.dark) .infoCard ul {
+  color: #b7c8e6;
+}
+
+:global(html.dark) .reasonCard,
+:global(html.dark) .thresholdCard,
+:global(html.dark) .infoCard,
+:global(html.dark) .reasonItem {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(html.dark) .newReasonBox {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(html.dark) .newReasonBox input,
+:global(html.dark) .thresholdGrid input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(html.dark) .backButton,
+:global(html.dark) .cancelButton {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(html.dark) .iconButton {
+  color: #b7c8e6;
+}
+
+@media (max-width: 768px) {
+  .reasonHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .newReasonBox,
+  .thresholdGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .newReasonActions {
+    justify-content: flex-end;
+  }
+}
+
+.actionButton {
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.actionButton:hover {
+  background: #f1f5f9;
+}
+
+/* LIGHT MODE */
+
+:global(html:not(.dark)) .actionButton {
+  color: #020617 !important;
+}
+
+:global(html:not(.dark)) .actionButton svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+/* DARK MODE */
+
+:global(html.dark) .actionButton {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .actionButton svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(html.dark) .actionButton:hover {
+  background: #1e293b;
+}
+
+/* CANCELAR - LIGHT MODE */
+
+:global(html:not(.dark)) .cancelButton {
+  color: #020617 !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  font-weight: 700;
+}
+
+:global(html:not(.dark)) .cancelButton:hover {
+  background: #f8fafc !important;
+}
+
+/* BOTON VOLVER - LIGHT MODE */
+
+:global(html:not(.dark)) .backButton {
+  color: #020617 !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb;
+}
+
+:global(html:not(.dark)) .backButton svg {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+:global(html:not(.dark)) .backButton:hover {
+  background: #f8fafc;
+}

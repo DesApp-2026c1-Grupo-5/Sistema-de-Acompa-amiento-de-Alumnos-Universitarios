@@ -13,11 +13,12 @@ import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
 import HomeAdmin from '../pages/admin/Home/HomeAdmin';
 import Careers from '../pages/admin/Careers';
 import StudyPlan from '../pages/admin/StudyPlan';
-import Reports from '../pages/admin/Reports';
 import Admins from '../pages/admin/Admins';
 import Statistics from '../pages/admin/Statistics';
 import ReportMaterial from '../pages/student/ReportMaterial';
 import Notifications from '../pages/student/Notifications';
+import ModerationPage from '../pages/admin/ModerationPage/ModerationPage';
+import ComplaintConfigPage from '../pages/admin/ComplaintConfigPage/ComplaintConfigPage';
 
 const router = createBrowserRouter([
   {
@@ -81,16 +82,20 @@ const router = createBrowserRouter([
         element: <StudyPlan />,
       },
       {
-        path: '/admin/reports',
-        element: <Reports />,
-      },
-      {
         path: '/admin/admins',
         element: <Admins />,
       },
       {
         path: '/admin/statistics',
         element: <Statistics />,
+      },
+      {
+        path: '/admin/moderation',
+        element: <ModerationPage />,
+      },
+      {
+        path: '/admin/complaint-config',
+        element: <ComplaintConfigPage />,
       },
     ],
   },

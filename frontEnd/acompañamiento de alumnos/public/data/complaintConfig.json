@@ -1,0 +1,33 @@
+{
+  "motivos": [
+    {
+      "id": 1,
+      "texto": "Contenido pornográfico o sexual explícito",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "texto": "Lenguaje ofensivo o insultos",
+      "activo": true
+    },
+    {
+      "id": 3,
+      "texto": "Material protegido por derechos de autor",
+      "activo": true
+    },
+    {
+      "id": 4,
+      "texto": "Spam o publicidad engañosa",
+      "activo": true
+    },
+    {
+      "id": 5,
+      "texto": "Información incorrecta o engañosa",
+      "activo": true
+    }
+  ],
+  "umbrales": {
+    "maxDenunciasPendientes": 10,
+    "maxDenunciasVerificadas": 5
+  }
+}
