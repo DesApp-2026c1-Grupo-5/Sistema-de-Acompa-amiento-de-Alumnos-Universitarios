@@ -1,3 +1,14 @@
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+
+function hoursAgo(n) {
+  return new Date(Date.now() - n * HOUR).toISOString();
+}
+
+function daysAgo(n) {
+  return new Date(Date.now() - n * DAY).toISOString();
+}
+
 export const currentUser = {
   id: 1,
   name: 'Federico García',
@@ -12,10 +23,10 @@ export const publications = [
     authorId: 2,
     authorName: 'María López',
     authorInitials: 'ML',
-    date: '2026-05-10',
-    content: '¿Alguien tiene apuntes de Bases de Datos II del parcial pasado? Estoy preparando el final y me cuesta entender normalización.',
-    likes: 12,
-    dislikes: 1,
+    createdAt: hoursAgo(2),
+    content: '¡Acabo de terminar mi proyecto final de Programación III! Fue un desafío enorme pero muy gratificante. ¿Alguien más está trabajando en React?',
+    likes: 15,
+    dislikes: 0,
   },
   {
     id: 2,
@@ -25,9 +36,9 @@ export const publications = [
     authorId: 3,
     authorName: 'Juan Pérez',
     authorInitials: 'JP',
-    date: '2026-05-09',
+    createdAt: hoursAgo(3),
     content: 'se inscribió a Programación II',
-    likes: 5,
+    likes: 8,
     dislikes: 0,
   },
   {
@@ -38,7 +49,7 @@ export const publications = [
     authorId: 4,
     authorName: 'María Gómez',
     authorInitials: 'MG',
-    date: '2026-05-08',
+    createdAt: hoursAgo(6),
     content: 'aprobó Matemática I con 9',
     likes: 28,
     dislikes: 0,
@@ -51,7 +62,7 @@ export const publications = [
     authorId: 5,
     authorName: 'Pedro Núñez',
     authorInitials: 'PN',
-    date: '2026-05-07',
+    createdAt: daysAgo(1),
     content: 'regularizó Física',
     likes: 9,
     dislikes: 0,
@@ -62,7 +73,7 @@ export const publications = [
     authorId: 6,
     authorName: 'Lucía Fernández',
     authorInitials: 'LF',
-    date: '2026-05-06',
+    createdAt: daysAgo(2),
     content: 'Armamos un grupo de estudio para el final de Algoritmos. Si te suma, comentá y te paso el link.',
     likes: 18,
     dislikes: 0,
