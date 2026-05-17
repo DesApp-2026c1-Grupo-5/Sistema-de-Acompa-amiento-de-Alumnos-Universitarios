@@ -5,15 +5,16 @@
  */
 require("dotenv").config();
 const db = require("./src/db/models");
+const { hashPassword } = require("./src/utils/password");
 
-// Placeholder fijo: bcrypt aún no está instalado y el login real usa DEMO_USER.
-// Reemplazar cuando el flujo de auth pase a leer la tabla `usuarios`.
-const PASSWORD_HASH_PLACEHOLDER = "$2b$10$placeholder.hash.no.real.usar.solo.seed";
+const DEV_PASSWORD = "123456";
 
 async function seed() {
   // 1. Reset de esquema. Destruye TODAS las tablas y las recrea vacías.
   await db.sequelize.sync({ force: true });
   console.log("· Esquema sincronizado");
+
+  const devPasswordHash = await hashPassword(DEV_PASSWORD);
 
   // 2. Estructura académica
   const [carreraTPI, carreraLicSI] = await db.carrera.bulkCreate(
@@ -56,10 +57,10 @@ async function seed() {
   // 3. Identidad: primero los usuarios, luego sus perfiles (admin/estudiante).
   const [uAdmin, uEst1, uEst2, uEst3] = await db.usuario.bulkCreate(
     [
-      { email: "admin@demo.com",   password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "administrador", activo: true  },
-      { email: "facu@alumno.com",  password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "estudiante",    activo: true  },
-      { email: "lara@alumno.com",  password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "estudiante",    activo: true  },
-      { email: "diego@alumno.com", password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "estudiante",    activo: false },
+      { email: "admin@demo.com",   password_hash: devPasswordHash, tipo: "administrador", activo: true  },
+      { email: "facu@alumno.com",  password_hash: devPasswordHash, tipo: "estudiante",    activo: true  },
+      { email: "lara@alumno.com",  password_hash: devPasswordHash, tipo: "estudiante",    activo: true  },
+      { email: "diego@alumno.com", password_hash: devPasswordHash, tipo: "estudiante",    activo: false },
     ],
     { returning: true }
   );

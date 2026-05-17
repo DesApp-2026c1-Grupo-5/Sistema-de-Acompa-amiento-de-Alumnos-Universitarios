@@ -1,4 +1,5 @@
 const { signToken } = require("../utils/jwt");
+const { comparePassword } = require("../utils/password");
 const { usuario, estudiante, administrador } = require("../db/models");
 
 const login = async (req, res, next) => {
@@ -32,12 +33,14 @@ const login = async (req, res, next) => {
     }
 
     if (!usuarioData.activo) {
-      const error = new Error("Usuario inactivo");
-      error.statusCode = 403;
+      const error = new Error("Credenciales invalidas");
+      error.statusCode = 401;
       throw error;
     }
 
-    if (usuarioData.password_hash !== password) {
+    const passwordOk = await comparePassword(password, usuarioData.password_hash);
+
+    if (!passwordOk) {
       const error = new Error("Credenciales invalidas");
       error.statusCode = 401;
       throw error;
