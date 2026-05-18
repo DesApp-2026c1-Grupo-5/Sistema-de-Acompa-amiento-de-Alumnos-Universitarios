@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Button from "../../components/common/Button";
 import { useAuth } from "../../context/useAuth";
@@ -19,7 +19,9 @@ const Login = () => {
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
+  const [loginErrorFields, setLoginErrorFields] = useState([]);
   const [loadingLogin, setLoadingLogin] = useState(false);
+  const loginErrorTimeout = useRef(null);
 
   const [registerData, setRegisterData] = useState({
     nombre_completo: "",
@@ -27,16 +29,40 @@ const Login = () => {
     password: "",
   });
   const [registerError, setRegisterError] = useState("");
+  const [registerErrorFields, setRegisterErrorFields] = useState([]);
   const [loadingRegister, setLoadingRegister] = useState(false);
+  const registerErrorTimeout = useRef(null);
+
+  const flagLoginFields = (fields) => {
+    setLoginErrorFields(fields);
+    if (loginErrorTimeout.current) clearTimeout(loginErrorTimeout.current);
+    if (fields.length === 0) return;
+    loginErrorTimeout.current = setTimeout(
+      () => setLoginErrorFields([]),
+      3000
+    );
+  };
+
+  const flagRegisterFields = (fields) => {
+    setRegisterErrorFields(fields);
+    if (registerErrorTimeout.current) clearTimeout(registerErrorTimeout.current);
+    if (fields.length === 0) return;
+    registerErrorTimeout.current = setTimeout(
+      () => setRegisterErrorFields([]),
+      3000
+    );
+  };
 
   const handleLoginChange = (field, value) => {
     setLoginData((prev) => ({ ...prev, [field]: value }));
     setLoginError("");
+    setLoginErrorFields((prev) => prev.filter((f) => f !== field));
   };
 
   const handleRegisterChange = (field, value) => {
     setRegisterData((prev) => ({ ...prev, [field]: value }));
     setRegisterError("");
+    setRegisterErrorFields((prev) => prev.filter((f) => f !== field));
   };
 
   const handleLoginSubmit = async (event) => {
@@ -46,8 +72,12 @@ const Login = () => {
     const email = loginData.email.trim();
     const password = loginData.password;
 
-    if (!email || !password) {
+    const emptyFields = [];
+    if (!email) emptyFields.push("email");
+    if (!password) emptyFields.push("password");
+    if (emptyFields.length > 0) {
       setLoginError("Completá email y contraseña.");
+      flagLoginFields(emptyFields);
       return;
     }
 
@@ -58,8 +88,10 @@ const Login = () => {
     } catch (err) {
       if (err.status === 401) {
         setLoginError("Email o contraseña incorrectos.");
-      } else if (err.status === 400 && err.details?.[0]?.message) {
+        flagLoginFields(["email", "password"]);
+      } else if (err.status === 400 && err.details?.[0]) {
         setLoginError(err.details[0].message);
+        flagLoginFields([err.details[0].field]);
       } else {
         setLoginError(err.message || "No pudimos iniciar sesión, intentá de nuevo.");
       }
@@ -76,8 +108,13 @@ const Login = () => {
     const email = registerData.email.trim();
     const password = registerData.password;
 
-    if (!nombre_completo || !email || !password) {
+    const emptyFields = [];
+    if (!nombre_completo) emptyFields.push("nombre_completo");
+    if (!email) emptyFields.push("email");
+    if (!password) emptyFields.push("password");
+    if (emptyFields.length > 0) {
       setRegisterError("Completá todos los campos.");
+      flagRegisterFields(emptyFields);
       return;
     }
 
@@ -88,8 +125,10 @@ const Login = () => {
     } catch (err) {
       if (err.status === 409) {
         setRegisterError("Ese email ya está registrado.");
-      } else if (err.status === 400 && err.details?.[0]?.message) {
+        flagRegisterFields(["email"]);
+      } else if (err.status === 400 && err.details?.[0]) {
         setRegisterError(err.details[0].message);
+        flagRegisterFields([err.details[0].field]);
       } else {
         setRegisterError(err.message || "No pudimos crear la cuenta, intentá de nuevo.");
       }
@@ -97,6 +136,11 @@ const Login = () => {
       setLoadingRegister(false);
     }
   };
+
+  const inputClass = (fields, field) =>
+    fields.includes(field)
+      ? `${styles.authInput} ${styles.authInputError}`
+      : styles.authInput;
 
   return (
     <section className={styles.authPage}>
@@ -155,11 +199,11 @@ const Login = () => {
           </div>
 
           {activeTab === "login" ? (
-            <form className={styles.authForm} onSubmit={handleLoginSubmit}>
+            <form className={styles.authForm} onSubmit={handleLoginSubmit} noValidate>
               <div className={styles.authField}>
                 <label>Email</label>
 
-                <div className={styles.authInput}>
+                <div className={inputClass(loginErrorFields, "email")}>
                   <span>✉</span>
                   <input
                     type="email"
@@ -175,7 +219,7 @@ const Login = () => {
               <div className={styles.authField}>
                 <label>Contraseña</label>
 
-                <div className={styles.authInput}>
+                <div className={inputClass(loginErrorFields, "password")}>
                   <span>🔒</span>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -207,10 +251,10 @@ const Login = () => {
               </button>
             </form>
           ) : (
-            <form className={styles.authForm} onSubmit={handleRegisterSubmit}>
+            <form className={styles.authForm} onSubmit={handleRegisterSubmit} noValidate>
               <div className={styles.authField}>
                 <label>Nombre completo</label>
-                <div className={styles.authInput}>
+                <div className={inputClass(registerErrorFields, "nombre_completo")}>
                   <span>👤</span>
                   <input
                     type="text"
@@ -225,7 +269,7 @@ const Login = () => {
 
               <div className={styles.authField}>
                 <label>Email</label>
-                <div className={styles.authInput}>
+                <div className={inputClass(registerErrorFields, "email")}>
                   <span>✉</span>
                   <input
                     type="email"
@@ -240,7 +284,7 @@ const Login = () => {
 
               <div className={styles.authField}>
                 <label>Contraseña</label>
-                <div className={styles.authInput}>
+                <div className={inputClass(registerErrorFields, "password")}>
                   <span>🔒</span>
                   <input
                     type={showPassword ? "text" : "password"}
