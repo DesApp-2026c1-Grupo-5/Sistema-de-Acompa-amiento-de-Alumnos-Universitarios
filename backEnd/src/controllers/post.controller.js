@@ -22,7 +22,6 @@ const crearPost = async (req, res, next) => {
   const nuevoPost = await post.create({
     contenido,
     estudiante_id: estudianteData.id,
-    created_at: new Date(),
   });
 
   return res.status(201).json({
@@ -37,7 +36,7 @@ const obtenerPosts = async (req, res, next) => {
       model: estudiante,
       attributes: ["id", "nombre", "apellido"],
     },
-    order: [["created_at", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   return res.json({

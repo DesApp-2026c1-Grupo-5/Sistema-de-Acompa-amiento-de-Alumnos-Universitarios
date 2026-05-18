@@ -4,18 +4,22 @@ import Avatar from '../common/Avatar';
 import Button from '../common/Button';
 import styles from './CreatePostCard.module.css';
 
-function CreatePostCard({ user, onPublish }) {
+function CreatePostCard({ user, onPublish, loading = false }) {
   const [content, setContent] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmed = content.trim();
     if (!trimmed) return;
-    onPublish?.(trimmed);
-    setContent('');
+    try {
+      await onPublish?.(trimmed);
+      setContent('');
+    } catch {
+      // mantengo el contenido para que el usuario pueda reintentar
+    }
   };
 
-  const disabled = content.trim().length === 0;
+  const disabled = loading || content.trim().length === 0;
 
   return (
     <form className={styles.card} onSubmit={handleSubmit}>

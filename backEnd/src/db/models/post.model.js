@@ -19,11 +19,9 @@ module.exports = (sequelize, DataTypes) => {
   }
   post.init({
     contenido: DataTypes.STRING,
-    created_at: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'post',
-    timestamps: false,
   });
   return post;
 };

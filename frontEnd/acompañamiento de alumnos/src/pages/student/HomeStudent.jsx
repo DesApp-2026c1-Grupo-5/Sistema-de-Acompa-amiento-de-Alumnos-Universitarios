@@ -1,21 +1,45 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/common/PageTitle';
 import SearchBar from '../../components/common/SearchBar';
 import EmptyState from '../../components/common/EmptyState';
+import ErrorState from '../../components/common/ErrorState';
 import CreatePostCard from '../../components/home/CreatePostCard';
 import FeedPost from '../../components/home/FeedPost';
 import UpcomingSessionsCard from '../../components/home/UpcomingSessionsCard';
-import {
-  currentUser,
-  publications as initialPublications,
-  upcomingSessions,
-} from './home/mockData';
+import { useAuth } from '../../context/useAuth';
+import { getPosts, createPost } from '../../services/postService';
+import { upcomingSessions } from './home/mockData';
+import { getInitials, mapPostFromApi } from './home/mapPost';
 import styles from './HomeStudent.module.css';
 
 function HomeStudent() {
-  const [publications, setPublications] = useState(initialPublications);
+  const { user } = useAuth();
+  const est = user?.estudiante ?? {};
+
+  const currentUser = {
+    id: est.id,
+    name: `${est.nombre ?? ''} ${est.apellido ?? ''}`.trim() || 'Estudiante',
+    initials: getInitials(est.nombre, est.apellido),
+  };
+
+  const [publications, setPublications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [publishError, setPublishError] = useState('');
+  const [publishing, setPublishing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [userReactions, setUserReactions] = useState({});
+
+  useEffect(() => {
+    getPosts()
+      .then((res) => {
+        setPublications((res?.data ?? []).map(mapPostFromApi));
+      })
+      .catch((err) => {
+        setError(err.message || 'No pudimos cargar el feed.');
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredPublications = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -29,46 +53,89 @@ function HomeStudent() {
     });
   }, [publications, searchTerm]);
 
-  const handlePublish = (content) => {
-    const newPost = {
-      id: Date.now(),
-      type: 'post',
-      authorId: currentUser.id,
-      authorName: currentUser.name,
-      authorInitials: currentUser.initials,
-      createdAt: new Date().toISOString(),
-      content,
-      likes: 0,
-      dislikes: 0,
-    };
-    setPublications((prev) => [newPost, ...prev]);
+  const handlePublish = async (content) => {
+    setPublishError('');
+    setPublishing(true);
+    try {
+      const res = await createPost(content);
+      const nuevo = mapPostFromApi({
+        ...res.data,
+        estudiante: {
+          id: est.id,
+          nombre: est.nombre,
+          apellido: est.apellido,
+        },
+      });
+      setPublications((prev) => [nuevo, ...prev]);
+    } catch (err) {
+      setPublishError(err.message || 'No pudimos publicar, intentá de nuevo.');
+      throw err;
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const handleReaction = (postId, reaction) => {
-    setUserReactions((prevReactions) => {
-      const previous = prevReactions[postId] ?? null;
-      const next = previous === reaction ? null : reaction;
+    const previous = userReactions[postId] ?? null;
+    const next = previous === reaction ? null : reaction;
 
-      setPublications((prevPosts) =>
-        prevPosts.map((post) => {
-          if (post.id !== postId) return post;
-          const updated = { ...post };
-          if (previous === 'like') updated.likes = Math.max(0, (updated.likes ?? 0) - 1);
-          if (previous === 'dislike') updated.dislikes = Math.max(0, (updated.dislikes ?? 0) - 1);
-          if (next === 'like') updated.likes = (updated.likes ?? 0) + 1;
-          if (next === 'dislike') updated.dislikes = (updated.dislikes ?? 0) + 1;
-          return updated;
-        }),
-      );
+    setUserReactions((prev) => ({ ...prev, [postId]: next }));
 
-      return { ...prevReactions, [postId]: next };
-    });
+    setPublications((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id !== postId) return post;
+        const updated = { ...post };
+        if (previous === 'like') updated.likes = Math.max(0, (updated.likes ?? 0) - 1);
+        if (previous === 'dislike') updated.dislikes = Math.max(0, (updated.dislikes ?? 0) - 1);
+        if (next === 'like') updated.likes = (updated.likes ?? 0) + 1;
+        if (next === 'dislike') updated.dislikes = (updated.dislikes ?? 0) + 1;
+        return updated;
+      }),
+    );
   };
 
   const handleLike = (postId) => handleReaction(postId, 'like');
   const handleDislike = (postId) => handleReaction(postId, 'dislike');
   const handleViewSessionDetails = () => {
     // TODO: navegar al detalle de sesión cuando exista la ruta
+  };
+
+  const renderFeed = () => {
+    if (loading) {
+      return <p className={styles.feedStatus}>Cargando publicaciones…</p>;
+    }
+
+    if (error) {
+      return (
+        <ErrorState
+          title="No pudimos cargar el feed"
+          description={error}
+        />
+      );
+    }
+
+    if (filteredPublications.length === 0) {
+      return (
+        <EmptyState
+          title={searchTerm ? 'Sin resultados' : 'El feed está vacío'}
+          description={
+            searchTerm
+              ? 'No encontramos publicaciones que coincidan con tu búsqueda.'
+              : 'Cuando vos o tus compañeros publiquen algo, aparecerá acá.'
+          }
+        />
+      );
+    }
+
+    return filteredPublications.map((post) => (
+      <FeedPost
+        key={post.id}
+        post={post}
+        userReaction={userReactions[post.id] ?? null}
+        onLike={handleLike}
+        onDislike={handleDislike}
+      />
+    ));
   };
 
   return (
@@ -88,30 +155,16 @@ function HomeStudent() {
             />
           </div>
 
-          <CreatePostCard user={currentUser} onPublish={handlePublish} />
+          <CreatePostCard
+            user={currentUser}
+            onPublish={handlePublish}
+            loading={publishing}
+          />
+          {publishError && (
+            <p className={styles.feedStatus}>{publishError}</p>
+          )}
 
-          <div className={styles.feed}>
-            {filteredPublications.length > 0 ? (
-              filteredPublications.map((post) => (
-                <FeedPost
-                  key={post.id}
-                  post={post}
-                  userReaction={userReactions[post.id] ?? null}
-                  onLike={handleLike}
-                  onDislike={handleDislike}
-                />
-              ))
-            ) : (
-              <EmptyState
-                title={searchTerm ? 'Sin resultados' : 'El feed está vacío'}
-                description={
-                  searchTerm
-                    ? 'No encontramos publicaciones que coincidan con tu búsqueda.'
-                    : 'Cuando vos o tus compañeros publiquen algo, aparecerá acá.'
-                }
-              />
-            )}
-          </div>
+          <div className={styles.feed}>{renderFeed()}</div>
         </div>
 
         <aside className={styles.aside}>

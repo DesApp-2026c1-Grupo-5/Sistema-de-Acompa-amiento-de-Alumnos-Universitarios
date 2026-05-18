@@ -178,9 +178,9 @@ async function seed() {
   );
 
   await db.post.bulkCreate([
-    { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            created_at: new Date("2024-07-16") },
-    { estudiante_id: estLara.id, contenido: "Buscando grupo de estudio para BD",             created_at: new Date("2026-04-10") },
-    { estudiante_id: estFacu.id, contenido: "Subí un resumen, lo encuentran en materiales", created_at: new Date("2026-04-25") },
+    { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            createdAt: new Date("2024-07-16"), updatedAt: new Date("2024-07-16") },
+    { estudiante_id: estLara.id, contenido: "Buscando grupo de estudio para BD",             createdAt: new Date("2026-04-10"), updatedAt: new Date("2026-04-10") },
+    { estudiante_id: estFacu.id, contenido: "Subí un resumen, lo encuentran en materiales", createdAt: new Date("2026-04-25"), updatedAt: new Date("2026-04-25") },
   ]);
 
   const [sesBD, sesPOO] = await db.sesion_estudio.bulkCreate(
