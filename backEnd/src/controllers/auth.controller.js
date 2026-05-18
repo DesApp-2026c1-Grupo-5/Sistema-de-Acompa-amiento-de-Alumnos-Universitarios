@@ -3,23 +3,13 @@ const { comparePassword, hashPassword } = require("../utils/password");
 const db = require("../db/models");
 const { usuario, estudiante, administrador, sequelize } = db;
 
-const PASSWORD_MIN_LENGTH = 6;
-
 const splitNombreCompleto = (nombreCompleto) => {
-  const partes = nombreCompleto.trim().split(/\s+/);
-  if (partes.length < 2) return null;
-  const [nombre, ...resto] = partes;
+  const [nombre, ...resto] = nombreCompleto.trim().split(/\s+/);
   return { nombre, apellido: resto.join(" ") };
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    const error = new Error("Email y password son obligatorios");
-    error.statusCode = 400;
-    throw error;
-  }
 
   const usuarioData = await usuario.findOne({
     where: { email },
@@ -64,31 +54,11 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
   const { nombre_completo, email, password } = req.body;
-
-  if (!nombre_completo || !email || !password) {
-    const error = new Error("Nombre completo, email y password son obligatorios");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (password.length < PASSWORD_MIN_LENGTH) {
-    const error = new Error(`La password debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres`);
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const partes = splitNombreCompleto(nombre_completo);
-  if (!partes) {
-    const error = new Error("Ingresá nombre y apellido");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const emailNormalizado = email.trim().toLowerCase();
+  const { nombre, apellido } = splitNombreCompleto(nombre_completo);
 
   const { nuevoUsuario, nuevoEstudiante } = await sequelize.transaction(async (t) => {
     const existente = await usuario.findOne({
-      where: { email: emailNormalizado },
+      where: { email },
       transaction: t,
     });
 
@@ -102,7 +72,7 @@ const register = async (req, res) => {
 
     const nuevoUsuario = await usuario.create(
       {
-        email: emailNormalizado,
+        email,
         password_hash,
         tipo: "estudiante",
         activo: true,
@@ -113,8 +83,8 @@ const register = async (req, res) => {
     const nuevoEstudiante = await estudiante.create(
       {
         usuario_id: nuevoUsuario.id,
-        nombre: partes.nombre,
-        apellido: partes.apellido,
+        nombre,
+        apellido,
         privacidad: "publico",
         pub_inscripciones: true,
         pub_regularizaciones: true,
