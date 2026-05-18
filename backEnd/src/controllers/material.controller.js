@@ -6,8 +6,9 @@ const {
 } = require("../db/models");
 const { Op } = require("sequelize");
 
-const listarMateriales = async (req, res, next) => {
-  const { q, tipo, materia_id, suspendido = "false" } = req.query;
+const listarMateriales = async (req, res) => {
+  const { q, tipo, materia_id, suspendido, page, limit } = req.query;
+  const offset = (page - 1) * limit;
 
   const where = {};
 
@@ -30,7 +31,7 @@ const listarMateriales = async (req, res, next) => {
     ];
   }
 
-  const materiales = await material.findAll({
+  const { count, rows } = await material.findAndCountAll({
     where,
     include: [
       {
@@ -47,9 +48,11 @@ const listarMateriales = async (req, res, next) => {
       },
     ],
     order: [["id", "DESC"]],
+    limit,
+    offset,
   });
 
-  const data = materiales.map((item) => {
+  const data = rows.map((item) => {
     const plain = item.get({ plain: true });
     const likes = plain.valoracions.filter((v) => v.valor === "like").length;
     const dislikes = plain.valoracions.filter((v) => v.valor === "dislike").length;
@@ -64,6 +67,12 @@ const listarMateriales = async (req, res, next) => {
   return res.status(200).json({
     ok: true,
     data,
+    pagination: {
+      page,
+      limit,
+      total: count,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 };
 
