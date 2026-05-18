@@ -65,9 +65,19 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
+.moreBtn svg {
+  color: #64748b;
+  stroke: #64748b;
+}
+
 .moreBtn:hover {
   background: #f1f5f9;
   color: #020617;
+}
+
+.moreBtn:hover svg {
+  color: #020617;
+  stroke: #020617;
 }
 
 .content {
@@ -154,9 +164,19 @@
   color: #94a3b8;
 }
 
+:global(html.dark) .moreBtn svg {
+  color: #94a3b8;
+  stroke: #94a3b8;
+}
+
 :global(html.dark) .moreBtn:hover {
   background: #273449;
   color: #f8fafc;
+}
+
+:global(html.dark) .moreBtn:hover svg {
+  color: #f8fafc;
+  stroke: #f8fafc;
 }
 
 :global(html.dark) .content {
