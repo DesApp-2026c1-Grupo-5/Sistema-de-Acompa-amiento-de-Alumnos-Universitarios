@@ -6,8 +6,8 @@ const {
 } = require("../db/models");
 const { Op } = require("sequelize");
 
-const listarMateriales = async (req, res, next) => {
-  const { q, tipo, materia_id, suspendido = "false" } = req.query;
+const listarMateriales = async (req, res) => {
+  const { q, tipo, materia_id, suspendido } = req.query;
 
   const where = {};
 
