@@ -201,6 +201,14 @@ const crearMaterial = async (req, res, next) => {
 const votarMaterial = async (req, res, next) => {
   const { material_id, valor } = req.body;
 
+  const materialId = Number(material_id);
+
+  if (!Number.isInteger(materialId) || materialId <= 0) {
+    const error = new Error("material_id debe ser un entero positivo");
+    error.statusCode = 400;
+    return next(error);
+  }
+
   if (valor !== "like" && valor !== "dislike") {
     const error = new Error("Valor invalido");
     error.statusCode = 400;
@@ -211,9 +219,29 @@ const votarMaterial = async (req, res, next) => {
     where: { usuario_id: req.user.sub },
   });
 
+  if (!estudianteData) {
+    const error = new Error("Estudiante no encontrado");
+    error.statusCode = 404;
+    return next(error);
+  }
+
+  const materialData = await material.findByPk(materialId);
+
+  if (!materialData) {
+    const error = new Error("Material no encontrado");
+    error.statusCode = 404;
+    return next(error);
+  }
+
+  if (materialData.suspendido) {
+    const error = new Error("No se puede votar un material suspendido");
+    error.statusCode = 400;
+    return next(error);
+  }
+
   const votoExistente = await valoracion.findOne({
     where: {
-      material_id,
+      material_id: materialId,
       estudiante_id: estudianteData.id,
     },
   });
@@ -230,7 +258,7 @@ const votarMaterial = async (req, res, next) => {
   }
 
   const voto = await valoracion.create({
-    material_id,
+    material_id: materialId,
     estudiante_id: estudianteData.id,
     valor,
     fecha: new Date(),
