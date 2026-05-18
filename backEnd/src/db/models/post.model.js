@@ -15,15 +15,17 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'estudiante_id'
       });
 
+      post.hasMany(models.voto_post, {
+        foreignKey: 'post_id'
+      });
+
     }
   }
   post.init({
     contenido: DataTypes.STRING,
-    created_at: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'post',
-    timestamps: false,
   });
   return post;
 };

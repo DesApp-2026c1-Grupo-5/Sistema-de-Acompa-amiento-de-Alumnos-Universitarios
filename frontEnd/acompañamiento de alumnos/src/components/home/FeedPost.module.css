@@ -111,9 +111,27 @@
   color: #00a8ad;
 }
 
+.actionBtn span,
+.actionBtn svg {
+  color: #475569;
+  stroke: #475569;
+}
+
+.actionBtn:hover span,
+.actionBtn:hover svg {
+  color: #00a8ad;
+  stroke: #00a8ad;
+}
+
 .actionBtnActive {
   background: rgba(0, 188, 212, 0.12);
   color: #00a8ad;
+}
+
+.actionBtnActive span,
+.actionBtnActive svg {
+  color: #00a8ad;
+  stroke: #00a8ad;
 }
 
 /* DARK MODE */
@@ -149,14 +167,32 @@
   color: #cbd5e1;
 }
 
+:global(html.dark) .actionBtn span,
+:global(html.dark) .actionBtn svg {
+  color: #cbd5e1;
+  stroke: #cbd5e1;
+}
+
 :global(html.dark) .actionBtn:hover {
   background: rgba(34, 211, 238, 0.15);
   color: #22d3ee;
 }
 
+:global(html.dark) .actionBtn:hover span,
+:global(html.dark) .actionBtn:hover svg {
+  color: #22d3ee;
+  stroke: #22d3ee;
+}
+
 :global(html.dark) .actionBtnActive {
   background: rgba(34, 211, 238, 0.18);
   color: #22d3ee;
+}
+
+:global(html.dark) .actionBtnActive span,
+:global(html.dark) .actionBtnActive svg {
+  color: #22d3ee;
+  stroke: #22d3ee;
 }
 
 /* RESPONSIVE */

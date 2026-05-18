@@ -36,6 +36,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'estudiante_id'
       });
 
+      estudiante.hasMany(models.voto_post, {
+        foreignKey: 'estudiante_id'
+      });
+
       estudiante.hasMany(models.sesion_estudio, {
         foreignKey: 'creador_id',
         as: 'sesiones_creadas'
