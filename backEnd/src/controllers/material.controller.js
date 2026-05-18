@@ -257,12 +257,38 @@ const votarMaterial = async (req, res, next) => {
     });
   }
 
-  const voto = await valoracion.create({
-    material_id: materialId,
-    estudiante_id: estudianteData.id,
-    valor,
-    fecha: new Date(),
-  });
+  let voto;
+
+  try {
+    voto = await valoracion.create({
+      material_id: materialId,
+      estudiante_id: estudianteData.id,
+      valor,
+      fecha: new Date(),
+    });
+  } catch (err) {
+    if (err.name === "SequelizeUniqueConstraintError") {
+      const votoDuplicado = await valoracion.findOne({
+        where: {
+          material_id: materialId,
+          estudiante_id: estudianteData.id,
+        },
+      });
+
+      if (votoDuplicado) {
+        votoDuplicado.valor = valor;
+        await votoDuplicado.save();
+
+        return res.status(200).json({
+          ok: true,
+          message: "Voto actualizado",
+          data: votoDuplicado,
+        });
+      }
+    }
+
+    return next(err);
+  }
 
   return res.status(201).json({
     ok: true,
