@@ -1,69 +1,146 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Button from "../../components/common/Button";
+import { useAuth } from "../../context/useAuth";
 import styles from "../../styles/login.module.css";
 
-const MOCK_USERS = [
-  {
-    email: "estudiante@siva.com",
-    password: "123456",
-    role: "student",
-    redirectTo: "/student/home",
-  },
-  {
-    email: "admin@siva.com",
-    password: "admin123",
-    role: "admin",
-    redirectTo: "/admin/home",
-  },
-];
+const redirectFor = (user) =>
+  user?.tipo === "administrador" ? "/admin/home" : "/student/home";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { login, register } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("login");
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") === "register" ? "register" : "login"
+  );
   const [showPassword, setShowPassword] = useState(false);
 
-  const [loginData, setLoginData] = useState({
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [loginError, setLoginError] = useState("");
+  const [loginErrorFields, setLoginErrorFields] = useState([]);
+  const [loadingLogin, setLoadingLogin] = useState(false);
+  const loginErrorTimeout = useRef(null);
+
+  const [registerData, setRegisterData] = useState({
+    nombre_completo: "",
     email: "",
     password: "",
   });
+  const [registerError, setRegisterError] = useState("");
+  const [registerErrorFields, setRegisterErrorFields] = useState([]);
+  const [loadingRegister, setLoadingRegister] = useState(false);
+  const registerErrorTimeout = useRef(null);
 
-  const [loginError, setLoginError] = useState("");
-
-  const handleLoginChange = (field, value) => {
-    setLoginData({
-      ...loginData,
-      [field]: value,
-    });
-
-    setLoginError("");
+  const flagLoginFields = (fields) => {
+    setLoginErrorFields(fields);
+    if (loginErrorTimeout.current) clearTimeout(loginErrorTimeout.current);
+    if (fields.length === 0) return;
+    loginErrorTimeout.current = setTimeout(
+      () => setLoginErrorFields([]),
+      3000
+    );
   };
 
-  const handleLoginSubmit = (event) => {
-    event.preventDefault();
-
-    const foundUser = MOCK_USERS.find(
-      (user) =>
-        user.email === loginData.email.trim() &&
-        user.password === loginData.password
+  const flagRegisterFields = (fields) => {
+    setRegisterErrorFields(fields);
+    if (registerErrorTimeout.current) clearTimeout(registerErrorTimeout.current);
+    if (fields.length === 0) return;
+    registerErrorTimeout.current = setTimeout(
+      () => setRegisterErrorFields([]),
+      3000
     );
+  };
 
-    if (!foundUser) {
-      setLoginError("Email o contraseña incorrectos.");
+  const handleLoginChange = (field, value) => {
+    setLoginData((prev) => ({ ...prev, [field]: value }));
+    setLoginError("");
+    setLoginErrorFields((prev) => prev.filter((f) => f !== field));
+  };
+
+  const handleRegisterChange = (field, value) => {
+    setRegisterData((prev) => ({ ...prev, [field]: value }));
+    setRegisterError("");
+    setRegisterErrorFields((prev) => prev.filter((f) => f !== field));
+  };
+
+  const handleLoginSubmit = async (event) => {
+    event.preventDefault();
+    setLoginError("");
+
+    const email = loginData.email.trim();
+    const password = loginData.password;
+
+    const emptyFields = [];
+    if (!email) emptyFields.push("email");
+    if (!password) emptyFields.push("password");
+    if (emptyFields.length > 0) {
+      setLoginError("Completá email y contraseña.");
+      flagLoginFields(emptyFields);
       return;
     }
 
-    localStorage.setItem(
-      "sivaUser",
-      JSON.stringify({
-        email: foundUser.email,
-        role: foundUser.role,
-      })
-    );
-
-    navigate(foundUser.redirectTo);
+    setLoadingLogin(true);
+    try {
+      const user = await login(email, password);
+      navigate(redirectFor(user));
+    } catch (err) {
+      if (err.status === 401) {
+        setLoginError("Email o contraseña incorrectos.");
+        flagLoginFields(["email", "password"]);
+      } else if (err.status === 400 && err.details?.[0]) {
+        setLoginError(err.details[0].message);
+        flagLoginFields([err.details[0].field]);
+      } else {
+        setLoginError(err.message || "No pudimos iniciar sesión, intentá de nuevo.");
+      }
+    } finally {
+      setLoadingLogin(false);
+    }
   };
+
+  const handleRegisterSubmit = async (event) => {
+    event.preventDefault();
+    setRegisterError("");
+
+    const nombre_completo = registerData.nombre_completo.trim();
+    const email = registerData.email.trim();
+    const password = registerData.password;
+
+    const emptyFields = [];
+    if (!nombre_completo) emptyFields.push("nombre_completo");
+    if (!email) emptyFields.push("email");
+    if (!password) emptyFields.push("password");
+    if (emptyFields.length > 0) {
+      setRegisterError("Completá todos los campos.");
+      flagRegisterFields(emptyFields);
+      return;
+    }
+
+    setLoadingRegister(true);
+    try {
+      const user = await register(nombre_completo, email, password);
+      navigate(redirectFor(user));
+    } catch (err) {
+      if (err.status === 409) {
+        setRegisterError("Ese email ya está registrado.");
+        flagRegisterFields(["email"]);
+      } else if (err.status === 400 && err.details?.[0]) {
+        setRegisterError(err.details[0].message);
+        flagRegisterFields([err.details[0].field]);
+      } else {
+        setRegisterError(err.message || "No pudimos crear la cuenta, intentá de nuevo.");
+      }
+    } finally {
+      setLoadingRegister(false);
+    }
+  };
+
+  const inputClass = (fields, field) =>
+    fields.includes(field)
+      ? `${styles.authInput} ${styles.authInputError}`
+      : styles.authInput;
 
   return (
     <section className={styles.authPage}>
@@ -94,11 +171,6 @@ const Login = () => {
               <p>Repositorio de materiales académicos</p>
             </div>
           </div>
-
-          <div className={styles.authDemoUsers}>
-            <p><strong>Usuario estudiante:</strong> estudiante@siva.com / 123456</p>
-            <p><strong>Usuario admin:</strong> admin@siva.com / admin123</p>
-          </div>
         </div>
       </div>
 
@@ -127,11 +199,11 @@ const Login = () => {
           </div>
 
           {activeTab === "login" ? (
-            <form className={styles.authForm} onSubmit={handleLoginSubmit}>
+            <form className={styles.authForm} onSubmit={handleLoginSubmit} noValidate>
               <div className={styles.authField}>
                 <label>Email</label>
 
-                <div className={styles.authInput}>
+                <div className={inputClass(loginErrorFields, "email")}>
                   <span>✉</span>
                   <input
                     type="email"
@@ -147,7 +219,7 @@ const Login = () => {
               <div className={styles.authField}>
                 <label>Contraseña</label>
 
-                <div className={styles.authInput}>
+                <div className={inputClass(loginErrorFields, "password")}>
                   <span>🔒</span>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -170,35 +242,57 @@ const Login = () => {
 
               {loginError && <p className={styles.authError}>{loginError}</p>}
 
-              <button type="submit" className={styles.authSubmit}>
-                Iniciar sesión
+              <button
+                type="submit"
+                className={styles.authSubmit}
+                disabled={loadingLogin}
+              >
+                {loadingLogin ? "Iniciando..." : "Iniciar sesión"}
               </button>
             </form>
           ) : (
-            <form className={styles.authForm}>
+            <form className={styles.authForm} onSubmit={handleRegisterSubmit} noValidate>
               <div className={styles.authField}>
                 <label>Nombre completo</label>
-                <div className={styles.authInput}>
+                <div className={inputClass(registerErrorFields, "nombre_completo")}>
                   <span>👤</span>
-                  <input type="text" placeholder="Juan Pérez" />
+                  <input
+                    type="text"
+                    placeholder="Juan Pérez"
+                    value={registerData.nombre_completo}
+                    onChange={(e) =>
+                      handleRegisterChange("nombre_completo", e.target.value)
+                    }
+                  />
                 </div>
               </div>
 
               <div className={styles.authField}>
                 <label>Email</label>
-                <div className={styles.authInput}>
+                <div className={inputClass(registerErrorFields, "email")}>
                   <span>✉</span>
-                  <input type="email" placeholder="tu@email.com" />
+                  <input
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={registerData.email}
+                    onChange={(e) =>
+                      handleRegisterChange("email", e.target.value)
+                    }
+                  />
                 </div>
               </div>
 
               <div className={styles.authField}>
                 <label>Contraseña</label>
-                <div className={styles.authInput}>
+                <div className={inputClass(registerErrorFields, "password")}>
                   <span>🔒</span>
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    value={registerData.password}
+                    onChange={(e) =>
+                      handleRegisterChange("password", e.target.value)
+                    }
                   />
 
                   <button
@@ -211,8 +305,18 @@ const Login = () => {
                 </div>
               </div>
 
-              <Button variant="primary" size="lg" fullWidth>
-                Crear cuenta
+              {registerError && (
+                <p className={styles.authError}>{registerError}</p>
+              )}
+
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                type="submit"
+                disabled={loadingRegister}
+              >
+                {loadingRegister ? "Creando cuenta..." : "Crear cuenta"}
               </Button>
             </form>
           )}
