@@ -177,10 +177,20 @@ async function seed() {
     { returning: true }
   );
 
-  await db.post.bulkCreate([
-    { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            createdAt: new Date("2024-07-16"), updatedAt: new Date("2024-07-16") },
-    { estudiante_id: estLara.id, contenido: "Buscando grupo de estudio para BD",             createdAt: new Date("2026-04-10"), updatedAt: new Date("2026-04-10") },
-    { estudiante_id: estFacu.id, contenido: "Subí un resumen, lo encuentran en materiales", createdAt: new Date("2026-04-25"), updatedAt: new Date("2026-04-25") },
+  const [postFacuAlgo, postLaraBD, postFacuResumen] = await db.post.bulkCreate(
+    [
+      { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            createdAt: new Date("2024-07-16"), updatedAt: new Date("2024-07-16") },
+      { estudiante_id: estLara.id, contenido: "Buscando grupo de estudio para BD",             createdAt: new Date("2026-04-10"), updatedAt: new Date("2026-04-10") },
+      { estudiante_id: estFacu.id, contenido: "Subí un resumen, lo encuentran en materiales", createdAt: new Date("2026-04-25"), updatedAt: new Date("2026-04-25") },
+    ],
+    { returning: true }
+  );
+
+  await db.voto_post.bulkCreate([
+    { post_id: postFacuAlgo.id,    estudiante_id: estLara.id,  tipo: "like" },
+    { post_id: postFacuAlgo.id,    estudiante_id: estDiego.id, tipo: "like" },
+    { post_id: postLaraBD.id,      estudiante_id: estFacu.id,  tipo: "like" },
+    { post_id: postFacuResumen.id, estudiante_id: estLara.id,  tipo: "dislike" },
   ]);
 
   const [sesBD, sesPOO] = await db.sesion_estudio.bulkCreate(

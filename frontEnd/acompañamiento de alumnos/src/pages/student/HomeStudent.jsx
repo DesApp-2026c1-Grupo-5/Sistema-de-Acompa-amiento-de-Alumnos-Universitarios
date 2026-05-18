@@ -7,7 +7,7 @@ import CreatePostCard from '../../components/home/CreatePostCard';
 import FeedPost from '../../components/home/FeedPost';
 import UpcomingSessionsCard from '../../components/home/UpcomingSessionsCard';
 import { useAuth } from '../../context/useAuth';
-import { getPosts, createPost } from '../../services/postService';
+import { getPosts, createPost, votePost } from '../../services/postService';
 import { upcomingSessions } from './home/mockData';
 import { getInitials, mapPostFromApi } from './home/mapPost';
 import styles from './HomeStudent.module.css';
@@ -28,7 +28,6 @@ function HomeStudent() {
   const [publishError, setPublishError] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [userReactions, setUserReactions] = useState({});
 
   useEffect(() => {
     getPosts()
@@ -75,23 +74,24 @@ function HomeStudent() {
     }
   };
 
-  const handleReaction = (postId, reaction) => {
-    const previous = userReactions[postId] ?? null;
-    const next = previous === reaction ? null : reaction;
-
-    setUserReactions((prev) => ({ ...prev, [postId]: next }));
-
-    setPublications((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id !== postId) return post;
-        const updated = { ...post };
-        if (previous === 'like') updated.likes = Math.max(0, (updated.likes ?? 0) - 1);
-        if (previous === 'dislike') updated.dislikes = Math.max(0, (updated.dislikes ?? 0) - 1);
-        if (next === 'like') updated.likes = (updated.likes ?? 0) + 1;
-        if (next === 'dislike') updated.dislikes = (updated.dislikes ?? 0) + 1;
-        return updated;
-      }),
-    );
+  const handleReaction = async (postId, tipo) => {
+    try {
+      const res = await votePost(postId, tipo);
+      setPublications((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                likes: res.data.likes,
+                dislikes: res.data.dislikes,
+                miVoto: res.data.mi_voto,
+              }
+            : p,
+        ),
+      );
+    } catch (err) {
+      setPublishError(err.message || 'No pudimos registrar tu voto.');
+    }
   };
 
   const handleLike = (postId) => handleReaction(postId, 'like');
@@ -131,7 +131,7 @@ function HomeStudent() {
       <FeedPost
         key={post.id}
         post={post}
-        userReaction={userReactions[post.id] ?? null}
+        userReaction={post.miVoto}
         onLike={handleLike}
         onDislike={handleDislike}
       />

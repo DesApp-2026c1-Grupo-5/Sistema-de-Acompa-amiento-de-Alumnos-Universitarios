@@ -14,7 +14,8 @@ export const mapPostFromApi = (apiPost) => {
     authorInitials: getInitials(nombre, apellido),
     createdAt: apiPost.createdAt,
     content: apiPost.contenido,
-    likes: 0,
-    dislikes: 0,
+    likes: apiPost.likes ?? 0,
+    dislikes: apiPost.dislikes ?? 0,
+    miVoto: apiPost.mi_voto ?? null,
   };
 };
