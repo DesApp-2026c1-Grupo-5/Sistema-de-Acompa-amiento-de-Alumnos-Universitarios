@@ -70,6 +70,36 @@
   border-left: 4px solid #00a8ad;
 }
 
+.navbar__logout {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  background: #ffd6dc;
+  color: #ef4444 !important;
+}
+
+.navbar__logout span,
+.navbar__logout svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
+}
+
+.navbar__logout:hover {
+  background: #ffc4cc;
+}
+
+:global(.dark) .navbar__logout {
+  border-top-color: #334155;
+  background: rgba(239, 68, 68, 0.28);
+}
+
+:global(.dark) .navbar__logout:hover {
+  background: rgba(239, 68, 68, 0.38);
+}
+
 /* DARK MODE */
 
 :global(.dark) .navbar {

@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
 import Layout from '../components/layouts/Layout';
+import PrivateRoute from '../components/auth/PrivateRoute';
 import { adminLinks } from '../components/navbar/AdminNavbar';
 import { studentLinks } from '../components/navbar/StudentNavbar';
 import HomeStudent from '../pages/student/HomeStudent';
@@ -30,72 +31,82 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    element: <Layout navbarBrand="Estudiante" navbarLinks={studentLinks} />,
+    element: <PrivateRoute requiredTipo="estudiante" />,
     children: [
       {
-        path: '/student/materials',
-        element: <MaterialRepositoryPage />,
-      },
-      {
-        path: '/student/home',
-        element: <HomeStudent />,
-      },
-      {
-        path: '/student/profile',
-        element: <Profile />,
-      },
-      {
-        path: '/student/academic-status',
-        element: <SituacionAcademica />,
-      },
-      {
-        path: '/student/academic-assistant',
-        element: <AcademicAssistant />,
-      },
-      {
-        path: '/student/study-sessions',
-        element: <StudySessions />,
-      },
-      {
-        path: '/student/report-material/:id',
-        element: <ReportMaterial />,
-      },
-      {
-        path: '/student/notifications',
-        element: <Notifications />,
+        element: <Layout navbarBrand="Estudiante" navbarLinks={studentLinks} />,
+        children: [
+          {
+            path: '/student/materials',
+            element: <MaterialRepositoryPage />,
+          },
+          {
+            path: '/student/home',
+            element: <HomeStudent />,
+          },
+          {
+            path: '/student/profile',
+            element: <Profile />,
+          },
+          {
+            path: '/student/academic-status',
+            element: <SituacionAcademica />,
+          },
+          {
+            path: '/student/academic-assistant',
+            element: <AcademicAssistant />,
+          },
+          {
+            path: '/student/study-sessions',
+            element: <StudySessions />,
+          },
+          {
+            path: '/student/report-material/:id',
+            element: <ReportMaterial />,
+          },
+          {
+            path: '/student/notifications',
+            element: <Notifications />,
+          },
+        ],
       },
     ],
   },
   {
-    element: <Layout navbarBrand="Administrador" navbarLinks={adminLinks} />,
+    element: <PrivateRoute requiredTipo="administrador" />,
     children: [
       {
-        path: '/admin/home',
-        element: <HomeAdmin />,
-      },
-      {
-        path: '/admin/careers',
-        element: <Careers />,
-      },
-      {
-        path: '/admin/study-plan/:id?',
-        element: <StudyPlan />,
-      },
-      {
-        path: '/admin/admins',
-        element: <Admins />,
-      },
-      {
-        path: '/admin/statistics',
-        element: <Statistics />,
-      },
-      {
-        path: '/admin/moderation',
-        element: <ModerationPage />,
-      },
-      {
-        path: '/admin/complaint-config',
-        element: <ComplaintConfigPage />,
+        element: <Layout navbarBrand="Administrador" navbarLinks={adminLinks} />,
+        children: [
+          {
+            path: '/admin/home',
+            element: <HomeAdmin />,
+          },
+          {
+            path: '/admin/careers',
+            element: <Careers />,
+          },
+          {
+            path: '/admin/study-plan/:id?',
+            element: <StudyPlan />,
+          },
+          {
+            path: '/admin/admins',
+            element: <Admins />,
+          },
+          {
+            path: '/admin/statistics',
+            element: <Statistics />,
+          },
+          {
+            path: '/admin/moderation',
+            element: <ModerationPage />,
+          },
+          {
+            path: '/admin/complaint-config',
+            element: <ComplaintConfigPage />,
+          },
+        ],
       },
     ],
   },

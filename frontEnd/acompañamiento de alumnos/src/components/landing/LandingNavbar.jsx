@@ -23,7 +23,7 @@ const LandingNavbar = ({ isDarkMode, toggleTheme }) => {
             Iniciar sesión
           </a>
 
-          <a href="/login" className={styles.registerButton}>
+          <a href="/login?tab=register" className={styles.registerButton}>
             Registrarse
           </a>
         </nav>
