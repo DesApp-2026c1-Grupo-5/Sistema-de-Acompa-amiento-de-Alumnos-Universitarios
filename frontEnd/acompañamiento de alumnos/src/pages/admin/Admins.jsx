@@ -3,11 +3,14 @@ import { Eye, EyeOff, Trash2 } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import ModalConfirmation from '../../components/common/ModalConfirmation';
+import { getAdmins, createAdmin } from '../../services/adminService';
 import styles from './Admins.module.css';
 
 function Admins() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [formError, setFormError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
@@ -17,21 +20,18 @@ function Admins() {
     name: '',
     lastname: '',
     email: '',
-    password: '',
-    role: 'admin'
+    password: ''
   });
 
   useEffect(() => {
-    fetch('/data/admins.json')
-      .then((res) => res.json())
-      .then((data) => {
-        setAdmins(data);
-        setLoading(false);
+    getAdmins()
+      .then((res) => {
+        setAdmins(res.data ?? []);
       })
       .catch((err) => {
-        console.error('Error fetching admins:', err);
-        setLoading(false);
-      });
+        setLoadError(err.message || 'No pudimos cargar los administradores.');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleInputChange = (e) => {
@@ -40,6 +40,7 @@ function Admins() {
       ...prev,
       [name]: value
     }));
+    setFormError('');
   };
 
   const handleSubmit = (e) => {
@@ -47,29 +48,35 @@ function Admins() {
     setShowConfirmModal(true);
   };
 
-  const handleConfirmCreate = () => {
-    const newAdmin = {
-      id: Date.now(),
-      name: formData.name,
-      lastname: formData.lastname,
-      email: formData.email,
-      role: formData.role,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
+  const handleConfirmCreate = async () => {
+    setFormError('');
+    try {
+      const res = await createAdmin(
+        formData.name,
+        formData.lastname,
+        formData.email,
+        formData.password
+      );
 
-    console.log('POST /api/admins', newAdmin);
+      setAdmins((prev) => [res.data, ...prev]);
 
-    setAdmins((prev) => [newAdmin, ...prev]);
-
-    setFormData({
-      name: '',
-      lastname: '',
-      email: '',
-      password: '',
-      role: 'admin'
-    });
-
-    setShowConfirmModal(false);
+      setFormData({
+        name: '',
+        lastname: '',
+        email: '',
+        password: ''
+      });
+    } catch (err) {
+      if (err.status === 409) {
+        setFormError('El email ya está registrado.');
+      } else if (err.status === 400 && err.details?.[0]?.message) {
+        setFormError(err.details[0].message);
+      } else {
+        setFormError(err.message || 'No pudimos crear el administrador.');
+      }
+    } finally {
+      setShowConfirmModal(false);
+    }
   };
 
   const handleCancelCreate = () => {
@@ -100,20 +107,10 @@ function Admins() {
       name: '',
       lastname: '',
       email: '',
-      password: '',
-      role: 'admin'
+      password: ''
     });
+    setFormError('');
   };
-
-  const getRoleBadgeClass = (role) => {
-    return role === 'super_admin' ? styles.badgeSuperAdmin : styles.badgeAdmin;
-  };
-
-  const getRoleLabel = (role) => {
-    return role === 'super_admin' ? 'Super Admin' : 'Administrador';
-  };
-
-  
 
   return (
     <div className={styles.container}>
@@ -205,18 +202,7 @@ function Admins() {
               </div>
             </div>
 
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Rol</label>
-              <select
-                name="role"
-                className={styles.input}
-                value={formData.role}
-                onChange={handleInputChange}
-              >
-                <option value="admin">Administrador</option>
-                <option value="super_admin">Super Admin</option>
-              </select>
-            </div>
+            {formError && <p className={styles.formError}>{formError}</p>}
 
             <div className={styles.formActions}>
               <Button
@@ -247,6 +233,8 @@ function Admins() {
 
           {loading ? (
             <div className={styles.emptyState}>Cargando...</div>
+          ) : loadError ? (
+            <div className={styles.emptyState}>{loadError}</div>
           ) : (
             <div className={styles.tableWrapper}>
               <table className={styles.table}>
@@ -254,7 +242,6 @@ function Admins() {
                   <tr>
                     <th>Nombre</th>
                     <th>Email</th>
-                    <th>Rol</th>
                     <th>Fecha creación</th>
                     <th>Acciones</th>
                   </tr>
@@ -263,15 +250,10 @@ function Admins() {
                   {admins.map((admin) => (
                     <tr key={admin.id}>
                       <td className={styles.nameCell}>
-                        {admin.name} {admin.lastname}
+                        {admin.nombre} {admin.apellido}
                       </td>
                       <td className={styles.emailCell}>{admin.email}</td>
-                      <td>
-                        <span className={`${styles.badge} ${getRoleBadgeClass(admin.role)}`}>
-                          {getRoleLabel(admin.role)}
-                        </span>
-                      </td>
-                      <td className={styles.dateCell}>{admin.createdAt}</td>
+                      <td className={styles.dateCell}>{admin.createdAt?.slice(0, 10)}</td>
                       <td>
                         <Button
                           variant="iconSquareDanger"
@@ -301,7 +283,7 @@ function Admins() {
       <ModalConfirmation
         open={showDeleteModal}
         title="Eliminar administrador"
-        message={`¿Está seguro que desea eliminar al administrador ${adminToDelete?.name} ${adminToDelete?.lastname}? Esta acción no se puede deshacer.`}
+        message={`¿Está seguro que desea eliminar al administrador ${adminToDelete?.nombre} ${adminToDelete?.apellido}? Esta acción no se puede deshacer.`}
         confirmText="Eliminar"
         cancelText="Cancelar"
         onConfirm={handleConfirmDelete}
