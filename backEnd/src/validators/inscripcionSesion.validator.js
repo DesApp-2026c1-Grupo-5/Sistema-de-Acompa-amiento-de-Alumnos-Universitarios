@@ -9,7 +9,9 @@ const inscripcionParamSchema = Joi.object({
   inscripcionId: Joi.number().integer().positive().required(),
 });
 
-const inscribirseBodySchema = Joi.object({});
+const inscribirseBodySchema = Joi.object({
+  sesion_id: Joi.number().integer().positive().required(),
+});
 
 module.exports = {
   sesionParamSchema,
