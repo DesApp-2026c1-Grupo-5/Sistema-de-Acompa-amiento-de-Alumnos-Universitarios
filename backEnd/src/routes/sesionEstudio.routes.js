@@ -1,7 +1,6 @@
 const express = require("express");
 
 const authMiddleware = require("../middlewares/auth.middleware");
-const asyncHandler = require("../middlewares/asyncHandler");
 const validate = require("../middlewares/validate.middleware");
 const {
   crearSesionSchema,
@@ -17,21 +16,21 @@ router.get(
   "/sesiones",
   authMiddleware,
   validate(listarSesionesQuerySchema, "query"),
-  asyncHandler(sesionEstudioController.listarSesiones)
+  sesionEstudioController.listarSesiones
 );
 
 router.get(
   "/sesiones/:id",
   authMiddleware,
   validate(idParamSchema, "params"),
-  asyncHandler(sesionEstudioController.obtenerSesion)
+  sesionEstudioController.obtenerSesion
 );
 
 router.post(
   "/sesiones",
   authMiddleware,
   validate(crearSesionSchema),
-  asyncHandler(sesionEstudioController.crearSesion)
+  sesionEstudioController.crearSesion
 );
 
 router.put(
@@ -39,14 +38,14 @@ router.put(
   authMiddleware,
   validate(idParamSchema, "params"),
   validate(editarSesionSchema),
-  asyncHandler(sesionEstudioController.editarSesion)
+  sesionEstudioController.editarSesion
 );
 
 router.patch(
   "/sesiones/:id/cancelar",
   authMiddleware,
   validate(idParamSchema, "params"),
-  asyncHandler(sesionEstudioController.cancelarSesion)
+  sesionEstudioController.cancelarSesion
 );
 
 module.exports = router;
