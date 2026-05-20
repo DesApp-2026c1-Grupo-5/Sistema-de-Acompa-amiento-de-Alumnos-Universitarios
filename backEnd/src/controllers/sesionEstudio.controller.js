@@ -147,7 +147,13 @@ const obtenerSesion = async (req, res, next) => {
     include: [
       { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido"] },
       { model: materia, attributes: ["id", "nombre", "anio_cursada"] },
-      { model: inscripcion_sesion, attributes: ["id", "estado", "estudiante_id"] },
+      {
+        model: inscripcion_sesion,
+        attributes: ["id", "estado", "estudiante_id"],
+        include: [
+          { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+        ],
+      },
     ],
   });
 
@@ -155,9 +161,25 @@ const obtenerSesion = async (req, res, next) => {
     return next(buildError("Sesion no encontrada", 404));
   }
 
+  const plain = sesion.get({ plain: true });
+  const base = normalizarSesion(plain, estudianteData.id);
+  const esCreador = plain.creador_id === estudianteData.id;
+
+  const pendingRequests = esCreador
+    ? (plain.inscripcion_sesions || [])
+        .filter((i) => i.estado === "pendiente")
+        .map((i) => ({
+          inscripcionId: i.id,
+          estudianteId: i.estudiante_id,
+          name: i.estudiante
+            ? `${i.estudiante.nombre} ${i.estudiante.apellido}`.trim()
+            : "Estudiante",
+        }))
+    : [];
+
   return res.status(200).json({
     ok: true,
-    data: normalizarSesion(sesion.get({ plain: true }), estudianteData.id),
+    data: { ...base, pendingRequests },
   });
 };
 
