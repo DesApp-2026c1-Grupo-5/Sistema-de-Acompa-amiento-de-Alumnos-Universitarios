@@ -3,16 +3,6 @@ import Button from "@/components/common/Button";
 import InputField from "@/components/common/InputField";
 import styles from './StudySessions.module.css';
 
-const SUBJECT_OPTIONS = [
-  'Algoritmos y Estructuras',
-  'Base de Datos',
-  'Programación I',
-  'Programación II',
-  'Programación III',
-  'Redes',
-  'Sistemas Operativos',
-];
-
 const INITIAL_FORM = {
   subject: '',
   topic: '',
@@ -29,9 +19,14 @@ const INITIAL_FORM = {
   requiresApproval: false,
 };
 
-function SessionForm({ onSubmit, onCancel }) {
-  const [form, setForm] = useState(INITIAL_FORM);
+function SessionForm({ onSubmit, onCancel, materias = [], initialValues = null }) {
+  const isEdit = Boolean(initialValues);
+  const [form, setForm] = useState(() =>
+    initialValues ? { ...INITIAL_FORM, ...initialValues } : INITIAL_FORM
+  );
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Actualiza campos simples del formulario
   const handleChange = (field, value) => {
@@ -47,6 +42,7 @@ function SessionForm({ onSubmit, onCancel }) {
         [field]: '',
       }));
     }
+    setSubmitError('');
   };
 
   const validateForm = () => {
@@ -117,45 +113,33 @@ function SessionForm({ onSubmit, onCancel }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!validateForm()) return;
 
-    const newSession = {
-      subject: form.subject,
-      topic: form.topic.trim(),
-      type: form.type,
-      meetingLink: form.type === 'virtual' ? form.meetingLink.trim() : '',
-      location: form.type === 'presencial' ? form.location.trim() : '',
-      date: form.date,
-      time: form.time,
-      durationHours: Number(form.durationHours),
-      durationMinutes: Number(form.durationMinutes),
-      maxParticipants: form.maxParticipants ? Number(form.maxParticipants) : null,
-      description: form.description.trim(),
-      privacy: form.privacy,
-      requiresApproval: form.requiresApproval,
+    const payload = {
+      materia_id: Number(form.subject),
+      tema: form.topic.trim(),
+      tipo: form.type,
+      link_ubicacion:
+        form.type === 'virtual' ? form.meetingLink.trim() : form.location.trim(),
+      fecha_hora: new Date(`${form.date}T${form.time}`).toISOString(),
+      duracion_minutos: Number(form.durationHours) * 60 + Number(form.durationMinutes),
+      cupos_max: form.maxParticipants ? Number(form.maxParticipants) : null,
+      descripcion: form.description.trim(),
+      requiere_aprobacion: form.requiresApproval,
     };
 
-    /*
-      Cuando el backend esté listo, acá iría algo parecido a esto:
-
-      fetch('http://localhost:3000/api/study-sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newSession),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          onSubmit(data);
-        });
-    */
-
-    onSubmit?.(newSession);
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      await onSubmit?.(payload);
+    } catch (err) {
+      setSubmitError(err.message || 'No pudimos guardar la sesión.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -171,9 +155,9 @@ function SessionForm({ onSubmit, onCancel }) {
           onChange={(e) => handleChange('subject', e.target.value)}
         >
           <option value="">Seleccionar materia</option>
-          {SUBJECT_OPTIONS.map((subject) => (
-            <option key={subject} value={subject}>
-              {subject}
+          {materias.map((materia) => (
+            <option key={materia.id} value={materia.id}>
+              {materia.nombre}
             </option>
           ))}
         </select>
@@ -351,13 +335,19 @@ function SessionForm({ onSubmit, onCancel }) {
         </span>
       </label>
 
+      {submitError && <p className={styles.error}>{submitError}</p>}
+
       <div className={styles.formActions}>
         <Button variant="ghost" onClick={onCancel}>
           Cancelar
         </Button>
 
-        <Button type="submit" variant="primary">
-          Crear sesión
+        <Button type="submit" variant="primary" disabled={submitting}>
+          {submitting
+            ? 'Guardando...'
+            : isEdit
+              ? 'Guardar cambios'
+              : 'Crear sesión'}
         </Button>
       </div>
     </form>

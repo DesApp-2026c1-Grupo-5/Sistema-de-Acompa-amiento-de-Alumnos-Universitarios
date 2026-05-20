@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Search,
@@ -15,106 +15,65 @@ import {
 
 import Modal from "../../components/common/Modal";
 import EmptyState from "../../components/common/EmptyState";
+import ErrorState from "../../components/common/ErrorState";
+import ModalConfirmation from "../../components/common/ModalConfirmation";
 import SessionForm from "./SessionForm";
+import {
+  getSessions,
+  getSession,
+  createSession,
+  updateSession,
+  cancelSession,
+  joinSession,
+  approveParticipant,
+  rejectParticipant,
+} from "../../services/sessionService";
+import { getMaterias } from "../../services/materialService";
+import { mapSessionFromApi } from "./sessions/mapSession";
 import styles from "./StudySessions.module.css";
 
-const currentUser = {
-  id: 1,
-  initials: "FG",
-  name: "Federico García",
-  contactIds: [2, 3],
-  profilePrivacy: "public",
-};
-
-const initialSessions = [
-  {
-    id: 1,
-    subject: "Algoritmos y Estructuras",
-    topic: "Árboles binarios y recorridos",
-    type: "virtual",
-    date: "2026-04-24",
-    time: "18:00",
-    durationHours: 2,
-    durationMinutes: 30,
-    maxParticipants: 15,
-    participantsCount: 8,
-    creatorId: 2,
-    creatorName: "María López",
-    creatorInitials: "ML",
-    status: "available",
-    userStatus: "none",
-  },
-  {
-    id: 2,
-    subject: "Base de Datos",
-    topic: "Normalización y diseño de BD",
-    type: "presencial",
-    date: "2026-04-25",
-    time: "16:00",
-    durationHours: 3,
-    durationMinutes: 0,
-    maxParticipants: 12,
-    participantsCount: 12,
-    creatorId: 4,
-    creatorName: "Carlos Rodríguez",
-    creatorInitials: "CR",
-    status: "full",
-    userStatus: "none",
-  },
-  {
-    id: 3,
-    subject: "Redes",
-    topic: "Protocolos TCP/IP",
-    type: "virtual",
-    date: "2026-04-26",
-    time: "19:00",
-    durationHours: 2,
-    durationMinutes: 0,
-    maxParticipants: 10,
-    participantsCount: 5,
-    creatorId: 3,
-    creatorName: "Ana Martínez",
-    creatorInitials: "AM",
-    status: "available",
-    userStatus: "pending",
-    requiresApproval: true,
-  },
-  {
-    id: 4,
-    subject: "Programación III",
-    topic: "Patrones de diseño",
-    type: "virtual",
-    date: "2026-04-27",
-    time: "17:30",
-    durationHours: 2,
-    durationMinutes: 0,
-    maxParticipants: 15,
-    participantsCount: 10,
-    creatorId: 1,
-    creatorName: "Federico García",
-    creatorInitials: "FG",
-    status: "available",
-    userStatus: "created",
-  },
-];
-
 function StudySessions() {
-  const [sessions, setSessions] = useState(initialSessions);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [sessions, setSessions] = useState([]);
+  const [materias, setMaterias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState("");
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editSession, setEditSession] = useState(null);
+  const [sessionToCancel, setSessionToCancel] = useState(null);
+  const [detailSession, setDetailSession] = useState(null);
+
   const [showFilters, setShowFilters] = useState(false);
   const [activeMyTab, setActiveMyTab] = useState("created");
-  const [detailSession, setDetailSession] = useState(null);
 
   const [search, setSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [sortBy, setSortBy] = useState("nextDate");
-  const [onlyContacts, setOnlyContacts] = useState(false);
+
+  useEffect(() => {
+    Promise.all([getSessions(), getMaterias()])
+      .then(([sesRes, matRes]) => {
+        setSessions((sesRes?.data ?? []).map(mapSessionFromApi));
+        setMaterias(matRes?.data ?? []);
+      })
+      .catch((err) => {
+        setError(err.message || "No pudimos cargar las sesiones.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const reloadSessions = async () => {
+    const res = await getSessions();
+    setSessions((res?.data ?? []).map(mapSessionFromApi));
+  };
 
   const subjects = [...new Set(sessions.map((session) => session.subject))];
 
   const formatDate = (date) => {
+    if (!date) return "";
     const [year, month, day] = date.split("-");
     return `${day}/${month}/${year}`;
   };
@@ -124,40 +83,36 @@ function StudySessions() {
     return `${session.durationHours}h ${session.durationMinutes}m`;
   };
 
-  const isFull = (session) => {
-    return session.maxParticipants && session.participantsCount >= session.maxParticipants;
-  };
+  const isFull = (session) =>
+    session.maxParticipants && session.participantsCount >= session.maxParticipants;
 
   const getStatusText = (session) => {
+    if (session.cancelled) return "Cancelada";
     if (isFull(session)) return "Completa";
     if (session.userStatus === "pending") return "Pendiente";
     return "Disponible";
   };
 
   const getStatusClass = (session) => {
-    if (isFull(session)) return styles.statusFull;
+    if (session.cancelled || isFull(session)) return styles.statusFull;
     if (session.userStatus === "pending") return styles.statusPending;
     return styles.statusAvailable;
   };
 
   const mySessions = useMemo(() => {
     if (activeMyTab === "created") {
-      return sessions.filter((session) => session.creatorId === currentUser.id);
+      return sessions.filter((session) => session.userStatus === "created");
     }
-
     if (activeMyTab === "joined") {
       return sessions.filter((session) => session.userStatus === "joined");
     }
-
     return sessions.filter((session) => session.userStatus === "pending");
   }, [sessions, activeMyTab]);
 
   const availableSessions = useMemo(() => {
-    let result = sessions.filter((session) => session.creatorId !== currentUser.id);
-
-    if (onlyContacts) {
-      result = result.filter((session) => currentUser.contactIds.includes(session.creatorId));
-    }
+    let result = sessions.filter(
+      (session) => session.userStatus !== "created" && !session.cancelled
+    );
 
     if (search.trim()) {
       const value = search.toLowerCase();
@@ -190,51 +145,112 @@ function StudySessions() {
         const spotsB = b.maxParticipants ? b.maxParticipants - b.participantsCount : 999;
         return spotsB - spotsA;
       }
-
       return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
     });
 
     return result;
-  }, [sessions, search, subjectFilter, typeFilter, availabilityFilter, sortBy, onlyContacts]);
+  }, [sessions, search, subjectFilter, typeFilter, availabilityFilter, sortBy]);
 
-  const handleCreateSession = (newSession) => {
-    const sessionToAdd = {
-      id: Date.now(),
-      ...newSession,
-      creatorId: currentUser.id,
-      creatorName: currentUser.name,
-      creatorInitials: currentUser.initials,
-      participantsCount: 0,
-      status: "available",
-      userStatus: "created",
-    };
-
-    setSessions((prev) => [sessionToAdd, ...prev]);
-    setIsCreateModalOpen(false);
+  const openCreateForm = () => {
+    setEditSession(null);
+    setFormOpen(true);
   };
 
-  const handleJoinSession = (session) => {
-    if (isFull(session)) return;
-
-    setSessions((prev) =>
-      prev.map((item) => {
-        if (item.id !== session.id) return item;
-
-        if (item.requiresApproval) {
-          return {
-            ...item,
-            userStatus: "pending",
-          };
-        }
-
-        return {
-          ...item,
-          userStatus: "joined",
-          participantsCount: item.participantsCount + 1,
-        };
-      })
-    );
+  const openEditForm = (session) => {
+    setEditSession(session);
+    setFormOpen(true);
   };
+
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditSession(null);
+  };
+
+  const handleSubmitForm = async (payload) => {
+    if (editSession) {
+      await updateSession(editSession.id, payload);
+    } else {
+      await createSession(payload);
+    }
+    await reloadSessions();
+    closeForm();
+  };
+
+  const handleJoinSession = async (session) => {
+    setActionError("");
+    try {
+      await joinSession(session.id);
+      await reloadSessions();
+    } catch (err) {
+      setActionError(err.message || "No pudimos completar la inscripción.");
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    setActionError("");
+    try {
+      await cancelSession(sessionToCancel.id);
+      await reloadSessions();
+    } catch (err) {
+      setActionError(err.message || "No pudimos cancelar la sesión.");
+    } finally {
+      setSessionToCancel(null);
+    }
+  };
+
+  const handleViewDetail = async (session) => {
+    setActionError("");
+    setDetailSession(session);
+    try {
+      const res = await getSession(session.id);
+      setDetailSession(mapSessionFromApi(res.data));
+    } catch {
+      // si falla, queda el dato del listado
+    }
+  };
+
+  const handleApprove = async (inscripcionId) => {
+    setActionError("");
+    try {
+      await approveParticipant(detailSession.id, inscripcionId);
+      const res = await getSession(detailSession.id);
+      setDetailSession(mapSessionFromApi(res.data));
+      await reloadSessions();
+    } catch (err) {
+      setActionError(err.message || "No pudimos aprobar la solicitud.");
+    }
+  };
+
+  const handleReject = async (inscripcionId) => {
+    setActionError("");
+    try {
+      await rejectParticipant(detailSession.id, inscripcionId);
+      const res = await getSession(detailSession.id);
+      setDetailSession(mapSessionFromApi(res.data));
+      await reloadSessions();
+    } catch (err) {
+      setActionError(err.message || "No pudimos rechazar la solicitud.");
+    }
+  };
+
+  const formInitialValues = editSession
+    ? {
+        subject: String(editSession.materiaId ?? ""),
+        topic: editSession.topic,
+        type: editSession.type,
+        meetingLink: editSession.type === "virtual" ? editSession.linkUbicacion : "",
+        location: editSession.type === "presencial" ? editSession.linkUbicacion : "",
+        date: editSession.date,
+        time: editSession.time,
+        durationHours: String(editSession.durationHours),
+        durationMinutes: String(editSession.durationMinutes),
+        maxParticipants: editSession.maxParticipants
+          ? String(editSession.maxParticipants)
+          : "",
+        description: editSession.description,
+        requiresApproval: editSession.requiresApproval,
+      }
+    : null;
 
   const getJoinButton = (session) => {
     if (isFull(session)) {
@@ -244,7 +260,6 @@ function StudySessions() {
         </button>
       );
     }
-
     if (session.userStatus === "joined") {
       return (
         <button className={styles.joinedButton} disabled>
@@ -252,7 +267,6 @@ function StudySessions() {
         </button>
       );
     }
-
     if (session.userStatus === "pending") {
       return (
         <button className={styles.pendingButton} disabled>
@@ -260,7 +274,6 @@ function StudySessions() {
         </button>
       );
     }
-
     return (
       <button className={styles.joinButton} onClick={() => handleJoinSession(session)}>
         Unirse
@@ -268,13 +281,33 @@ function StudySessions() {
     );
   };
 
+  if (loading) {
+    return (
+      <div className={styles.screen}>
+        <main className={styles.content}>
+          <p className={styles.statusText}>Cargando sesiones…</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.screen}>
+        <main className={styles.content}>
+          <ErrorState title="No pudimos cargar las sesiones" description={error} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.screen}>
       <main className={styles.content}>
         <section className={styles.titleRow}>
           <h1>Sesiones de estudio</h1>
 
-          <button className={styles.createButton} onClick={() => setIsCreateModalOpen(true)}>
+          <button className={styles.createButton} onClick={openCreateForm}>
             <Plus size={20} />
             Crear sesión
           </button>
@@ -342,18 +375,11 @@ function StudySessions() {
                   <option value="spots">Cupos disponibles</option>
                 </select>
               </label>
-
-              <label className={styles.checkboxFilter}>
-                <input
-                  type="checkbox"
-                  checked={onlyContacts}
-                  onChange={(e) => setOnlyContacts(e.target.checked)}
-                />
-                Solo sesiones de contactos
-              </label>
             </div>
           )}
         </section>
+
+        {actionError && <p className={styles.actionError}>{actionError}</p>}
 
         <section className={styles.mySessionsBox}>
           <h2>Mis sesiones</h2>
@@ -406,12 +432,26 @@ function StudySessions() {
                 </div>
 
                 <div className={styles.myActions}>
-                  <button onClick={() => setDetailSession(session)}>Ver detalle</button>
+                  <button onClick={() => handleViewDetail(session)}>Ver detalle</button>
 
-                  {session.creatorId === currentUser.id && (
+                  {session.userStatus === "created" && !session.cancelled && (
                     <>
-                      <Edit size={18} />
-                      <Trash2 size={18} className={styles.deleteIcon} />
+                      <button
+                        type="button"
+                        className={styles.iconButton}
+                        aria-label="Editar sesión"
+                        onClick={() => openEditForm(session)}
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.iconButton}
+                        aria-label="Cancelar sesión"
+                        onClick={() => setSessionToCancel(session)}
+                      >
+                        <Trash2 size={18} className={styles.deleteIcon} />
+                      </button>
                     </>
                   )}
                 </div>
@@ -423,68 +463,78 @@ function StudySessions() {
         <section className={styles.availableSection}>
           <h2>Sesiones disponibles</h2>
 
-          <div className={styles.sessionsGrid}>
-            {availableSessions.map((session) => (
-              <article className={styles.sessionCard} key={session.id}>
-                <div className={styles.cardTop}>
-                  <div>
-                    <h3>
-                      {session.subject}
-                      <span className={`${styles.statusBadge} ${getStatusClass(session)}`}>
-                        {getStatusText(session)}
-                      </span>
-                    </h3>
-                    <p>{session.topic}</p>
+          {availableSessions.length === 0 ? (
+            <EmptyState
+              title="No hay sesiones disponibles"
+              description="Cuando haya sesiones de otros estudiantes, aparecerán acá."
+            />
+          ) : (
+            <div className={styles.sessionsGrid}>
+              {availableSessions.map((session) => (
+                <article className={styles.sessionCard} key={session.id}>
+                  <div className={styles.cardTop}>
+                    <div>
+                      <h3>
+                        {session.subject}
+                        <span className={`${styles.statusBadge} ${getStatusClass(session)}`}>
+                          {getStatusText(session)}
+                        </span>
+                      </h3>
+                      <p>{session.topic}</p>
+                    </div>
+
+                    <MoreVertical size={21} className={styles.moreIcon} />
                   </div>
 
-                  <MoreVertical size={21} className={styles.moreIcon} />
-                </div>
+                  <div className={styles.cardMeta}>
+                    <span>
+                      {session.type === "virtual" ? <Video size={16} /> : <MapPin size={16} />}
+                      {session.type === "virtual" ? "Virtual" : "Presencial"}
+                    </span>
 
-                <div className={styles.cardMeta}>
-                  <span>
-                    {session.type === "virtual" ? <Video size={16} /> : <MapPin size={16} />}
-                    {session.type === "virtual" ? "Virtual" : "Presencial"}
-                  </span>
+                    <span>
+                      <CalendarDays size={16} />
+                      {formatDate(session.date)} · {session.time}
+                    </span>
 
-                  <span>
-                    <CalendarDays size={16} />
-                    {formatDate(session.date)} · {session.time}
-                  </span>
+                    <span>
+                      <Clock size={16} />
+                      {formatDuration(session)}
+                    </span>
 
-                  <span>
-                    <Clock size={16} />
-                    {formatDuration(session)}
-                  </span>
-
-                  <span>
-                    <Users size={16} />
-                    {session.participantsCount}/{session.maxParticipants} participantes
-                  </span>
-                </div>
-
-                <footer className={styles.cardFooter}>
-                  <div className={styles.creator}>
-                    <div className={styles.creatorAvatar}>{session.creatorInitials}</div>
-                    <span>{session.creatorName}</span>
+                    <span>
+                      <Users size={16} />
+                      {session.participantsCount}/{session.maxParticipants ?? "∞"} participantes
+                    </span>
                   </div>
 
-                  {getJoinButton(session)}
-                </footer>
-              </article>
-            ))}
-          </div>
+                  <footer className={styles.cardFooter}>
+                    <div className={styles.creator}>
+                      <div className={styles.creatorAvatar}>{session.creatorInitials}</div>
+                      <span>{session.creatorName}</span>
+                    </div>
+
+                    {getJoinButton(session)}
+                  </footer>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
       <Modal
-        open={isCreateModalOpen}
-        title="Crear nueva sesión"
-        onClose={() => setIsCreateModalOpen(false)}
+        open={formOpen}
+        title={editSession ? "Editar sesión" : "Crear nueva sesión"}
+        onClose={closeForm}
         size="lg"
       >
         <SessionForm
-          onCancel={() => setIsCreateModalOpen(false)}
-          onSubmit={handleCreateSession}
+          key={editSession?.id ?? "new"}
+          materias={materias}
+          initialValues={formInitialValues}
+          onCancel={closeForm}
+          onSubmit={handleSubmitForm}
         />
       </Modal>
 
@@ -499,15 +549,60 @@ function StudySessions() {
             <h3>{detailSession.subject}</h3>
             <p>{detailSession.topic}</p>
             <p>Tipo: {detailSession.type === "virtual" ? "Virtual" : "Presencial"}</p>
-            <p>Fecha: {formatDate(detailSession.date)} · {detailSession.time}</p>
+            <p>
+              Fecha: {formatDate(detailSession.date)} · {detailSession.time}
+            </p>
             <p>Duración: {formatDuration(detailSession)}</p>
             <p>
-              Participantes: {detailSession.participantsCount}/{detailSession.maxParticipants}
+              Participantes: {detailSession.participantsCount}/
+              {detailSession.maxParticipants ?? "∞"}
             </p>
             <p>Creador: {detailSession.creatorName}</p>
+            {detailSession.description && <p>{detailSession.description}</p>}
+
+            {detailSession.userStatus === "created" &&
+              detailSession.pendingRequests?.length > 0 && (
+                <div className={styles.pendingBox}>
+                  <h4>Solicitudes pendientes</h4>
+                  {detailSession.pendingRequests.map((req) => (
+                    <div key={req.inscripcionId} className={styles.pendingItem}>
+                      <span>{req.name}</span>
+                      <div className={styles.pendingActions}>
+                        <button
+                          type="button"
+                          className={styles.approveBtn}
+                          onClick={() => handleApprove(req.inscripcionId)}
+                        >
+                          Aprobar
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.rejectBtn}
+                          onClick={() => handleReject(req.inscripcionId)}
+                        >
+                          Rechazar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            {actionError && <p className={styles.actionError}>{actionError}</p>}
           </div>
         )}
       </Modal>
+
+      <ModalConfirmation
+        open={Boolean(sessionToCancel)}
+        title="Cancelar sesión"
+        message={`¿Seguro que querés cancelar la sesión de ${sessionToCancel?.subject ?? ""}? Esta acción no se puede deshacer.`}
+        confirmText="Cancelar sesión"
+        cancelText="Volver"
+        variant="danger"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setSessionToCancel(null)}
+      />
     </div>
   );
 }
