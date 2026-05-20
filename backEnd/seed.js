@@ -72,9 +72,9 @@ async function seed() {
 
   const [estFacu, estLara, estDiego] = await db.estudiante.bulkCreate(
     [
-      { usuario_id: uEst1.id, nombre: "Facundo", apellido: "Torres", privacidad: "publico",   pub_inscripciones: true,  pub_regularizaciones: true,  pub_aprobaciones: true  },
-      { usuario_id: uEst2.id, nombre: "Lara",    apellido: "Méndez", privacidad: "contactos", pub_inscripciones: true,  pub_regularizaciones: false, pub_aprobaciones: true  },
-      { usuario_id: uEst3.id, nombre: "Diego",   apellido: "Ríos",   privacidad: "privado",   pub_inscripciones: false, pub_regularizaciones: false, pub_aprobaciones: false },
+      { usuario_id: uEst1.id, nombre: "Facundo", apellido: "Torres", privacidad: "publico",   pub_inscripciones: true,  pub_regularizaciones: true,  pub_aprobaciones: true,  bio: "Estudiante de Tecnicatura en Programación. Me interesa el desarrollo web y compartir apuntes con mis compañeros." },
+      { usuario_id: uEst2.id, nombre: "Lara",    apellido: "Méndez", privacidad: "contactos", pub_inscripciones: true,  pub_regularizaciones: false, pub_aprobaciones: true,  bio: "Cursando segundo año. Siempre dispuesta a armar grupos de estudio para los parciales." },
+      { usuario_id: uEst3.id, nombre: "Diego",   apellido: "Ríos",   privacidad: "privado",   pub_inscripciones: false, pub_regularizaciones: false, pub_aprobaciones: false, bio: "Estudiante de Licenciatura en Sistemas, enfocado en redes y bases de datos." },
     ],
     { returning: true }
   );
@@ -143,10 +143,10 @@ async function seed() {
 
   const [matResumen, matVideoPOO, matLinkDiscord, matParcialBD] = await db.material.bulkCreate(
     [
-      { materia_id: matAlgo.id, estudiante_id: estFacu.id,  tipo: "archivo", titulo: "Resumen Algoritmos I",       descripcion: "Resumen completo del cuatri",   url_o_path: "/uploads/resumen-algo.pdf", formato: "pdf", size_bytes: 245000, suspendido: false, created_at: new Date() },
-      { materia_id: matPOO.id,  estudiante_id: estLara.id,  tipo: "link",    titulo: "Video clase 3 - POO",        descripcion: "Grabación de la clase",         url_o_path: "https://youtube.com/x",     formato: "url", subtipo_link: "youtube", size_bytes: null, suspendido: false, created_at: new Date() },
-      { materia_id: matBD.id,   estudiante_id: estFacu.id,  tipo: "discord", titulo: "Servidor estudio BD",        descripcion: "Canal con consultas resueltas", url_o_path: null,                         formato: null,  discord_servidor: "UNAHUR-BD", discord_canal: "general", size_bytes: null, suspendido: false, created_at: new Date() },
-      { materia_id: matBD.id,   estudiante_id: estDiego.id, tipo: "archivo", titulo: "Parcial 1 BD 2024 resuelto", descripcion: "Resolución completa",           url_o_path: "/uploads/parcial-bd.pdf",   formato: "pdf", size_bytes: 180000, suspendido: false, created_at: new Date() },
+      { materia_id: matAlgo.id, estudiante_id: estFacu.id,  tipo: "file",    titulo: "Resumen Algoritmos I",       descripcion: "Resumen completo del cuatri",   url_o_path: "https://example.com/resumen-algo.pdf", formato: "pdf", size_bytes: 245000, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
+      { materia_id: matPOO.id,  estudiante_id: estLara.id,  tipo: "video",   titulo: "Video clase 3 - POO",        descripcion: "Grabación de la clase",         url_o_path: "https://youtube.com/watch?v=x",        formato: "url", subtipo_link: "youtube", size_bytes: null, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
+      { materia_id: matBD.id,   estudiante_id: estFacu.id,  tipo: "discord", titulo: "Servidor estudio BD",        descripcion: "Canal con consultas resueltas", url_o_path: "https://discord.gg/unahur-bd",         formato: null,  discord_servidor: "UNAHUR-BD", discord_canal: "general", size_bytes: null, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
+      { materia_id: matBD.id,   estudiante_id: estDiego.id, tipo: "file",    titulo: "Parcial 1 BD 2024 resuelto", descripcion: "Resolución completa",           url_o_path: "https://example.com/parcial-bd.pdf",   formato: "pdf", size_bytes: 180000, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
     ],
     { returning: true }
   );
@@ -157,10 +157,10 @@ async function seed() {
   await matParcialBD.addTags([tagApunte.id, tagParcial.id]);
 
   await db.valoracion.bulkCreate([
-    { material_id: matResumen.id,   estudiante_id: estLara.id,  valor: "util",    fecha: new Date() },
-    { material_id: matResumen.id,   estudiante_id: estDiego.id, valor: "util",    fecha: new Date() },
-    { material_id: matVideoPOO.id,  estudiante_id: estFacu.id,  valor: "util",    fecha: new Date() },
-    { material_id: matParcialBD.id, estudiante_id: estFacu.id,  valor: "no_util", fecha: new Date() },
+    { material_id: matResumen.id,   estudiante_id: estLara.id,  valor: "like",    fecha: new Date() },
+    { material_id: matResumen.id,   estudiante_id: estDiego.id, valor: "like",    fecha: new Date() },
+    { material_id: matVideoPOO.id,  estudiante_id: estFacu.id,  valor: "like",    fecha: new Date() },
+    { material_id: matParcialBD.id, estudiante_id: estFacu.id,  valor: "dislike", fecha: new Date() },
   ]);
 
   const [denuncia1] = await db.denuncia.bulkCreate(

@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
 
       material.belongsTo(models.materia, {
-        foreignKey: 'materia_id'
+        foreignKey: 'materia_id',
+        as: 'materia'
       });
 
       material.belongsTo(models.estudiante, {
@@ -47,7 +48,6 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'material',
-    timestamps: false,
   });
   return material;
 };

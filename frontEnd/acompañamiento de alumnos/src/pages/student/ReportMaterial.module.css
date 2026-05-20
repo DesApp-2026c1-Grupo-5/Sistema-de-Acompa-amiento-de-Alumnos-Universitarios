@@ -194,9 +194,37 @@
   background: #ec6f80;
 }
 
-.loading {
-  padding: 40px;
-  color: var(--text-color);
+.statusText {
+  margin: 0;
+  padding: 16px 0;
+
+  text-align: center;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.backButton {
+  align-self: center;
+
+  height: 48px;
+  padding: 0 28px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #00a8ad;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.backButton:hover {
+  background: #048b8f;
 }
 
 /* Dark mode */

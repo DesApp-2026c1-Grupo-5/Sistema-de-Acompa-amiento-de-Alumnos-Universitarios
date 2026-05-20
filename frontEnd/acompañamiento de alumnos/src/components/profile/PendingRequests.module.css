@@ -113,3 +113,13 @@
   border-color: #475569;
   color: #ffffff !important;
 }
+
+.empty {
+  margin: 0;
+  color: #526987;
+  font-size: 14px;
+}
+
+:global(html.dark) .empty {
+  color: #94a3b8;
+}

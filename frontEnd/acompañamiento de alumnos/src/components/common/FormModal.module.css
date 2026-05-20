@@ -16,6 +16,10 @@
   color: #334155;
 }
 
+:global(html.dark) .label {
+  color: #cbd5e1;
+}
+
 .required {
   color: #dc2626;
   margin-left: 2px;
@@ -37,6 +41,11 @@
   outline: none;
   border-color: #00bcd4;
   box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.12);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .input::placeholder {

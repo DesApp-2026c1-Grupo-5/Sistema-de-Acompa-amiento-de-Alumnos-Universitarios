@@ -15,7 +15,13 @@ const validate = (schema, source = "body") => (req, res, next) => {
     throw e;
   }
 
-  req[source] = value;
+  // En Express 5 req.query es un getter de solo lectura; defineProperty
+  // permite reemplazarlo con los valores ya validados/convertidos por Joi.
+  Object.defineProperty(req, source, {
+    value,
+    writable: true,
+    configurable: true,
+  });
   return next();
 };
 
