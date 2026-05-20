@@ -1,84 +1,26 @@
 # AGENTS.md
 
-## Project Structure
+## Repo Layout
+- This repo has two independent Node projects: `frontEnd/acompañamiento de alumnos/` and `backEnd/`.
+- The frontend path includes a space and `ñ`; always quote it in shell commands.
+- Root `package-lock.json` and `frontEnd/package-lock.json` are placeholders; real installs/lockfiles are inside each app directory.
 
-- **Frontend**: `frontEnd/acompañamiento de alumnos/` (React + Vite)
-- **Backend**: `backEnd/` (Express + Sequelize + MySQL)
+## Commands You Should Actually Use
+- Frontend (run from `frontEnd/acompañamiento de alumnos/`): `npm run dev`, `npm run lint`, `npm run build`, `npm run preview`.
+- Backend (run from `backEnd/`): `npm run dev` starts `nodemon src/server.js`.
+- Backend tests are not implemented: `npm test` is a placeholder that exits with error.
 
-## Commands
+## Backend Data Safety Gotcha
+- `backEnd/src/server.js` runs `sequelize.sync({ force: true })` on startup (currently duplicated), which drops/recreates tables in the target DB.
 
-### Frontend
-```bash
-cd frontEnd/acompañamiento de alumnos
-npm run dev      # Start dev server (port 5173)
-npm run build    # Production build
-npm run preview # Preview production build
-npm run lint     # ESLint (flat config)
-```
-<Button
-  variant="primary"      // primary, secondary, outline, ghost, danger, dangerSolid, primarySoft, gradient, filter, filterActive, iconSquare, iconSquareDanger
-  size="md"             // sm, md, lg
-  type="button"         // button, submit, reset
-  disabled={false}
-  fullWidth={false}
-  iconLeft={null}       // elemento React (ej: <Icon size={16} />)
-  iconRight={null}
-  onClick={handler}
->
-  Texto del botón
-</Button>
-```
+## DB and Sequelize Wiring
+- Backend env is loaded from `backEnd/.env` (`PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_TEST_NAME`, `DB_PROD_NAME`, `DB_HOST`, `DB_PORT`, `DB_DIALECT`).
+- `backEnd/.sequelizerc` remaps Sequelize CLI paths to `src/db/config/config.js`, `src/db/models`, `src/db/migrations`, and `src/db/seeders`.
 
-### ModalConfirmation (`src/components/common/ModalConfirmation.jsx`)
-Componente de modal de confirmación reutilizable.
+## Real Entrypoints
+- Frontend bootstraps at `frontEnd/acompañamiento de alumnos/src/main.jsx` and uses router config in `frontEnd/acompañamiento de alumnos/src/router/AppRouter.jsx`.
+- Backend bootstraps at `backEnd/src/server.js`; Express app setup is in `backEnd/src/app.js`.
 
-```jsx
-import ModalConfirmation from '../../components/common/ModalConfirmation';
-
-<ModalConfirmation
-  open={showModal}           // boolean - controlar visibilidad
-  title="Confirmar acción"   // titulo del modal
-  message="¿Está seguro?"   // mensaje de confirmación
-  confirmText="Confirmar"    // texto del botón confirmar
-  cancelText="Cancelar"      // texto del botón cancelar
-  onConfirm={handler}        // callback al confirmar
-  onCancel={handler}         // callback al cancelar
-  variant="danger"          // 'danger' (rojo) o 'primary' (azul)
-/>
-```
-### Backend
-- No entry point yet (`index.js` missing). Create it and add `"dev": "nodemon index.js"` to scripts.
-- Sequelize CLI available: `npx sequelize-cli` for migrations/seeders.
-
-## Frontend Stack
-
-- React 19.2.5 + Vite 8.0.9
-- React Router DOM v7 (`createBrowserRouter` - data router)
-- ESLint flat config (`eslint.config.js`, no legacy `.eslintrc`)
-- No typecheck script
-
-## Routing (src/router/AppRouter.jsx)
-
-| Group | Paths |
-|-------|-------|
-| Public | `/`, `/login` |
-| Student | `/student/home`, `/student/profile`, `/student/materials`, `/student/study-sessions`, `/student/academic-status`, `/student/academic-assistant` |
-| Admin | `/admin/home`, `/admin/careers`, `/admin/study-plan`, `/admin/reports`, `/admin/admins`, `/admin/statistics` |
-
-## Institutional Colors
-
-- Cyan: `#00bcd4`
-- Dark Green: `#004d40`
-- Teal: `#00695c`
-- White: `#ffffff`
-
-## Backend Config
-
-- `.sequelizerc` maps to `src/db/{config,models,seeders,migrations}`
-- Database: MySQL (via `mysql2`)
-- Env vars: `.env` file exists but no app entry point configured yet
-
-## Current Gaps
-
-- Backend: no `index.js`, no API routes, no auth
-- No tests in either project
+## Verification Reality
+- No CI workflows in `.github/workflows/` and no pre-commit config found.
+- Practical validation is frontend `npm run lint` then `npm run build`; backend has no automated test gate.

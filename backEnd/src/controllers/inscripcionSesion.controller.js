@@ -1,72 +1,58 @@
 const inscripcionSesionService = require("../services/inscripcionSesion.service");
 
 const inscribirse = async (req, res, next) => {
-  try {
-    const inscripcion = await inscripcionSesionService.inscribirse(req.params.id, req.user.sub);
-
-    return res.status(201).json({
-      ok: true,
-      data: inscripcion,
-    });
-  } catch (error) {
+  if (!req.params.id) {
+    const error = new Error("id de sesion requerido");
+    error.statusCode = 400;
     return next(error);
   }
+
+  const inscripcion = await inscripcionSesionService.inscribirse(req.params.id, req.user.sub);
+
+  return res.status(201).json({
+    ok: true,
+    data: inscripcion,
+  });
 };
 
 const inscribirseLegacy = async (req, res, next) => {
-  try {
-    req.params.id = req.body.sesion_id;
-    return await inscribirse(req, res, next);
-  } catch (error) {
-    return next(error);
-  }
+  req.params.id = req.body.sesion_id;
+  return inscribirse(req, res, next);
 };
 
 const cancelarMiInscripcion = async (req, res, next) => {
-  try {
-    const data = await inscripcionSesionService.cancelarMiInscripcion(req.params.id, req.user.sub);
+  const data = await inscripcionSesionService.cancelarMiInscripcion(req.params.id, req.user.sub);
 
-    return res.status(200).json({
-      ok: true,
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
+  return res.status(200).json({
+    ok: true,
+    data,
+  });
 };
 
 const aprobarParticipante = async (req, res, next) => {
-  try {
-    const data = await inscripcionSesionService.aprobarParticipante(
-      req.params.id,
-      req.params.inscripcionId,
-      req.user.sub
-    );
+  const data = await inscripcionSesionService.aprobarParticipante(
+    req.params.id,
+    req.params.inscripcionId,
+    req.user.sub
+  );
 
-    return res.status(200).json({
-      ok: true,
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
+  return res.status(200).json({
+    ok: true,
+    data,
+  });
 };
 
 const rechazarParticipante = async (req, res, next) => {
-  try {
-    const data = await inscripcionSesionService.rechazarParticipante(
-      req.params.id,
-      req.params.inscripcionId,
-      req.user.sub
-    );
+  const data = await inscripcionSesionService.rechazarParticipante(
+    req.params.id,
+    req.params.inscripcionId,
+    req.user.sub
+  );
 
-    return res.status(200).json({
-      ok: true,
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
+  return res.status(200).json({
+    ok: true,
+    data,
+  });
 };
 
 module.exports = {
