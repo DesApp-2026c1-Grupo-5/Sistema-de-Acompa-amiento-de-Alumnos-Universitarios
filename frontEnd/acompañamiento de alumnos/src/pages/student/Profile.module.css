@@ -4,6 +4,17 @@
   padding: 24px 24px 64px;
 }
 
+.statusText {
+  margin: 0;
+  padding: 24px 4px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+:global(html.dark) .statusText {
+  color: #cbd5e1;
+}
+
 .aboutCard {
   margin-bottom: 24px;
   padding: 24px;

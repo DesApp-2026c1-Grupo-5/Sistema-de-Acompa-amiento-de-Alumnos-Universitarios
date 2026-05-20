@@ -7,6 +7,8 @@ const {
   contacto,
   situacion_academica,
   estado_materia,
+  plan_estudio,
+  carrera,
 } = require("../db/models");
 
 const getInitials = (nombre = "", apellido = "") => {
@@ -41,7 +43,18 @@ const buildAcademicStatus = async (estudianteId) => {
   return `${aprobadas} materias aprobadas`;
 };
 
-const buildCareerLabel = async () => "Carrera no definida";
+const buildCareerLabel = async (estudianteId) => {
+  const sit = await situacion_academica.findOne({
+    where: { estudiante_id: estudianteId },
+  });
+  if (!sit) return "Carrera no definida";
+
+  const plan = await plan_estudio.findByPk(sit.plan_id);
+  if (!plan) return "Carrera no definida";
+
+  const carreraData = await carrera.findByPk(plan.carrera_id);
+  return carreraData?.nombre ?? "Carrera no definida";
+};
 
 const buildContacts = async (estudianteId) => {
   const contactosAceptados = await contacto.findAll({
@@ -178,7 +191,7 @@ const obtenerMiPerfil = async (req, res, next) => {
         location: null,
         email: estudianteData.usuario.email,
         academicStatus,
-        bio: null,
+        bio: estudianteData.bio,
         contactsCount: contacts.length,
         foto_url: estudianteData.foto_url,
         privacidad: estudianteData.privacidad,
@@ -186,7 +199,7 @@ const obtenerMiPerfil = async (req, res, next) => {
         pub_regularizaciones: estudianteData.pub_regularizaciones,
         pub_aprobaciones: estudianteData.pub_aprobaciones,
       },
-      contacts,
+      contacts: contacts.slice(0, 6),
       pendingRequests,
       publications,
       userReactions,
@@ -199,6 +212,7 @@ const actualizarMiPerfil = async (req, res, next) => {
     nombre,
     apellido,
     foto_url,
+    bio,
     privacidad,
     pub_inscripciones,
     pub_regularizaciones,
@@ -219,6 +233,7 @@ const actualizarMiPerfil = async (req, res, next) => {
     nombre: nombre ?? estudianteData.nombre,
     apellido: apellido ?? estudianteData.apellido,
     foto_url: foto_url ?? estudianteData.foto_url,
+    bio: bio ?? estudianteData.bio,
     privacidad: privacidad ?? estudianteData.privacidad,
     pub_inscripciones: pub_inscripciones ?? estudianteData.pub_inscripciones,
     pub_regularizaciones:

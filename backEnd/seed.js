@@ -72,9 +72,9 @@ async function seed() {
 
   const [estFacu, estLara, estDiego] = await db.estudiante.bulkCreate(
     [
-      { usuario_id: uEst1.id, nombre: "Facundo", apellido: "Torres", privacidad: "publico",   pub_inscripciones: true,  pub_regularizaciones: true,  pub_aprobaciones: true  },
-      { usuario_id: uEst2.id, nombre: "Lara",    apellido: "Méndez", privacidad: "contactos", pub_inscripciones: true,  pub_regularizaciones: false, pub_aprobaciones: true  },
-      { usuario_id: uEst3.id, nombre: "Diego",   apellido: "Ríos",   privacidad: "privado",   pub_inscripciones: false, pub_regularizaciones: false, pub_aprobaciones: false },
+      { usuario_id: uEst1.id, nombre: "Facundo", apellido: "Torres", privacidad: "publico",   pub_inscripciones: true,  pub_regularizaciones: true,  pub_aprobaciones: true,  bio: "Estudiante de Tecnicatura en Programación. Me interesa el desarrollo web y compartir apuntes con mis compañeros." },
+      { usuario_id: uEst2.id, nombre: "Lara",    apellido: "Méndez", privacidad: "contactos", pub_inscripciones: true,  pub_regularizaciones: false, pub_aprobaciones: true,  bio: "Cursando segundo año. Siempre dispuesta a armar grupos de estudio para los parciales." },
+      { usuario_id: uEst3.id, nombre: "Diego",   apellido: "Ríos",   privacidad: "privado",   pub_inscripciones: false, pub_regularizaciones: false, pub_aprobaciones: false, bio: "Estudiante de Licenciatura en Sistemas, enfocado en redes y bases de datos." },
     ],
     { returning: true }
   );

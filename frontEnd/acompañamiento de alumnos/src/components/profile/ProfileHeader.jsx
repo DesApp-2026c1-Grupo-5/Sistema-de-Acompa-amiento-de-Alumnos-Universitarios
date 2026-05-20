@@ -4,11 +4,11 @@ import FormModal from '../common/FormModal';
 import Avatar from '../common/Avatar';
 import styles from './ProfileHeader.module.css';
 
-function ProfileHeader({ user, onEditProfile }) {
-  const { initials, name, career, location, contactsCount, email, academicStatus } = user;
+function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
+  const { initials, name, career, location, contactsCount, email, academicStatus, privacidad } = user;
+  const isPublic = privacidad === 'publico';
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [visibility, setVisibility] = useState(false);
 
   const fields = [
     { name: 'name', label: 'Nombre completo', type: 'text', required: true },
@@ -37,10 +37,12 @@ function ProfileHeader({ user, onEditProfile }) {
             <p className={styles.career}>{career}</p>
 
             <p className={styles.metaRow}>
-              <span className={styles.metaItem}>
-                <MapPin className={styles.metaIcon} />
-                {location}
-              </span>
+              {location && (
+                <span className={styles.metaItem}>
+                  <MapPin className={styles.metaIcon} />
+                  {location}
+                </span>
+              )}
 
               <span className={styles.metaItem}>
                 <Users className={styles.metaIcon} />
@@ -53,10 +55,10 @@ function ProfileHeader({ user, onEditProfile }) {
             <button
               type="button"
               className={styles.btnPublico}
-              onClick={() => setVisibility(!visibility)}
+              onClick={() => onToggleVisibility?.()}
             >
-              {visibility ? <Lock size={16} /> : <Globe size={16} />}
-              {visibility ? 'Privado' : 'Público'}
+              {isPublic ? <Globe size={16} /> : <Lock size={16} />}
+              {isPublic ? 'Público' : 'Privado'}
             </button>
 
             <button
