@@ -4,7 +4,7 @@ import ContactList from '../../components/profile/ContactList';
 import PendingRequests from '../../components/profile/PendingRequests';
 import PublicationsList from '../../components/profile/PublicationsList';
 import ErrorState from '../../components/common/ErrorState';
-import { getMyProfile, updateMyPrivacy } from '../../services/profileService';
+import { getMyProfile, updateMyPrivacy, updateMyProfile } from '../../services/profileService';
 import { votePost } from '../../services/postService';
 import styles from './Profile.module.css';
 
@@ -20,8 +20,17 @@ function Profile() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleEditProfile = (data) => {
-    setProfile((prev) => ({ ...prev, user: { ...prev.user, ...data } }));
+  const handleEditProfile = async (data) => {
+    const fullName = (data.name ?? '').trim();
+    const [nombre, ...resto] = fullName.split(/\s+/);
+    const apellido = resto.join(' ');
+
+    await updateMyProfile({ nombre, apellido, bio: data.bio });
+
+    setProfile((prev) => ({
+      ...prev,
+      user: { ...prev.user, name: fullName, bio: data.bio },
+    }));
   };
 
   const handleToggleVisibility = async () => {

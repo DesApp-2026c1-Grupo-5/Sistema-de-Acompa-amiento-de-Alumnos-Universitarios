@@ -12,10 +12,10 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
 
   const fields = [
     { name: 'name', label: 'Nombre completo', type: 'text', required: true },
-    { name: 'career', label: 'Carrera', type: 'text', required: true },
-    { name: 'location', label: 'Ubicación', type: 'text' },
-    { name: 'email', label: 'Email', type: 'email' },
-    { name: 'academicStatus', label: 'Estado académico', type: 'text' },
+    { name: 'career', label: 'Carrera', type: 'text', readOnly: true },
+    { name: 'location', label: 'Ubicación', type: 'text', readOnly: true },
+    { name: 'email', label: 'Email', type: 'email', readOnly: true },
+    { name: 'academicStatus', label: 'Estado académico', type: 'text', readOnly: true },
     { name: 'bio', label: 'Biografía', type: 'textarea' },
   ];
 
