@@ -19,17 +19,13 @@ const authMiddleware = (req, res, next) => {
     });
   }
 
-  try {
-    const decoded = verifyToken(token);
-    req.user = {
-      sub: decoded.sub,
-      email: decoded.email,
-      tipo: decoded.tipo,
-    };
-    return next();
-  } catch (error) {
-    return next(error);
-  }
+  const decoded = verifyToken(token);
+  req.user = {
+    sub: decoded.sub,
+    email: decoded.email,
+    tipo: decoded.tipo,
+  };
+  return next();
 };
 
 module.exports = authMiddleware;

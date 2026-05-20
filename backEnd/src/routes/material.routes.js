@@ -3,22 +3,27 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../middlewares/auth.middleware");
+const validate = require("../middlewares/validate.middleware");
+const { listarMaterialesQuerySchema } = require("../validators/material.validator");
 
 const materialController = require("../controllers/material.controller");
+const {
+  listarMateriales,
+  obtenerMaterialPorId,
+  crearMaterial,
+  votarMaterial,
+} = materialController;
 
-router.get("/materiales", authMiddleware, materialController.listarMateriales);
-router.get("/materiales/:id", authMiddleware, materialController.obtenerMaterialPorId);
-
-router.post(
+router.get(
   "/materiales",
   authMiddleware,
-  materialController.crearMaterial
+  validate(listarMaterialesQuerySchema, "query"),
+  listarMateriales
 );
+router.get("/materiales/:id", authMiddleware, obtenerMaterialPorId);
 
-router.post(
-  "/materiales/votar",
-  authMiddleware,
-  materialController.votarMaterial
-);
+router.post("/materiales", authMiddleware, crearMaterial);
+
+router.post("/materiales/votar", authMiddleware, votarMaterial);
 
 module.exports = router;

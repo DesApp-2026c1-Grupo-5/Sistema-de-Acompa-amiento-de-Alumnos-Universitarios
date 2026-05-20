@@ -1,3 +1,5 @@
+import styles from "../../styles/landing.module.css";
+
 const features = [
   {
     icon: "📅",
@@ -27,18 +29,18 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <section className="features-section">
-      <div className="section-heading">
+    <section className={styles.featuresSection}>
+      <div className={styles.sectionHeading}>
         <h2>
           Todo lo que necesitas para <span>triunfar</span>
         </h2>
         <p>Herramientas diseñadas para estudiantes universitarios modernos</p>
       </div>
 
-      <div className="features-grid">
+      <div className={styles.featuresGrid}>
         {features.map((feature) => (
-          <article className="feature-card" key={feature.title}>
-            <div className="feature-card__icon">{feature.icon}</div>
+          <article className={styles.featureCard} key={feature.title}>
+            <div className={styles.featureCard__icon}>{feature.icon}</div>
             <h3>{feature.title}</h3>
             <p>{feature.description}</p>
           </article>

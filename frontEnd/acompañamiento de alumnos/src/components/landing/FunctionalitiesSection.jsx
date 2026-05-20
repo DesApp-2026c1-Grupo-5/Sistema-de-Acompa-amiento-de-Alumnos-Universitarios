@@ -1,3 +1,5 @@
+import styles from "../../styles/landing.module.css";
+
 const functionalities = [
   {
     icon: "▦",
@@ -31,19 +33,19 @@ const functionalities = [
 
 const FunctionalitiesSection = () => {
   return (
-    <section className="functionalities-section">
-      <div className="section-heading">
+    <section className={styles.functionalitiesSection}>
+      <div className={styles.sectionHeading}>
         <h2>
           Funcionalidades <span>potentes</span>
         </h2>
         <p>Descubre las herramientas que transformarán tu experiencia universitaria</p>
       </div>
 
-      <div className="functionalities-grid">
+      <div className={styles.functionalitiesGrid}>
         {functionalities.map((item) => (
-          <article className="functionality-card" key={item.title}>
-            <div className="functionality-card__header">
-              <div className="functionality-card__icon">{item.icon}</div>
+          <article className={styles.functionalityCard} key={item.title}>
+            <div className={styles.functionalityCard__header}>
+              <div className={styles.functionalityCard__icon}>{item.icon}</div>
 
               <div>
                 <h3>{item.title}</h3>
@@ -51,7 +53,7 @@ const FunctionalitiesSection = () => {
               </div>
             </div>
 
-            <div className={`functionality-mock functionality-mock--${item.type}`}>
+            <div className={styles.functionalityMock}>
               <MockContent type={item.type} />
             </div>
           </article>
@@ -65,20 +67,20 @@ const MockContent = ({ type }) => {
   if (type === "dashboard") {
     return (
       <>
-        <div className="mock-line mock-line--primary"></div>
-        <div className="mock-line"></div>
-        <div className="mock-line mock-line--short"></div>
+        <div className={`${styles.mockLine} ${styles.mockLinePrimary}`}></div>
+        <div className={styles.mockLine}></div>
+        <div className={`${styles.mockLine} ${styles.mockLineShort}`}></div>
       </>
     );
   }
 
   if (type === "calendar") {
     return (
-      <div className="calendar-mock">
+      <div className={styles.calendarMock}>
         {Array.from({ length: 21 }).map((_, index) => (
           <span
             key={index}
-            className={index === 10 || index === 11 || index === 15 ? "active" : ""}
+            className={index === 10 || index === 11 || index === 15 ? styles.active : ""}
           ></span>
         ))}
       </div>
@@ -88,19 +90,19 @@ const MockContent = ({ type }) => {
   if (type === "feed") {
     return (
       <>
-        <div className="feed-row">
-          <span className="avatar active"></span>
+        <div className={styles.feedRow}>
+          <span className={`${styles.avatar} ${styles.active}`}></span>
           <div>
-            <div className="mock-line"></div>
-            <div className="mock-line mock-line--short"></div>
+            <div className={styles.mockLine}></div>
+            <div className={`${styles.mockLine} ${styles.mockLineShort}`}></div>
           </div>
         </div>
 
-        <div className="feed-row">
-          <span className="avatar"></span>
+        <div className={styles.feedRow}>
+          <span className={styles.avatar}></span>
           <div>
-            <div className="mock-line"></div>
-            <div className="mock-line mock-line--short"></div>
+            <div className={styles.mockLine}></div>
+            <div className={`${styles.mockLine} ${styles.mockLineShort}`}></div>
           </div>
         </div>
       </>
@@ -108,8 +110,8 @@ const MockContent = ({ type }) => {
   }
 
   return (
-    <div className="materials-mock">
-      <span className="active"></span>
+    <div className={styles.materialsMock}>
+      <span className={styles.active}></span>
       <span></span>
       <span></span>
       <span></span>

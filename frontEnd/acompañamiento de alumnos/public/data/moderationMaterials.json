@@ -1,0 +1,50 @@
+{
+  "materials": [
+    {
+      "id": 1,
+      "titulo": "Resumen Final Algebra.pdf",
+      "tipo": "Archivo",
+      "materia": "Álgebra",
+      "subidoPor": "Juan Pérez",
+      "fechaSubida": "2026-03-10",
+      "estado": "activo",
+      "archivo": "resumen-algebra.pdf",
+      "denunciasPendientes": 5,
+      "denunciasVerificadas": 2,
+      "ultimaDenuncia": "2026-04-20",
+      "denuncias": [
+        {
+          "id": 101,
+          "denuncianteNombre": "María García",
+          "motivo": "Lenguaje ofensivo o insultos",
+          "descripcion": "Contiene lenguaje ofensivo en varias secciones",
+          "estado": "pendiente",
+          "fecha": "2026-04-20"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "titulo": "Servidor Discord Exámenes",
+      "tipo": "Discord",
+      "materia": "Programación III",
+      "subidoPor": "Ana López",
+      "fechaSubida": "2026-01-15",
+      "estado": "suspendido",
+      "archivo": "https://discord.gg/test",
+      "denunciasPendientes": 12,
+      "denunciasVerificadas": 8,
+      "ultimaDenuncia": "2026-04-21",
+      "denuncias": [
+        {
+          "id": 201,
+          "denuncianteNombre": "Carlos López",
+          "motivo": "Material protegido por derechos de autor",
+          "descripcion": "Material copiado sin atribución",
+          "estado": "pendiente",
+          "fecha": "2026-04-19"
+        }
+      ]
+    }
+  ]
+}

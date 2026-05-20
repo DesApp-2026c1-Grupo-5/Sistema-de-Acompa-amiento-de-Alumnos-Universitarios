@@ -1,0 +1,229 @@
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.authorRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.author {
+  color: #020617;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.eventBadge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.time {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.moreBtn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.moreBtn svg {
+  color: #64748b;
+  stroke: #64748b;
+}
+
+.moreBtn:hover {
+  background: #f1f5f9;
+  color: #020617;
+}
+
+.moreBtn:hover svg {
+  color: #020617;
+  stroke: #020617;
+}
+
+.content {
+  margin: 0;
+  color: #020617;
+  font-size: 15px;
+  line-height: 1.55;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.actionBtn {
+  height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.actionBtn svg {
+  flex-shrink: 0;
+}
+
+.actionBtn:hover {
+  background: #e6fbff;
+  color: #00a8ad;
+}
+
+.actionBtn span,
+.actionBtn svg {
+  color: #475569;
+  stroke: #475569;
+}
+
+.actionBtn:hover span,
+.actionBtn:hover svg {
+  color: #00a8ad;
+  stroke: #00a8ad;
+}
+
+.actionBtnActive {
+  background: rgba(0, 188, 212, 0.12);
+  color: #00a8ad;
+}
+
+.actionBtnActive span,
+.actionBtnActive svg {
+  color: #00a8ad;
+  stroke: #00a8ad;
+}
+
+/* DARK MODE */
+
+:global(html.dark) .card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+:global(html.dark) .author {
+  color: #f8fafc;
+}
+
+:global(html.dark) .time {
+  color: #94a3b8;
+}
+
+:global(html.dark) .moreBtn {
+  color: #94a3b8;
+}
+
+:global(html.dark) .moreBtn svg {
+  color: #94a3b8;
+  stroke: #94a3b8;
+}
+
+:global(html.dark) .moreBtn:hover {
+  background: #273449;
+  color: #f8fafc;
+}
+
+:global(html.dark) .moreBtn:hover svg {
+  color: #f8fafc;
+  stroke: #f8fafc;
+}
+
+:global(html.dark) .content {
+  color: #f8fafc;
+}
+
+:global(html.dark) .actionBtn {
+  color: #cbd5e1;
+}
+
+:global(html.dark) .actionBtn span,
+:global(html.dark) .actionBtn svg {
+  color: #cbd5e1;
+  stroke: #cbd5e1;
+}
+
+:global(html.dark) .actionBtn:hover {
+  background: rgba(34, 211, 238, 0.15);
+  color: #22d3ee;
+}
+
+:global(html.dark) .actionBtn:hover span,
+:global(html.dark) .actionBtn:hover svg {
+  color: #22d3ee;
+  stroke: #22d3ee;
+}
+
+:global(html.dark) .actionBtnActive {
+  background: rgba(34, 211, 238, 0.18);
+  color: #22d3ee;
+}
+
+:global(html.dark) .actionBtnActive span,
+:global(html.dark) .actionBtnActive svg {
+  color: #22d3ee;
+  stroke: #22d3ee;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+  .card {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+
+  .content {
+    font-size: 14px;
+  }
+}

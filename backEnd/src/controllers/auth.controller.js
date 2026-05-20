@@ -1,70 +1,122 @@
 const { signToken } = require("../utils/jwt");
-const { usuario, estudiante, administrador } = require("../db/models");
+const { comparePassword, hashPassword } = require("../utils/password");
+const db = require("../db/models");
+const { usuario, estudiante, administrador, sequelize } = db;
 
-const login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
+const splitNombreCompleto = (nombreCompleto) => {
+  const [nombre, ...resto] = nombreCompleto.trim().split(/\s+/);
+  return { nombre, apellido: resto.join(" ") };
+};
 
-    if (!email || !password) {
-      const error = new Error("Email y password son obligatorios");
-      error.statusCode = 400;
-      throw error;
-    }
+const login = async (req, res) => {
+  const { email, password } = req.body;
 
-    const usuarioData = await usuario.findOne({
-      where: { email },
-      include: [
-        {
-          model: estudiante,
-          attributes: ["id", "nombre", "apellido"],
-        },
-        {
-          model: administrador,
-          attributes: ["id", "nombre", "apellido"],
-        },
-      ],
-    });
+  const usuarioData = await usuario.findOne({
+    where: { email },
+    include: [
+      { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+      { model: administrador, attributes: ["id", "nombre", "apellido"] },
+    ],
+  });
 
-    if (!usuarioData) {
-      const error = new Error("Credenciales invalidas");
-      error.statusCode = 401;
-      throw error;
-    }
+  if (!usuarioData || !usuarioData.activo) {
+    const error = new Error("Credenciales invalidas");
+    error.statusCode = 401;
+    throw error;
+  }
 
-    if (!usuarioData.activo) {
-      const error = new Error("Usuario inactivo");
-      error.statusCode = 403;
-      throw error;
-    }
+  const passwordOk = await comparePassword(password, usuarioData.password_hash);
 
-    if (usuarioData.password_hash !== password) {
-      const error = new Error("Credenciales invalidas");
-      error.statusCode = 401;
-      throw error;
-    }
+  if (!passwordOk) {
+    const error = new Error("Credenciales invalidas");
+    error.statusCode = 401;
+    throw error;
+  }
 
-    const payload = {
-      sub: usuarioData.id,
+  const token = signToken({
+    sub: usuarioData.id,
+    email: usuarioData.email,
+    tipo: usuarioData.tipo,
+  });
+
+  return res.status(200).json({
+    ok: true,
+    token,
+    user: {
+      id: usuarioData.id,
       email: usuarioData.email,
       tipo: usuarioData.tipo,
-    };
+      estudiante: usuarioData.estudiante,
+      administrador: usuarioData.administrador,
+    },
+  });
+};
 
-    const token = signToken(payload);
+const register = async (req, res) => {
+  const { nombre_completo, email, password } = req.body;
+  const { nombre, apellido } = splitNombreCompleto(nombre_completo);
 
-    return res.status(200).json({
-      ok: true,
-      token,
-      user: {
-        id: usuarioData.id,
-        email: usuarioData.email,
-        tipo: usuarioData.tipo,
-        estudiante: usuarioData.estudiante,
-        administrador: usuarioData.administrador,
-      },
+  const { nuevoUsuario, nuevoEstudiante } = await sequelize.transaction(async (t) => {
+    const existente = await usuario.findOne({
+      where: { email },
+      transaction: t,
     });
-  } catch (error) {
-    return next(error);
-  }
+
+    if (existente) {
+      const error = new Error("El email ya está registrado");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const password_hash = await hashPassword(password);
+
+    const nuevoUsuario = await usuario.create(
+      {
+        email,
+        password_hash,
+        tipo: "estudiante",
+        activo: true,
+      },
+      { transaction: t }
+    );
+
+    const nuevoEstudiante = await estudiante.create(
+      {
+        usuario_id: nuevoUsuario.id,
+        nombre,
+        apellido,
+        privacidad: "publico",
+        pub_inscripciones: true,
+        pub_regularizaciones: true,
+        pub_aprobaciones: true,
+      },
+      { transaction: t }
+    );
+
+    return { nuevoUsuario, nuevoEstudiante };
+  });
+
+  const token = signToken({
+    sub: nuevoUsuario.id,
+    email: nuevoUsuario.email,
+    tipo: nuevoUsuario.tipo,
+  });
+
+  return res.status(201).json({
+    ok: true,
+    token,
+    user: {
+      id: nuevoUsuario.id,
+      email: nuevoUsuario.email,
+      tipo: nuevoUsuario.tipo,
+      estudiante: {
+        id: nuevoEstudiante.id,
+        nombre: nuevoEstudiante.nombre,
+        apellido: nuevoEstudiante.apellido,
+      },
+      administrador: null,
+    },
+  });
 };
 
 const me = (req, res) => {
@@ -76,5 +128,6 @@ const me = (req, res) => {
 
 module.exports = {
   login,
+  register,
   me,
 };

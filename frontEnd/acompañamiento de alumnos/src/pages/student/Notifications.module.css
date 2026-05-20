@@ -1,0 +1,487 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 18px 38px 40px;
+  background: #ffffff;
+  color: #020617;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #020617 !important;
+}
+
+.header p {
+  margin: 0;
+  font-size: 13px;
+  color: #405a7a !important;
+}
+
+.markAllButton {
+  border: none;
+  background: transparent;
+  color: #020617 !important;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.filtersCard {
+  padding: 18px 14px 14px;
+  margin-bottom: 20px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.filtersCard h2 {
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #020617;
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.filterLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #405a7a !important;
+}
+
+.filterButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.filterButtons button {
+  height: 30px;
+  padding: 0 13px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #020617 !important;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.filterButtons .activeFilter {
+  background: #ecfeff;
+  border-color: #06b6d4;
+  color: #0284c7 !important;
+}
+
+.notificationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notificationCard {
+  min-height: 110px;
+  padding: 20px;
+
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 18px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.unreadCard {
+  background: #ecfeff;
+  border-color: #22d3ee;
+  border-left: 3px solid #06b6d4;
+}
+
+.notificationIcon {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.academic {
+  background: #fef3c7 !important;
+  color: #f59e0b !important;
+}
+
+.session {
+  background: #cffafe !important;
+  color: #06b6d4 !important;
+}
+
+.material {
+  background: #ead5ff !important;
+  color: #a855f7 !important;
+}
+
+.notificationContent {
+  min-width: 0;
+}
+
+.notificationTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.notificationTitleRow h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #020617 !important;
+}
+
+.categoryBadge {
+  height: 19px;
+  padding: 0 8px;
+
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.notificationContent p {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #405a7a !important;
+}
+
+.date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  font-size: 11px;
+  color: #405a7a !important;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.readButton,
+.detailButton {
+  height: 30px;
+  padding: 0 12px;
+
+  border: none;
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.readButton {
+  background: #ffffff !important;
+  color: #020617 !important;
+}
+
+.detailButton {
+  background: #00a7b5 !important;
+  color: #ffffff !important;
+}
+
+.detailButton svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.deleteButton {
+  width: 32px;
+  height: 32px;
+
+  border: none;
+  background: transparent;
+
+  color: #ef4444 !important;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteButton svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
+}
+
+.readLabel {
+  color: #64748b !important;
+  font-size: 12px;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.readLabel svg {
+  color: #64748b !important;
+  stroke: #64748b !important;
+}
+
+.emptyCard {
+  height: 180px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyIcon {
+  width: 52px;
+  height: 52px;
+
+  margin-bottom: 14px;
+
+  border-radius: 999px;
+
+  background: #f1f5f9;
+  color: #64748b;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyCard h2 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #020617;
+}
+
+.emptyCard p {
+  margin: 0;
+  font-size: 12px;
+  color: #405a7a;
+}
+
+.loading {
+  padding: 30px;
+  color: #020617;
+}
+
+/* Dark mode */
+:global(.dark) .page,
+:global(.dark-mode) .page,
+:global([data-theme='dark']) .page {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+:global(.dark) .header h1,
+:global(.dark-mode) .header h1,
+:global([data-theme='dark']) .header h1,
+:global(.dark) .filtersCard h2,
+:global(.dark-mode) .filtersCard h2,
+:global([data-theme='dark']) .filtersCard h2,
+:global(.dark) .notificationTitleRow h3,
+:global(.dark-mode) .notificationTitleRow h3,
+:global([data-theme='dark']) .notificationTitleRow h3,
+:global(.dark) .emptyCard h2,
+:global(.dark-mode) .emptyCard h2,
+:global([data-theme='dark']) .emptyCard h2 {
+  color: #ffffff !important;
+}
+
+:global(.dark) .header p,
+:global(.dark-mode) .header p,
+:global([data-theme='dark']) .header p,
+:global(.dark) .filterLabel,
+:global(.dark-mode) .filterLabel,
+:global([data-theme='dark']) .filterLabel,
+:global(.dark) .notificationContent p,
+:global(.dark-mode) .notificationContent p,
+:global([data-theme='dark']) .notificationContent p,
+:global(.dark) .date,
+:global(.dark-mode) .date,
+:global([data-theme='dark']) .date,
+:global(.dark) .emptyCard p,
+:global(.dark-mode) .emptyCard p,
+:global([data-theme='dark']) .emptyCard p {
+  color: #b7c8e6 !important;
+}
+
+:global(.dark) .filtersCard,
+:global(.dark-mode) .filtersCard,
+:global([data-theme='dark']) .filtersCard {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+:global(.dark) .notificationCard,
+:global(.dark-mode) .notificationCard,
+:global([data-theme='dark']) .notificationCard {
+  background: #0b2239 !important;
+  border-color: #0891b2 !important;
+}
+
+:global(.dark) .unreadCard,
+:global(.dark-mode) .unreadCard,
+:global([data-theme='dark']) .unreadCard {
+  background: #0b2239 !important;
+  border-color: #06b6d4 !important;
+  border-left-color: #06b6d4 !important;
+}
+
+:global(.dark) .emptyCard,
+:global(.dark-mode) .emptyCard,
+:global([data-theme='dark']) .emptyCard {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+:global(.dark) .filterButtons button,
+:global(.dark-mode) .filterButtons button,
+:global([data-theme='dark']) .filterButtons button {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+:global(.dark) .filterButtons .activeFilter,
+:global(.dark-mode) .filterButtons .activeFilter,
+:global([data-theme='dark']) .filterButtons .activeFilter {
+  background: #083344 !important;
+  border-color: #06b6d4 !important;
+  color: #22d3ee !important;
+}
+
+:global(.dark) .markAllButton,
+:global(.dark-mode) .markAllButton,
+:global([data-theme='dark']) .markAllButton,
+:global(.dark) .markAllButton svg,
+:global(.dark-mode) .markAllButton svg,
+:global([data-theme='dark']) .markAllButton svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(.dark) .readButton,
+:global(.dark-mode) .readButton,
+:global([data-theme='dark']) .readButton {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+:global(.dark) .readButton svg,
+:global(.dark-mode) .readButton svg,
+:global([data-theme='dark']) .readButton svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(.dark) .detailButton,
+:global(.dark-mode) .detailButton,
+:global([data-theme='dark']) .detailButton,
+:global(.dark) .detailButton svg,
+:global(.dark-mode) .detailButton svg,
+:global([data-theme='dark']) .detailButton svg {
+  background: #00a7b5 !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(.dark) .deleteButton,
+:global(.dark-mode) .deleteButton,
+:global([data-theme='dark']) .deleteButton,
+:global(.dark) .deleteButton svg,
+:global(.dark-mode) .deleteButton svg,
+:global([data-theme='dark']) .deleteButton svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
+}
+
+:global(.dark) .readLabel,
+:global(.dark-mode) .readLabel,
+:global([data-theme='dark']) .readLabel {
+  color: #b7c8e6 !important;
+}
+
+:global(.dark) .readLabel svg,
+:global(.dark-mode) .readLabel svg,
+:global([data-theme='dark']) .readLabel svg,
+:global(.dark) .date svg,
+:global(.dark-mode) .date svg,
+:global([data-theme='dark']) .date svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .notificationCard {
+    grid-template-columns: 44px 1fr;
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}

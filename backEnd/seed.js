@@ -5,15 +5,16 @@
  */
 require("dotenv").config();
 const db = require("./src/db/models");
+const { hashPassword } = require("./src/utils/password");
 
-// Placeholder fijo: bcrypt aún no está instalado y el login real usa DEMO_USER.
-// Reemplazar cuando el flujo de auth pase a leer la tabla `usuarios`.
-const PASSWORD_HASH_PLACEHOLDER = "$2b$10$placeholder.hash.no.real.usar.solo.seed";
+const DEV_PASSWORD = "123456";
 
 async function seed() {
   // 1. Reset de esquema. Destruye TODAS las tablas y las recrea vacías.
   await db.sequelize.sync({ force: true });
   console.log("· Esquema sincronizado");
+
+  const devPasswordHash = await hashPassword(DEV_PASSWORD);
 
   // 2. Estructura académica
   const [carreraTPI, carreraLicSI] = await db.carrera.bulkCreate(
@@ -56,10 +57,10 @@ async function seed() {
   // 3. Identidad: primero los usuarios, luego sus perfiles (admin/estudiante).
   const [uAdmin, uEst1, uEst2, uEst3] = await db.usuario.bulkCreate(
     [
-      { email: "admin@demo.com",   password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "administrador", activo: true  },
-      { email: "facu@alumno.com",  password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "estudiante",    activo: true  },
-      { email: "lara@alumno.com",  password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "estudiante",    activo: true  },
-      { email: "diego@alumno.com", password_hash: PASSWORD_HASH_PLACEHOLDER, tipo: "estudiante",    activo: false },
+      { email: "admin@demo.com",   password_hash: devPasswordHash, tipo: "administrador", activo: true  },
+      { email: "facu@alumno.com",  password_hash: devPasswordHash, tipo: "estudiante",    activo: true  },
+      { email: "lara@alumno.com",  password_hash: devPasswordHash, tipo: "estudiante",    activo: true  },
+      { email: "diego@alumno.com", password_hash: devPasswordHash, tipo: "estudiante",    activo: false },
     ],
     { returning: true }
   );
@@ -71,9 +72,9 @@ async function seed() {
 
   const [estFacu, estLara, estDiego] = await db.estudiante.bulkCreate(
     [
-      { usuario_id: uEst1.id, nombre: "Facundo", apellido: "Torres", privacidad: "publico",   pub_inscripciones: true,  pub_regularizaciones: true,  pub_aprobaciones: true  },
-      { usuario_id: uEst2.id, nombre: "Lara",    apellido: "Méndez", privacidad: "contactos", pub_inscripciones: true,  pub_regularizaciones: false, pub_aprobaciones: true  },
-      { usuario_id: uEst3.id, nombre: "Diego",   apellido: "Ríos",   privacidad: "privado",   pub_inscripciones: false, pub_regularizaciones: false, pub_aprobaciones: false },
+      { usuario_id: uEst1.id, nombre: "Facundo", apellido: "Torres", privacidad: "publico",   pub_inscripciones: true,  pub_regularizaciones: true,  pub_aprobaciones: true,  bio: "Estudiante de Tecnicatura en Programación. Me interesa el desarrollo web y compartir apuntes con mis compañeros." },
+      { usuario_id: uEst2.id, nombre: "Lara",    apellido: "Méndez", privacidad: "contactos", pub_inscripciones: true,  pub_regularizaciones: false, pub_aprobaciones: true,  bio: "Cursando segundo año. Siempre dispuesta a armar grupos de estudio para los parciales." },
+      { usuario_id: uEst3.id, nombre: "Diego",   apellido: "Ríos",   privacidad: "privado",   pub_inscripciones: false, pub_regularizaciones: false, pub_aprobaciones: false, bio: "Estudiante de Licenciatura en Sistemas, enfocado en redes y bases de datos." },
     ],
     { returning: true }
   );
@@ -142,10 +143,10 @@ async function seed() {
 
   const [matResumen, matVideoPOO, matLinkDiscord, matParcialBD] = await db.material.bulkCreate(
     [
-      { materia_id: matAlgo.id, estudiante_id: estFacu.id,  tipo: "archivo", titulo: "Resumen Algoritmos I",       descripcion: "Resumen completo del cuatri",   url_o_path: "/uploads/resumen-algo.pdf", formato: "pdf", size_bytes: 245000, suspendido: false, created_at: new Date() },
-      { materia_id: matPOO.id,  estudiante_id: estLara.id,  tipo: "link",    titulo: "Video clase 3 - POO",        descripcion: "Grabación de la clase",         url_o_path: "https://youtube.com/x",     formato: "url", subtipo_link: "youtube", size_bytes: null, suspendido: false, created_at: new Date() },
-      { materia_id: matBD.id,   estudiante_id: estFacu.id,  tipo: "discord", titulo: "Servidor estudio BD",        descripcion: "Canal con consultas resueltas", url_o_path: null,                         formato: null,  discord_servidor: "UNAHUR-BD", discord_canal: "general", size_bytes: null, suspendido: false, created_at: new Date() },
-      { materia_id: matBD.id,   estudiante_id: estDiego.id, tipo: "archivo", titulo: "Parcial 1 BD 2024 resuelto", descripcion: "Resolución completa",           url_o_path: "/uploads/parcial-bd.pdf",   formato: "pdf", size_bytes: 180000, suspendido: false, created_at: new Date() },
+      { materia_id: matAlgo.id, estudiante_id: estFacu.id,  tipo: "file",    titulo: "Resumen Algoritmos I",       descripcion: "Resumen completo del cuatri",   url_o_path: "https://example.com/resumen-algo.pdf", formato: "pdf", size_bytes: 245000, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
+      { materia_id: matPOO.id,  estudiante_id: estLara.id,  tipo: "video",   titulo: "Video clase 3 - POO",        descripcion: "Grabación de la clase",         url_o_path: "https://youtube.com/watch?v=x",        formato: "url", subtipo_link: "youtube", size_bytes: null, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
+      { materia_id: matBD.id,   estudiante_id: estFacu.id,  tipo: "discord", titulo: "Servidor estudio BD",        descripcion: "Canal con consultas resueltas", url_o_path: "https://discord.gg/unahur-bd",         formato: null,  discord_servidor: "UNAHUR-BD", discord_canal: "general", size_bytes: null, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
+      { materia_id: matBD.id,   estudiante_id: estDiego.id, tipo: "file",    titulo: "Parcial 1 BD 2024 resuelto", descripcion: "Resolución completa",           url_o_path: "https://example.com/parcial-bd.pdf",   formato: "pdf", size_bytes: 180000, suspendido: false, createdAt: new Date(), updatedAt: new Date() },
     ],
     { returning: true }
   );
@@ -156,10 +157,10 @@ async function seed() {
   await matParcialBD.addTags([tagApunte.id, tagParcial.id]);
 
   await db.valoracion.bulkCreate([
-    { material_id: matResumen.id,   estudiante_id: estLara.id,  valor: "util",    fecha: new Date() },
-    { material_id: matResumen.id,   estudiante_id: estDiego.id, valor: "util",    fecha: new Date() },
-    { material_id: matVideoPOO.id,  estudiante_id: estFacu.id,  valor: "util",    fecha: new Date() },
-    { material_id: matParcialBD.id, estudiante_id: estFacu.id,  valor: "no_util", fecha: new Date() },
+    { material_id: matResumen.id,   estudiante_id: estLara.id,  valor: "like",    fecha: new Date() },
+    { material_id: matResumen.id,   estudiante_id: estDiego.id, valor: "like",    fecha: new Date() },
+    { material_id: matVideoPOO.id,  estudiante_id: estFacu.id,  valor: "like",    fecha: new Date() },
+    { material_id: matParcialBD.id, estudiante_id: estFacu.id,  valor: "dislike", fecha: new Date() },
   ]);
 
   const [denuncia1] = await db.denuncia.bulkCreate(
@@ -176,10 +177,20 @@ async function seed() {
     { returning: true }
   );
 
-  await db.post.bulkCreate([
-    { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            created_at: new Date("2024-07-16") },
-    { estudiante_id: estLara.id, contenido: "Buscando grupo de estudio para BD",             created_at: new Date("2026-04-10") },
-    { estudiante_id: estFacu.id, contenido: "Subí un resumen, lo encuentran en materiales", created_at: new Date("2026-04-25") },
+  const [postFacuAlgo, postLaraBD, postFacuResumen] = await db.post.bulkCreate(
+    [
+      { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            createdAt: new Date("2024-07-16"), updatedAt: new Date("2024-07-16") },
+      { estudiante_id: estLara.id, contenido: "Buscando grupo de estudio para BD",             createdAt: new Date("2026-04-10"), updatedAt: new Date("2026-04-10") },
+      { estudiante_id: estFacu.id, contenido: "Subí un resumen, lo encuentran en materiales", createdAt: new Date("2026-04-25"), updatedAt: new Date("2026-04-25") },
+    ],
+    { returning: true }
+  );
+
+  await db.voto_post.bulkCreate([
+    { post_id: postFacuAlgo.id,    estudiante_id: estLara.id,  tipo: "like" },
+    { post_id: postFacuAlgo.id,    estudiante_id: estDiego.id, tipo: "like" },
+    { post_id: postLaraBD.id,      estudiante_id: estFacu.id,  tipo: "like" },
+    { post_id: postFacuResumen.id, estudiante_id: estLara.id,  tipo: "dislike" },
   ]);
 
   const [sesBD, sesPOO] = await db.sesion_estudio.bulkCreate(

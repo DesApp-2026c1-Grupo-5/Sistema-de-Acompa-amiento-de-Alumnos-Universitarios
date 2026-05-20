@@ -6,5 +6,5 @@ export const adminLinks = [
   { path: '/admin/admins', label: 'Gestionar Administradores', icon: Users },
   { path: '/admin/careers', label: 'Gestionar Carreras', icon: GraduationCap },
   { path: '/admin/study-plan', label: 'Gestionar Planes De Estudio', icon: FileStack },
-  { path: '/admin/reports', label: 'Gestionar Denuncias', icon: FileWarning },
+  { path: '/admin/moderation', label: 'Gestionar Denuncias', icon: FileWarning },
 ];

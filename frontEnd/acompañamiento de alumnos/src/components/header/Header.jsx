@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Menu, Bell, Moon, User, GraduationCap } from 'lucide-react';
-import './Header.css';
+import { useNavigate } from 'react-router-dom';
+import styles from './Header.module.css';
 
 function Header({
   onMenuToggle,
@@ -8,14 +9,57 @@ function Header({
   isSidebarOpen,
   brand = 'SIVA UNAHUR',
 }) {
-  const [notifications] = useState(3);
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState(0);
+
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      try {
+        const savedNotifications = localStorage.getItem('student_notifications');
+
+        if (savedNotifications) {
+          const parsedNotifications = JSON.parse(savedNotifications);
+
+          setNotifications(
+            parsedNotifications.filter((notification) => !notification.read).length
+          );
+
+          return;
+        }
+
+        const response = await fetch('/data/notifications.json');
+
+        if (!response.ok) {
+          throw new Error('No se pudieron cargar las notificaciones');
+        }
+
+        const data = await response.json();
+
+        localStorage.setItem('student_notifications', JSON.stringify(data));
+
+        setNotifications(
+          data.filter((notification) => !notification.read).length
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadUnreadCount();
+
+    window.addEventListener('notifications-updated', loadUnreadCount);
+
+    return () => {
+      window.removeEventListener('notifications-updated', loadUnreadCount);
+    };
+  }, []);
 
   return (
-    <header className="header">
-      <div className="header__left">
+    <header className={styles.header}>
+      <div className={styles.header__left}>
         {!isSidebarOpen && (
           <button
-            className="header__hamburger"
+            className={styles.header__hamburger}
             onClick={onMenuToggle}
             aria-label="Abrir menú"
           >
@@ -23,30 +67,39 @@ function Header({
           </button>
         )}
 
-        <div className="header__brand">
-          <div className="header__brand-logo">
+        <div className={styles.header__brand}>
+          <div className={styles.header__brandLogo}>
             <GraduationCap size={22} />
           </div>
 
-          <span className="header__brand-text">{brand}</span>
+          <span className={styles.header__brandText}>{brand}</span>
         </div>
       </div>
 
-      <div className="header__right">
-        <button className="header__icon-btn" aria-label="Notificaciones">
+      <div className={styles.header__right}>
+        <button
+          className={styles.header__iconBtn}
+          aria-label="Notificaciones"
+          onClick={() => navigate('/student/notifications')}
+        >
           <Bell size={20} />
-          {notifications > 0 && <span className="header__notification-dot" />}
+
+          {notifications > 0 && (
+            <span className={styles.header__notificationBadge}>
+              {notifications}
+            </span>
+          )}
         </button>
 
         <button
-          className="header__icon-btn"
+          className={styles.header__iconBtn}
           onClick={onToggleTheme}
           aria-label="Cambiar tema"
         >
           <Moon size={20} />
         </button>
 
-        <button className="header__user-btn" aria-label="Perfil de usuario">
+        <button className={styles.header__userBtn} aria-label="Perfil de usuario">
           <User size={20} />
         </button>
       </div>

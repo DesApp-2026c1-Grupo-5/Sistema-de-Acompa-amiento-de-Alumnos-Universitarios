@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { getMaterial } from '../../services/materialService';
 import styles from './ReportMaterial.module.css';
 
 export default function ReportMaterial() {
@@ -9,6 +10,8 @@ export default function ReportMaterial() {
 
     const [material, setMaterial] = useState(null);
     const [motivos, setMotivos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [formData, setFormData] = useState({
         motivo: '',
@@ -18,20 +21,19 @@ export default function ReportMaterial() {
     useEffect(() => {
         const cargarDatos = async () => {
             try {
-                const materialResponse = await fetch('/data/materials.json');
-                const motivosResponse = await fetch('/data/reportReasons.json');
+                const [materialRes, motivosResponse] = await Promise.all([
+                    getMaterial(id),
+                    fetch('/data/reportReasons.json'),
+                ]);
 
-                const materiales = await materialResponse.json();
                 const motivosData = await motivosResponse.json();
 
-                const materialEncontrado = materiales.find(
-                    (item) => String(item.id) === id
-                );
-
-                setMaterial(materialEncontrado);
+                setMaterial(materialRes.data);
                 setMotivos(motivosData);
-            } catch (error) {
-                console.error(error);
+            } catch (err) {
+                setError(err.message || 'No pudimos cargar el material.');
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -60,11 +62,44 @@ export default function ReportMaterial() {
         navigate('/student/materials');
     };
 
-    if (!material) {
+    if (loading) {
         return (
-            <div className={styles.loading}>
-                Cargando información del material...
-            </div>
+            <section className={styles.page}>
+                <div className={styles.card}>
+                    <div className={styles.header}>
+                        <h1>Denunciar material</h1>
+                    </div>
+                    <div className={styles.content}>
+                        <p className={styles.statusText}>
+                            Cargando información del material...
+                        </p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    if (error || !material) {
+        return (
+            <section className={styles.page}>
+                <div className={styles.card}>
+                    <div className={styles.header}>
+                        <h1>Denunciar material</h1>
+                    </div>
+                    <div className={styles.content}>
+                        <p className={styles.statusText}>
+                            {error || 'No encontramos el material que querés denunciar.'}
+                        </p>
+                        <button
+                            type="button"
+                            className={styles.backButton}
+                            onClick={() => navigate('/student/materials')}
+                        >
+                            Volver a materiales
+                        </button>
+                    </div>
+                </div>
+            </section>
         );
     }
 

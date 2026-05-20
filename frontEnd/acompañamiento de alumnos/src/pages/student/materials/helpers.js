@@ -1,5 +1,3 @@
-import { ALLOWED_EXTENSIONS, MAX_FILE_SIZE_MB } from './mockData';
-
 export const formatDate = (iso) => {
   if (!iso) return '';
   const d = new Date(iso);
@@ -32,19 +30,6 @@ export const initialsFromName = (name = '') => {
     .join('');
 };
 
-export const validateFile = (file) => {
-  if (!file) return 'Debes seleccionar un archivo.';
-  const sizeMb = file.size / (1024 * 1024);
-  if (sizeMb > MAX_FILE_SIZE_MB) {
-    return `El archivo supera el tamaño máximo de ${MAX_FILE_SIZE_MB} MB.`;
-  }
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (!ext || !ALLOWED_EXTENSIONS.includes(ext)) {
-    return `Extensión no permitida. Usa: ${ALLOWED_EXTENSIONS.join(', ').toUpperCase()}.`;
-  }
-  return '';
-};
-
 export const validateUrl = (url) => {
   if (!url || !url.trim()) return 'Debes ingresar una URL válida.';
   try {
@@ -74,43 +59,4 @@ export const filterMaterials = (materials, { query = '', type = 'all' } = {}) =>
       .toLowerCase();
     return haystack.includes(q);
   });
-};
-
-export const buildNewMaterial = ({
-  title,
-  subject,
-  type,
-  description,
-  tags,
-  url,
-  file,
-  user = { id: 999, name: 'Franco González', initials: 'FG' },
-}) => {
-  const base = {
-    id: Date.now(),
-    title: title.trim(),
-    subject: subject.trim(),
-    description: (description || '').trim(),
-    type,
-    tags: parseTags(tags),
-    author: user,
-    likes: 0,
-    dislikes: 0,
-    downloads: 0,
-    views: 0,
-    publishedAt: new Date().toISOString(),
-  };
-  if (type === 'file') {
-    return {
-      ...base,
-      format: file?.name?.split('.').pop()?.toLowerCase() || 'file',
-      fileName: file?.name || '',
-      fileUrl: file ? URL.createObjectURL(file) : '',
-    };
-  }
-  return {
-    ...base,
-    format: type,
-    externalUrl: url.trim(),
-  };
 };

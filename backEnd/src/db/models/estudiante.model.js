@@ -36,6 +36,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'estudiante_id'
       });
 
+      estudiante.hasMany(models.voto_post, {
+        foreignKey: 'estudiante_id'
+      });
+
       estudiante.hasMany(models.sesion_estudio, {
         foreignKey: 'creador_id',
         as: 'sesiones_creadas'
@@ -61,6 +65,7 @@ module.exports = (sequelize, DataTypes) => {
     nombre: DataTypes.STRING,
     apellido: DataTypes.STRING,
     foto_url: DataTypes.STRING,
+    bio: DataTypes.TEXT,
     privacidad: DataTypes.STRING,
     pub_inscripciones: DataTypes.BOOLEAN,
     pub_regularizaciones: DataTypes.BOOLEAN,

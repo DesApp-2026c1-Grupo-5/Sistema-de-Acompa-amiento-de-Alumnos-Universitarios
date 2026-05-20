@@ -1,15 +1,17 @@
+import styles from "../../styles/landing.module.css";
+
 const LandingNavbar = ({ isDarkMode, toggleTheme }) => {
   return (
-    <header className="landing-navbar">
-      <div className="landing-navbar__content">
-        <div className="landing-logo">
-          <div className="landing-logo__icon">🎓</div>
+    <header className={styles.landingNavbar}>
+      <div className={styles.landingNavbar__content}>
+        <div className={styles.landingLogo}>
+          <div className={styles.landingLogo__icon}>🎓</div>
           <span>SIVA UNAHUR</span>
         </div>
 
-        <nav className="landing-navbar__actions">
+        <nav className={styles.landingNavbar__actions}>
           <button
-            className="theme-button"
+            className={styles.themeButton}
             type="button"
             onClick={toggleTheme}
             aria-label="Cambiar tema"
@@ -17,11 +19,11 @@ const LandingNavbar = ({ isDarkMode, toggleTheme }) => {
             {isDarkMode ? "☀" : "☾"}
           </button>
 
-          <a href="/login" className="login-link">
+          <a href="/login" className={styles.loginLink}>
             Iniciar sesión
           </a>
 
-          <a href="/login" className="register-button">
+          <a href="/login?tab=register" className={styles.registerButton}>
             Registrarse
           </a>
         </nav>

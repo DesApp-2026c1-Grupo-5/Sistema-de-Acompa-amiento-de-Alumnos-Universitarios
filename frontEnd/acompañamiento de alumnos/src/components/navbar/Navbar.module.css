@@ -70,41 +70,71 @@
   border-left: 4px solid #00a8ad;
 }
 
+.navbar__logout {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  background: #ffd6dc;
+  color: #ef4444 !important;
+}
+
+.navbar__logout span,
+.navbar__logout svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
+}
+
+.navbar__logout:hover {
+  background: #ffc4cc;
+}
+
+:global(.dark) .navbar__logout {
+  border-top-color: #334155;
+  background: rgba(239, 68, 68, 0.28);
+}
+
+:global(.dark) .navbar__logout:hover {
+  background: rgba(239, 68, 68, 0.38);
+}
+
 /* DARK MODE */
 
-:root.dark .navbar {
+:global(.dark) .navbar {
   background: #111827;
   border-right-color: #334155;
   color: #ffffff;
 }
 
-:root.dark .navbar__header {
+:global(.dark) .navbar__header {
   border-bottom-color: #334155;
 }
 
-:root.dark .navbar__brand {
+:global(.dark) .navbar__brand {
   color: #ffffff;
 }
 
-:root.dark .navbar__close {
+:global(.dark) .navbar__close {
   color: #cbd5e1;
 }
 
-:root.dark .navbar__close:hover {
+:global(.dark) .navbar__close:hover {
   background: rgba(34, 211, 238, 0.12);
   color: #22d3ee;
 }
 
-:root.dark .navbar__link {
+:global(.dark) .navbar__link {
   color: #cbd5e1;
 }
 
-:root.dark .navbar__link:hover {
+:global(.dark) .navbar__link:hover {
   background: rgba(34, 211, 238, 0.12);
   color: #22d3ee;
 }
 
-:root.dark .navbar__link--active {
+:global(.dark) .navbar__link--active {
   background: rgba(34, 211, 238, 0.16);
   color: #22d3ee;
   border-left-color: #22d3ee;

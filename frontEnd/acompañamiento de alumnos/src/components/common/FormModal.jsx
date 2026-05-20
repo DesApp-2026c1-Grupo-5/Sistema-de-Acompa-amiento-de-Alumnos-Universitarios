@@ -54,11 +54,15 @@ function FormModal({ open, title, onClose, onSubmit, fields = [], initialValues 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    onSubmit?.({ ...form });
-    onClose?.();
+    try {
+      await onSubmit?.({ ...form });
+      onClose?.();
+    } catch {
+      // si el submit falla, el modal queda abierto para reintentar
+    }
   };
 
   const renderField = (field) => {
@@ -67,6 +71,7 @@ function FormModal({ open, title, onClose, onSubmit, fields = [], initialValues 
       value: form[field.name] || '',
       onChange: (e) => handleChange(field.name, e),
       placeholder: field.placeholder,
+      disabled: field.readOnly,
     };
 
     if (field.type === 'textarea') {

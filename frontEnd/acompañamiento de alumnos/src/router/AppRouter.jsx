@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
 import Layout from '../components/layouts/Layout';
+import PrivateRoute from '../components/auth/PrivateRoute';
 import { adminLinks } from '../components/navbar/AdminNavbar';
 import { studentLinks } from '../components/navbar/StudentNavbar';
 import HomeStudent from '../pages/student/HomeStudent';
@@ -13,10 +14,12 @@ import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
 import HomeAdmin from '../pages/admin/Home/HomeAdmin';
 import Careers from '../pages/admin/Careers';
 import StudyPlan from '../pages/admin/StudyPlan';
-import Reports from '../pages/admin/Reports';
 import Admins from '../pages/admin/Admins';
 import Statistics from '../pages/admin/Statistics';
 import ReportMaterial from '../pages/student/ReportMaterial';
+import Notifications from '../pages/student/Notifications';
+import ModerationPage from '../pages/admin/ModerationPage/ModerationPage';
+import ComplaintConfigPage from '../pages/admin/ComplaintConfigPage/ComplaintConfigPage';
 
 const router = createBrowserRouter([
   {
@@ -28,64 +31,82 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    element: <Layout navbarBrand="Estudiante" navbarLinks={studentLinks} />,
+    element: <PrivateRoute requiredTipo="estudiante" />,
     children: [
       {
-        path: '/student/materials',
-        element: <MaterialRepositoryPage />,
-      },
-      {
-        path: '/student/home',
-        element: <HomeStudent />,
-      },
-      {
-        path: '/student/profile',
-        element: <Profile />,
-      },
-      {
-        path: '/student/academic-status',
-        element: <SituacionAcademica />,
-      },
-      {
-        path: '/student/academic-assistant',
-        element: <AcademicAssistant />,
-      },
-      {
-        path: '/student/study-sessions',
-        element: <StudySessions />,
-      },
-      {
-        path: '/student/report-material/:id',
-        element: <ReportMaterial />,
+        element: <Layout navbarBrand="Estudiante" navbarLinks={studentLinks} />,
+        children: [
+          {
+            path: '/student/materials',
+            element: <MaterialRepositoryPage />,
+          },
+          {
+            path: '/student/home',
+            element: <HomeStudent />,
+          },
+          {
+            path: '/student/profile',
+            element: <Profile />,
+          },
+          {
+            path: '/student/academic-status',
+            element: <SituacionAcademica />,
+          },
+          {
+            path: '/student/academic-assistant',
+            element: <AcademicAssistant />,
+          },
+          {
+            path: '/student/study-sessions',
+            element: <StudySessions />,
+          },
+          {
+            path: '/student/report-material/:id',
+            element: <ReportMaterial />,
+          },
+          {
+            path: '/student/notifications',
+            element: <Notifications />,
+          },
+        ],
       },
     ],
   },
   {
-    element: <Layout navbarBrand="Administrador" navbarLinks={adminLinks} />,
+    element: <PrivateRoute requiredTipo="administrador" />,
     children: [
       {
-        path: '/admin/home',
-        element: <HomeAdmin />,
-      },
-      {
-        path: '/admin/careers',
-        element: <Careers />,
-      },
-      {
-        path: '/admin/study-plan',
-        element: <StudyPlan />,
-      },
-      {
-        path: '/admin/reports',
-        element: <Reports />,
-      },
-      {
-        path: '/admin/admins',
-        element: <Admins />,
-      },
-      {
-        path: '/admin/statistics',
-        element: <Statistics />,
+        element: <Layout navbarBrand="Administrador" navbarLinks={adminLinks} />,
+        children: [
+          {
+            path: '/admin/home',
+            element: <HomeAdmin />,
+          },
+          {
+            path: '/admin/careers',
+            element: <Careers />,
+          },
+          {
+            path: '/admin/study-plan/:id?',
+            element: <StudyPlan />,
+          },
+          {
+            path: '/admin/admins',
+            element: <Admins />,
+          },
+          {
+            path: '/admin/statistics',
+            element: <Statistics />,
+          },
+          {
+            path: '/admin/moderation',
+            element: <ModerationPage />,
+          },
+          {
+            path: '/admin/complaint-config',
+            element: <ComplaintConfigPage />,
+          },
+        ],
       },
     ],
   },
