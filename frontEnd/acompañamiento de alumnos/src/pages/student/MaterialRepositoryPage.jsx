@@ -1,23 +1,44 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import SearchBar from '../../components/materials/SearchBar';
 import MaterialGrid from '../../components/materials/MaterialGrid';
 import UploadMaterialModal from '../../components/materials/UploadMaterialModal';
 import MaterialDetailModal from '../../components/materials/MaterialDetailModal';
 import Button from '../../components/common/Button';
-import { initialMaterials } from './materials/mockData';
+import ErrorState from '../../components/common/ErrorState';
 import { filterMaterials } from './materials/helpers';
+import { mapMaterialFromApi } from './materials/mapMaterial';
+import {
+  getMaterials,
+  getMaterial,
+  createMaterial,
+  voteMaterial,
+  getMaterias,
+} from '../../services/materialService';
 import styles from './MaterialRepositoryPage.module.css';
 
 function MaterialRepositoryPage() {
-  const [materials, setMaterials] = useState(initialMaterials);
+  const [materials, setMaterials] = useState([]);
+  const [materias, setMaterias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [detailMaterial, setDetailMaterial] = useState(null);
-  const [reportMaterial, setReportMaterial] = useState(null);
-  const [userVotes, setUserVotes] = useState({});
+
+  useEffect(() => {
+    Promise.all([getMaterials(), getMaterias()])
+      .then(([matRes, materiasRes]) => {
+        setMaterials((matRes?.data ?? []).map(mapMaterialFromApi));
+        setMaterias(materiasRes?.data ?? []);
+      })
+      .catch((err) => {
+        setError(err.message || 'No pudimos cargar los materiales.');
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(
     () => filterMaterials(materials, { query, type: typeFilter }),
@@ -33,23 +54,23 @@ function MaterialRepositoryPage() {
     );
   };
 
-  const handleUploadSubmit = (newMaterial) => {
-    setMaterials((prev) => [newMaterial, ...prev]);
+  const handleUploadSubmit = async (payload) => {
+    const res = await createMaterial(payload);
+    setMaterials((prev) => [mapMaterialFromApi(res.data), ...prev]);
   };
 
-  const handleView = (material) => setDetailMaterial(material);
+  const handleView = async (material) => {
+    try {
+      const res = await getMaterial(material.id);
+      setDetailMaterial(mapMaterialFromApi(res.data));
+    } catch {
+      setDetailMaterial(material);
+    }
+  };
 
   const handleDownload = (material) => {
-    updateMaterial(material.id, (m) => ({ downloads: (m.downloads || 0) + 1 }));
     if (material.fileUrl) {
-      const a = document.createElement('a');
-      a.href = material.fileUrl;
-      a.download = material.fileName || material.title;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      window.open(material.fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -59,39 +80,17 @@ function MaterialRepositoryPage() {
     }
   };
 
-  const handleVote = (material, kind) => {
-    const current = userVotes[material.id] || null;
-    setUserVotes((prev) => {
-      const next = { ...prev };
-      if (current === kind) {
-        delete next[material.id];
-      } else {
-        next[material.id] = kind;
-      }
-      return next;
-    });
-
-    updateMaterial(material.id, (m) => {
-      const likes = m.likes || 0;
-      const dislikes = m.dislikes || 0;
-      if (current === kind) {
-        return kind === 'like'
-          ? { likes: Math.max(0, likes - 1) }
-          : { dislikes: Math.max(0, dislikes - 1) };
-      }
-      if (kind === 'like') {
-        return current === 'dislike'
-          ? { likes: likes + 1, dislikes: Math.max(0, dislikes - 1) }
-          : { likes: likes + 1 };
-      }
-      return current === 'like'
-        ? { dislikes: dislikes + 1, likes: Math.max(0, likes - 1) }
-        : { dislikes: dislikes + 1 };
-    });
-  };
-
-  const handleReportSubmit = (payload) => {
-    console.info('[Denuncia enviada]', payload);
+  const handleVote = async (material, kind) => {
+    try {
+      const res = await voteMaterial(material.id, kind);
+      updateMaterial(material.id, () => ({
+        likes: res.data.likes,
+        dislikes: res.data.dislikes,
+        miVoto: res.data.mi_voto,
+      }));
+    } catch {
+      // si el voto falla, el contador queda sin cambios
+    }
   };
 
   return (
@@ -118,17 +117,27 @@ function MaterialRepositoryPage() {
         </section>
 
         <section className={styles.gridSection}>
-          <MaterialGrid
-            materials={filtered}
-            onView={handleView}
-            onDownload={handleDownload}
-            onJoinDiscord={handleJoinDiscord}
-          />
+          {loading ? (
+            <p className={styles.statusText}>Cargando materiales…</p>
+          ) : error ? (
+            <ErrorState
+              title="No pudimos cargar los materiales"
+              description={error}
+            />
+          ) : (
+            <MaterialGrid
+              materials={filtered}
+              onView={handleView}
+              onDownload={handleDownload}
+              onJoinDiscord={handleJoinDiscord}
+            />
+          )}
         </section>
       </main>
 
       {uploadOpen && (
         <UploadMaterialModal
+          materias={materias}
           onClose={() => setUploadOpen(false)}
           onSubmit={handleUploadSubmit}
         />
@@ -141,10 +150,9 @@ function MaterialRepositoryPage() {
           onClose={() => setDetailMaterial(null)}
           onLike={(m) => handleVote(m, 'like')}
           onDislike={(m) => handleVote(m, 'dislike')}
-          onReport={(m) => setReportMaterial(m)}
-          userVote={userVotes[detailMaterial.id]}
+          userVote={detailMaterial.miVoto}
         />
-      )}d
+      )}
     </div>
   );
 }

@@ -3,8 +3,37 @@ const {
   estudiante,
   valoracion,
   materia,
+  tag,
 } = require("../db/models");
 const { Op } = require("sequelize");
+
+const materialIncludes = [
+  { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+  { model: materia, as: "materia", attributes: ["id", "nombre", "anio_cursada"] },
+  { model: valoracion, attributes: ["valor", "estudiante_id"] },
+  {
+    model: tag,
+    as: "tags",
+    attributes: ["id", "nombre"],
+    through: { attributes: [] },
+  },
+];
+
+const getMiEstudianteId = async (req) => {
+  const est = await estudiante.findOne({ where: { usuario_id: req.user.sub } });
+  return est?.id ?? null;
+};
+
+const formatMaterial = (plain, miEstudianteId) => {
+  const votos = plain.valoracions ?? [];
+  const likes = votos.filter((v) => v.valor === "like").length;
+  const dislikes = votos.filter((v) => v.valor === "dislike").length;
+  const mio = miEstudianteId
+    ? votos.find((v) => v.estudiante_id === miEstudianteId)
+    : null;
+  delete plain.valoracions;
+  return { ...plain, likes, dislikes, mi_voto: mio?.valor ?? null };
+};
 
 const listarMateriales = async (req, res) => {
   const { q, tipo, materia_id, suspendido, page, limit } = req.query;
@@ -31,38 +60,20 @@ const listarMateriales = async (req, res) => {
     ];
   }
 
+  const miEstudianteId = await getMiEstudianteId(req);
+
   const { count, rows } = await material.findAndCountAll({
     where,
-    include: [
-      {
-        model: estudiante,
-        attributes: ["id", "nombre", "apellido"],
-      },
-      {
-        model: materia,
-        attributes: ["id", "nombre", "anio_cursada"],
-      },
-      {
-        model: valoracion,
-        attributes: ["valor"],
-      },
-    ],
+    include: materialIncludes,
     order: [["id", "DESC"]],
     limit,
     offset,
+    distinct: true,
   });
 
-  const data = rows.map((item) => {
-    const plain = item.get({ plain: true });
-    const likes = plain.valoracions.filter((v) => v.valor === "like").length;
-    const dislikes = plain.valoracions.filter((v) => v.valor === "dislike").length;
-
-    return {
-      ...plain,
-      likes,
-      dislikes,
-    };
-  });
+  const data = rows.map((item) =>
+    formatMaterial(item.get({ plain: true }), miEstudianteId)
+  );
 
   return res.status(200).json({
     ok: true,
@@ -80,20 +91,7 @@ const obtenerMaterialPorId = async (req, res, next) => {
   const { id } = req.params;
 
   const materialData = await material.findByPk(id, {
-    include: [
-      {
-        model: estudiante,
-        attributes: ["id", "nombre", "apellido"],
-      },
-      {
-        model: materia,
-        attributes: ["id", "nombre", "anio_cursada"],
-      },
-      {
-        model: valoracion,
-        attributes: ["id", "valor", "fecha", "estudiante_id"],
-      },
-    ],
+    include: materialIncludes,
   });
 
   if (!materialData) {
@@ -102,15 +100,11 @@ const obtenerMaterialPorId = async (req, res, next) => {
     return next(error);
   }
 
-  const plain = materialData.get({ plain: true });
+  const miEstudianteId = await getMiEstudianteId(req);
 
   return res.status(200).json({
     ok: true,
-    data: {
-      ...plain,
-      likes: plain.valoracions.filter((v) => v.valor === "like").length,
-      dislikes: plain.valoracions.filter((v) => v.valor === "dislike").length,
-    },
+    data: formatMaterial(materialData.get({ plain: true }), miEstudianteId),
   });
 };
 
@@ -127,6 +121,7 @@ const crearMaterial = async (req, res, next) => {
     discord_canal,
     size_bytes,
     suspendido,
+    tags,
   } = req.body;
 
   if (!materia_id || !tipo || !titulo || !url_o_path) {
@@ -201,9 +196,26 @@ const crearMaterial = async (req, res, next) => {
 
   const nuevoMaterial = await material.create(payload);
 
+  if (Array.isArray(tags) && tags.length > 0) {
+    const tagIds = [];
+    for (const nombre of tags) {
+      const limpio = String(nombre).trim().toLowerCase();
+      if (!limpio) continue;
+      const [tagRow] = await tag.findOrCreate({ where: { nombre: limpio } });
+      tagIds.push(tagRow.id);
+    }
+    if (tagIds.length > 0) {
+      await nuevoMaterial.addTags(tagIds);
+    }
+  }
+
+  const completo = await material.findByPk(nuevoMaterial.id, {
+    include: materialIncludes,
+  });
+
   return res.status(201).json({
     ok: true,
-    data: nuevoMaterial,
+    data: formatMaterial(completo.get({ plain: true }), estudianteData.id),
   });
 };
 
@@ -248,60 +260,40 @@ const votarMaterial = async (req, res, next) => {
     return next(error);
   }
 
-  const votoExistente = await valoracion.findOne({
+  const existente = await valoracion.findOne({
     where: {
       material_id: materialId,
       estudiante_id: estudianteData.id,
     },
   });
 
-  if (votoExistente) {
-    votoExistente.valor = valor;
-    await votoExistente.save();
-
-    return res.json({
-      ok: true,
-      message: "Voto actualizado",
-      data: votoExistente,
-    });
-  }
-
-  let voto;
-
-  try {
-    voto = await valoracion.create({
+  let miVoto;
+  if (!existente) {
+    await valoracion.create({
       material_id: materialId,
       estudiante_id: estudianteData.id,
       valor,
       fecha: new Date(),
     });
-  } catch (err) {
-    if (err.name === "SequelizeUniqueConstraintError") {
-      const votoDuplicado = await valoracion.findOne({
-        where: {
-          material_id: materialId,
-          estudiante_id: estudianteData.id,
-        },
-      });
-
-      if (votoDuplicado) {
-        votoDuplicado.valor = valor;
-        await votoDuplicado.save();
-
-        return res.status(200).json({
-          ok: true,
-          message: "Voto actualizado",
-          data: votoDuplicado,
-        });
-      }
-    }
-
-    return next(err);
+    miVoto = valor;
+  } else if (existente.valor === valor) {
+    await existente.destroy();
+    miVoto = null;
+  } else {
+    existente.valor = valor;
+    await existente.save();
+    miVoto = valor;
   }
 
-  return res.status(201).json({
+  const todas = await valoracion.findAll({
+    where: { material_id: materialId },
+  });
+  const likes = todas.filter((v) => v.valor === "like").length;
+  const dislikes = todas.filter((v) => v.valor === "dislike").length;
+
+  return res.json({
     ok: true,
-    data: voto,
+    data: { likes, dislikes, mi_voto: miVoto },
   });
 };
 
