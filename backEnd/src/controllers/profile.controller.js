@@ -46,7 +46,9 @@ const buildCareerLabel = async () => "Carrera no definida";
 const buildContacts = async (estudianteId) => {
   const contactosAceptados = await contacto.findAll({
     where: {
-      estado: "aceptado",
+      estado: {
+        [Op.in]: ["aceptado", "aceptada"],
+      },
       [Op.or]: [
         { estudiante_solicitante_id: estudianteId },
         { estudiante_receptor_id: estudianteId },
@@ -66,15 +68,20 @@ const buildContacts = async (estudianteId) => {
     ],
   });
 
-  const contactos = contactosAceptados.map((row) => {
-    const isSolicitante = row.estudiante_solicitante_id === estudianteId;
-    const persona = isSolicitante ? row.receptor : row.solicitante;
-    return {
-      id: persona.id,
-      initials: getInitials(persona.nombre, persona.apellido),
-      name: `${persona.nombre} ${persona.apellido}`.trim(),
-    };
-  });
+  const contactos = contactosAceptados
+    .map((row) => {
+      const isSolicitante = row.estudiante_solicitante_id === estudianteId;
+      const persona = isSolicitante ? row.receptor : row.solicitante;
+
+      if (!persona) return null;
+
+      return {
+        id: persona.id,
+        initials: getInitials(persona.nombre, persona.apellido),
+        name: `${persona.nombre} ${persona.apellido}`.trim(),
+      };
+    })
+    .filter(Boolean);
 
   return contactos;
 };
