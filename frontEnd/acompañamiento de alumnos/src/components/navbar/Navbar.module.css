@@ -1,6 +1,7 @@
 .navbar {
   width: 260px;
-  min-height: calc(100vh - 66px);
+  height: 100%;
+  overflow-y: auto;
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
   padding: 20px 0;
@@ -138,4 +139,11 @@
   background: rgba(34, 211, 238, 0.16);
   color: #22d3ee;
   border-left-color: #22d3ee;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    width: 100%;
+    border-right: none;
+  }
 }

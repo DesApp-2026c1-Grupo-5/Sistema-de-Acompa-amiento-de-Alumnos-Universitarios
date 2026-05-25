@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CalendarDays, X } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import SearchBar from '../../components/common/SearchBar';
 import EmptyState from '../../components/common/EmptyState';
@@ -28,6 +29,7 @@ function HomeStudent() {
   const [publishError, setPublishError] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sessionsOpen, setSessionsOpen] = useState(false);
 
   useEffect(() => {
     getPosts()
@@ -81,11 +83,11 @@ function HomeStudent() {
         prev.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                likes: res.data.likes,
-                dislikes: res.data.dislikes,
-                miVoto: res.data.mi_voto,
-              }
+              ...p,
+              likes: res.data.likes,
+              dislikes: res.data.dislikes,
+              miVoto: res.data.mi_voto,
+            }
             : p,
         ),
       );
@@ -167,12 +169,50 @@ function HomeStudent() {
           <div className={styles.feed}>{renderFeed()}</div>
         </div>
 
-        <aside className={styles.aside}>
-          <UpcomingSessionsCard
-            sessions={upcomingSessions}
-            onViewDetails={handleViewSessionDetails}
-          />
-        </aside>
+        <>
+          <aside className={styles.aside}>
+            <UpcomingSessionsCard
+              sessions={upcomingSessions}
+              onViewDetails={handleViewSessionDetails}
+            />
+          </aside>
+
+          <button
+            type="button"
+            className={styles.mobileSessionsButton}
+            onClick={() => setSessionsOpen(true)}
+          >
+            <CalendarDays size={20} />
+            Mis sesiones
+          </button>
+
+          {sessionsOpen && (
+            <>
+              <div
+                className={styles.mobileSessionsOverlay}
+                onClick={() => setSessionsOpen(false)}
+              />
+
+              <div className={styles.mobileSessionsModal}>
+                <div className={styles.mobileSessionsHeader}>
+                  <h3>Mis sesiones</h3>
+
+                  <button
+                    type="button"
+                    onClick={() => setSessionsOpen(false)}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <UpcomingSessionsCard
+                  sessions={upcomingSessions}
+                  onViewDetails={handleViewSessionDetails}
+                />
+              </div>
+            </>
+          )}
+        </>
       </div>
     </div>
   );
