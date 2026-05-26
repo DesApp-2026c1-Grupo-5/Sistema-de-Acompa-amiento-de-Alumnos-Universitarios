@@ -23,6 +23,7 @@ function ModerationPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('todos');
     const [loading, setLoading] = useState(true);
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
 
     useEffect(() => {
         const getMaterials = async () => {
@@ -210,7 +211,13 @@ function ModerationPage() {
                                     key={material.id}
                                     className={`${styles.tableRow} ${selectedMaterial?.id === material.id ? styles.activeRow : ''
                                         }`}
-                                    onClick={() => setSelectedMaterial(material)}
+                                    onClick={() => {
+                                        setSelectedMaterial(material);
+
+                                        if (window.innerWidth <= 768) {
+                                            setDetailModalOpen(true);
+                                        }
+                                    }}
                                 >
                                     <div className={styles.materialCell}>
                                         <div className={styles.materialIcon}>
@@ -229,10 +236,10 @@ function ModerationPage() {
                                         <strong>{totalDenuncias}</strong>
                                         <span
                                             className={`${styles.riskBadge} ${totalDenuncias >= 8
-                                                    ? styles.high
-                                                    : totalDenuncias >= 4
-                                                        ? styles.medium
-                                                        : styles.low
+                                                ? styles.high
+                                                : totalDenuncias >= 4
+                                                    ? styles.medium
+                                                    : styles.low
                                                 }`}
                                         >
                                             {getRiskLabel(totalDenuncias)}
@@ -241,12 +248,12 @@ function ModerationPage() {
 
                                     <span
                                         className={`${styles.statusBadge} ${material.estado === 'suspendido'
-                                                ? styles.statusSuspended
-                                                : material.estado === 'rechazada'
-                                                    ? styles.statusRejected
-                                                    : material.estado === 'verificada'
-                                                        ? styles.statusVerified
-                                                        : styles.statusPending
+                                            ? styles.statusSuspended
+                                            : material.estado === 'rechazada'
+                                                ? styles.statusRejected
+                                                : material.estado === 'verificada'
+                                                    ? styles.statusVerified
+                                                    : styles.statusPending
                                             }`}
                                     >
                                         {material.estado === 'suspendido'
@@ -263,10 +270,30 @@ function ModerationPage() {
                     </div>
                 </section>
 
+                {selectedMaterial && detailModalOpen && (
+                    <div
+                        className={styles.detailOverlay}
+                        onClick={() => setDetailModalOpen(false)}
+                    />
+                )}
+
                 {selectedMaterial && (
-                    <aside className={styles.detailPanel}>
+                    <aside
+                        className={`${styles.detailPanel} ${detailModalOpen ? styles.detailModalOpen : ''
+                            }`}
+                    >
+                        <button
+                            type="button"
+                            className={styles.closeDetailButton}
+                            onClick={() => setDetailModalOpen(false)}
+                        >
+                            ×
+                        </button>
+
                         <div className={styles.detailHeader}>
-                            <div className={styles.detailIcon}>{getIcon(selectedMaterial.tipo)}</div>
+                            <div className={styles.detailIcon}>
+                                {getIcon(selectedMaterial.tipo)}
+                            </div>
 
                             <div>
                                 <h2>{selectedMaterial.titulo}</h2>
@@ -292,8 +319,8 @@ function ModerationPage() {
                                 <span>Estado:</span>
                                 <strong
                                     className={`${styles.statusBadge} ${selectedMaterial.estado === 'suspendido'
-                                            ? styles.statusSuspended
-                                            : styles.statusPending
+                                        ? styles.statusSuspended
+                                        : styles.statusPending
                                         }`}
                                 >
                                     {selectedMaterial.estado === 'suspendido'
@@ -317,10 +344,10 @@ function ModerationPage() {
 
                                             <span
                                                 className={`${styles.complaintStatus} ${denuncia.estado === 'pendiente'
-                                                        ? styles.complaintPending
-                                                        : denuncia.estado === 'verificada'
-                                                            ? styles.complaintVerified
-                                                            : styles.complaintRejected
+                                                    ? styles.complaintPending
+                                                    : denuncia.estado === 'verificada'
+                                                        ? styles.complaintVerified
+                                                        : styles.complaintRejected
                                                     }`}
                                             >
                                                 {denuncia.estado}

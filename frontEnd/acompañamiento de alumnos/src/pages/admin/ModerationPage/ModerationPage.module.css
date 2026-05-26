@@ -757,3 +757,247 @@
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
+
+.detailOverlay,
+.closeDetailButton {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 0 14px 28px;
+    overflow-x: hidden;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .configButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .summaryCard {
+    height: auto;
+    min-height: 92px;
+    padding: 14px 10px 16px;
+  }
+
+  .summaryCard span {
+    min-height: 34px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .summaryCard strong {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .filtersCard {
+    grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .content {
+    display: block;
+  }
+
+  .tableCard {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .tableHeader {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+  }
+
+  .tableHeader span:not(:first-child) {
+    display: none;
+  }
+
+  .tableRow {
+    min-width: 0;
+    width: 100%;
+    min-height: auto;
+    padding: 14px 16px;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .materialCell {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .materialCell > div:last-child {
+    min-width: 0;
+  }
+
+  .materialCell strong {
+    font-size: 13px;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .materialCell span,
+  .userCell {
+    font-size: 12px;
+  }
+
+  .userCell {
+    display: block;
+  }
+
+  .userCell::before {
+    content: 'Usuario: ';
+    font-weight: 700;
+  }
+
+  .reportCell {
+    justify-content: space-between;
+  }
+
+  .reportCell::before {
+    content: 'Denuncias';
+    font-size: 12px;
+    font-weight: 700;
+    color: #405a7a;
+  }
+
+  .statusBadge {
+    justify-self: flex-start;
+  }
+
+  .detailPanel {
+    display: none;
+  }
+
+  .detailOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.68);
+    z-index: 9998;
+  }
+
+  .detailPanel.detailModalOpen {
+    display: block;
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    top: 82px;
+    bottom: 18px;
+
+    width: auto;
+    max-width: none;
+
+    overflow-y: auto;
+
+    padding: 44px 18px 20px;
+
+    z-index: 9999;
+  }
+
+  .closeDetailButton {
+    display: flex;
+    position: absolute;
+    top: 12px;
+    right: 14px;
+
+    width: 30px;
+    height: 30px;
+
+    border: none;
+    border-radius: 999px;
+
+    background: #f1f5f9;
+    color: #020617 !important;
+
+    font-size: 24px;
+    line-height: 1;
+
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+  }
+
+  .detailHeader h2 {
+    font-size: 16px;
+    word-break: break-word;
+  }
+
+  .complaintsList {
+    max-height: none;
+  }
+
+  .actions button {
+    min-height: 38px;
+  }
+
+  :global(html.dark) .reportCell::before {
+    color: #b7c8e6;
+  }
+
+  :global(html.dark) .closeDetailButton {
+    background: #111827;
+    color: #ffffff;
+  }
+}
+
+/* LIGHT MODE */
+
+:global(html:not(.dark)) .closeDetailButton {
+  background: #f1f5f9;
+  color: #020617 !important;
+}
+
+/* DARK MODE */
+
+:global(html.dark) .closeDetailButton {
+  background: #111827;
+  color: #ffffff !important;
+}
+
+.searchBox {
+  min-height: 38px;
+  height: auto;
+}
+
+.searchBox input {
+  min-width: 0;
+  height: 100%;
+  line-height: 1.2;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .filtersCard {
+    overflow: visible;
+  }
+
+  .searchBox {
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .searchBox input {
+    font-size: 13px;
+  }
+}
