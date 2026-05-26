@@ -19,7 +19,7 @@ function HomeAdmin() {
         </h1>
       </div>
 
-      <p className={styles.welcomeSubtitle}>Panel de Administración de EduPath</p>
+      <p className={styles.welcomeSubtitle}>Panel de Administración de SIVA UNAHUR</p>
 
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
