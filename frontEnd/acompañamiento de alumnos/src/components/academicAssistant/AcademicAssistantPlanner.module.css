@@ -158,6 +158,15 @@
   border-color: #334155 !important;
 }
 
+:global(html.dark) .planner .subjectUnmet {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+:global(html.dark) .planner .corrUnmet {
+  border-color: #f59e0b !important;
+}
+
 .planner button.saveButton:hover {
   transform: translateY(-1px);
   background: var(--color-soft);
@@ -274,6 +283,30 @@
 
 .subjectItem:active {
   cursor: grabbing;
+}
+
+.subjectUnmet {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.subjectUnmet:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15) !important;
+}
+
+.warnIcon {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.warnIconInline {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.corrUnmet {
+  border-color: #f59e0b !important;
 }
 
 .gripIcon {

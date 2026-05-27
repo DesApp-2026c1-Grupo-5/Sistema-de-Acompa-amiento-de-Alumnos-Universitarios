@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown } from 'lucide-react';
+import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
 import Card from '../common/Card';
 import ErrorState from '../common/ErrorState';
 import { getCareerSubjects } from '../../services/plannerService';
@@ -354,7 +354,8 @@ function AcademicAssistantPlanner() {
                     )}
                     <div className={styles.groupHeaderRight}>
                       <span className={styles.groupHours}>
-                        <span className={groupTotal > (classHours + extraCap) ? styles.groupOver : ''}>{groupTotal}hs</span>
+                        {overCap && <AlertTriangle size={14} className={styles.warnIconInline} />}
+                        <span className={overCap ? styles.groupOver : ''}>{groupTotal}hs</span>
                         <span className={styles.groupCap}> / {classHours + extraCap}hs</span>
                       </span>
                       {isEmpty && (
@@ -373,12 +374,17 @@ function AcademicAssistantPlanner() {
                     {group.subjects.map((subject, subjectIndex) => {
                       const isExpanded = expandedCorr[subject.id];
                       const hasCorr = subject.correlatives?.length > 0;
+                      const earlierIds = new Set();
+                      for (let g = 0; g < groupIndex; g++) {
+                        for (const s of plan[g].subjects) earlierIds.add(s.id);
+                      }
+                      const corrUnmet = hasCorr && !subject.correlatives.every((cId) => earlierIds.has(cId));
 
                       return (
                         <div key={subject.id}>
                           <div
                             draggable
-                            className={styles.subjectItem}
+                            className={`${styles.subjectItem} ${corrUnmet ? styles.subjectUnmet : ''}`}
                             onDragStart={(e) => handleDragStart(e, groupIndex, subjectIndex)}
                             onDragOver={handleDragOver}
                             onDrop={(e) => handleDrop(e, groupIndex, subjectIndex)}
@@ -388,10 +394,11 @@ function AcademicAssistantPlanner() {
                             <span className={styles.subjectName}>{subject.name}</span>
                             {hasCorr && (
                               <button
-                                className={styles.corrButton}
+                                className={`${styles.corrButton} ${corrUnmet ? styles.corrUnmet : ''}`}
                                 onClick={() => toggleCorr(subject.id)}
                                 title="Ver correlativas"
                               >
+                                {corrUnmet && <AlertTriangle size={13} className={styles.warnIconInline} />}
                                 Correlativas
                                 {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                               </button>
