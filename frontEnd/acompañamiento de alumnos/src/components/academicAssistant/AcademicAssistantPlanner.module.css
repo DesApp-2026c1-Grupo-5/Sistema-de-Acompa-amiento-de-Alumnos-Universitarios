@@ -150,6 +150,14 @@
   color: #ef4444 !important;
 }
 
+:global(html.dark) .planner input.input,
+:global(html.dark) .planner .extraInput,
+:global(html.dark) .planner .labelInput {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
 .planner button.saveButton:hover {
   transform: translateY(-1px);
   background: var(--color-soft);
