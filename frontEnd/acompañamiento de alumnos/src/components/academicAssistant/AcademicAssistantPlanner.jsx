@@ -6,7 +6,8 @@ import { getCareerSubjects } from '../../services/plannerService';
 import styles from './AcademicAssistantPlanner.module.css';
 
 function AcademicAssistantPlanner() {
-  const [hours, setHours] = useState(20);
+  const [classHours, setClassHours] = useState(20);
+  const [extraCap, setExtraCap] = useState(10);
   const [plan, setPlan] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ function AcademicAssistantPlanner() {
           subjects: [],
         };
       }
-      groups[key].subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives });
+      groups[key].subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives, extraHours: 0 });
     }
     return Object.values(groups).sort((a, b) =>
       a.year !== b.year ? a.year - b.year : a.cuatrimestre - b.cuatrimestre
@@ -94,8 +95,8 @@ function AcademicAssistantPlanner() {
 
         if (!met) continue;
 
-        if (groupHours + s.hours <= hours) {
-          newPlan[newPlan.length - 1].subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives });
+        if (groupHours + s.hours <= classHours) {
+          newPlan[newPlan.length - 1].subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives, extraHours: 0 });
           groupHours += s.hours;
           remaining.splice(i, 1);
           placed = true;
@@ -113,11 +114,35 @@ function AcademicAssistantPlanner() {
       }
     }
 
+    for (const group of newPlan) {
+      const subjects = group.subjects;
+      const totalClass = subjects.reduce((s, sub) => s + sub.hours, 0);
+      if (totalClass === 0) continue;
+      let remaining = extraCap;
+      for (let i = 0; i < subjects.length; i++) {
+        if (i === subjects.length - 1) {
+          subjects[i].extraHours = remaining;
+        } else {
+          const extra = Math.round((subjects[i].hours / totalClass) * extraCap);
+          subjects[i].extraHours = Math.min(extra, remaining);
+          remaining -= subjects[i].extraHours;
+        }
+      }
+    }
+
     setPlan(newPlan);
   };
 
   const fixedTotalHours = plan.reduce(
+    (acc, group) => acc + group.subjects.reduce((s, sub) => s + sub.hours + (sub.extraHours || 0), 0),
+    0
+  );
+  const fixedClassHours = plan.reduce(
     (acc, group) => acc + group.subjects.reduce((s, sub) => s + sub.hours, 0),
+    0
+  );
+  const fixedExtraHours = plan.reduce(
+    (acc, group) => acc + group.subjects.reduce((s, sub) => s + (sub.extraHours || 0), 0),
     0
   );
 
@@ -210,6 +235,15 @@ function AcademicAssistantPlanner() {
     setExpandedCorr((prev) => ({ ...prev, [subjectId]: !prev[subjectId] }));
   };
 
+  const handleExtraChange = (groupIndex, subjectIndex, value) => {
+    const v = Math.max(0, Math.min(20, Number(value) || 0));
+    setPlan((prev) => {
+      const newPlan = prev.map((g) => ({ ...g, subjects: [...g.subjects.map((s) => ({ ...s }))] }));
+      newPlan[groupIndex].subjects[subjectIndex].extraHours = v;
+      return newPlan;
+    });
+  };
+
   if (loading) {
     return (
       <div className={styles.planner}>
@@ -238,13 +272,24 @@ function AcademicAssistantPlanner() {
       <Card title="Planificador de cursada">
         <div className={styles.inputRow}>
           <label className={styles.label}>
-            Horas disponibles por semana
+            Horas de cursada por semana
             <input
               type="number"
-              value={hours}
-              onChange={(e) => setHours(Number(e.target.value))}
+              value={classHours}
+              onChange={(e) => setClassHours(Number(e.target.value))}
               className={styles.input}
               min={1}
+              max={80}
+            />
+          </label>
+          <label className={styles.label}>
+            Horas extra por semana
+            <input
+              type="number"
+              value={extraCap}
+              onChange={(e) => setExtraCap(Number(e.target.value))}
+              className={styles.input}
+              min={0}
               max={80}
             />
           </label>
@@ -264,7 +309,7 @@ function AcademicAssistantPlanner() {
         </div>
 
         <div className={styles.summary}>
-          Total del plan: <strong>{fixedTotalHours}hs</strong> · <strong>{hours}hs</strong> semanales por cuatrimestre
+          Total del plan: <strong>{fixedClassHours}hs</strong> cursada + <strong>{fixedExtraHours}hs</strong> extra = <strong>{fixedTotalHours}hs</strong> · máx. <strong>{classHours}hs</strong> cursada + <strong>{extraCap}hs</strong> extra por cuatrimestre
         </div>
 
         {plan.length === 0 ? (
@@ -274,13 +319,16 @@ function AcademicAssistantPlanner() {
         ) : (
           <div className={styles.groupsContainer}>
             {plan.map((group, groupIndex) => {
-              const groupHours = group.subjects.reduce((s, sub) => s + sub.hours, 0);
+              const groupClassHours = group.subjects.reduce((s, sub) => s + sub.hours, 0);
+              const groupExtraHours = group.subjects.reduce((s, sub) => s + (sub.extraHours || 0), 0);
+              const groupTotal = groupClassHours + groupExtraHours;
               const isEmpty = group.subjects.length === 0;
+              const overCap = groupTotal > (classHours + extraCap);
 
               return (
                 <div
                   key={groupIndex}
-                  className={`${styles.groupCard} ${isEmpty ? styles.groupCardEmpty : ''}`}
+                  className={`${styles.groupCard} ${isEmpty ? styles.groupCardEmpty : ''} ${overCap ? styles.groupCardOver : ''}`}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => handleDropOnGroup(e, groupIndex)}
                 >
@@ -306,7 +354,8 @@ function AcademicAssistantPlanner() {
                     )}
                     <div className={styles.groupHeaderRight}>
                       <span className={styles.groupHours}>
-                        {groupHours}hs
+                        <span className={groupTotal > (classHours + extraCap) ? styles.groupOver : ''}>{groupTotal}hs</span>
+                        <span className={styles.groupCap}> / {classHours + extraCap}hs</span>
                       </span>
                       {isEmpty && (
                         <button
@@ -348,6 +397,17 @@ function AcademicAssistantPlanner() {
                               </button>
                             )}
                             <span className={styles.subjectHours}>{subject.hours}hs</span>
+                            <label className={styles.extraLabel}>
+                              +
+                              <input
+                                type="number"
+                                className={styles.extraInput}
+                                value={subject.extraHours || 0}
+                                onChange={(e) => handleExtraChange(groupIndex, subjectIndex, e.target.value)}
+                                min={0}
+                                max={20}
+                              />hs
+                            </label>
                           </div>
                           {isExpanded && hasCorr && (
                             <div className={styles.corrDropdown}>
