@@ -1,88 +1,322 @@
-.title {
+.wrapper {
+  margin-top: 24px;
+}
+
+.loadingState {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorState {
+  padding: 16px;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.title {
   font-size: 18px;
   font-weight: 600;
-  margin: 0 0 16px;
+  margin: 0;
   color: var(--text);
 }
 
 .desc {
   font-size: 14px;
   color: var(--text-muted);
-  margin: 0 0 16px;
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+.statusBar {
+  display: flex;
+  gap: 24px;
+  padding: 12px 16px;
+  background: var(--color-soft);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.statusBar span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .checkbox {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 16px;
   background: var(--color-soft);
   border-radius: 8px;
   cursor: pointer;
-}
-
-.checkbox + .checkbox {
-  margin-top: 16px;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .checkbox:hover {
   background: var(--color-soft-hover);
 }
 
+.checkbox.checked {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
 .checkbox input {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  accent-color: #16a34a;
+  flex-shrink: 0;
+}
+
+.checkboxInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.checkboxName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.checkboxMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.noSubjects {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* -------- Results section -------- */
+
+.results {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.resultsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.resultsHeader h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.resultsSummary {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+/* -------- Unlock map (cause → effects) -------- */
+
+.unlockMap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.unlockRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--color-soft);
+  border-radius: 8px;
   border: 1px solid var(--border);
-  accent-color: var(--color-accent);
 }
 
-@media (max-width: 640px) {
-  .checkbox {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
+.unlockCause {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
 }
 
-/* Dark Mode - Following Figma mockup */
+.unlockCauseName {
+  font-weight: 600;
+  color: var(--text);
+}
 
-:global(.dark) .title {
+.unlockArrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.unlockEffects {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-left: 0;
+}
+
+.unlockChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #166534;
+}
+
+.areaBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* -------- Area badge colors -------- */
+
+.areaCB { background: #e3f2fd; color: #1565c0; }
+.areaAyL { background: #fce4ec; color: #c62828; }
+.areaASOyR { background: #e8f5e9; color: #2e7d32; }
+.areaISBDySI { background: #fff3e0; color: #e65100; }
+.areaTC { background: #f3e5f5; color: #7b1fa2; }
+.areaUNAHUR { background: #e0f7fa; color: #00838f; }
+.areaOptativa { background: #f5f5f5; color: #616161; }
+.areaAPyS { background: #fff8e1; color: #f57f17; }
+.areaOtros { background: #eceff1; color: #546e7a; }
+
+/* -------- Dark mode overrides -------- */
+
+:global(html.dark) .title {
   color: #f8fafc;
 }
 
-:global(.dark) .desc {
+:global(html.dark) .desc {
   color: #94a3b8;
 }
 
-:global(.dark) .checkbox {
+:global(html.dark) .statusBar {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+:global(html.dark) .checkbox {
   background: #1e293b;
 }
 
-:global(.dark) .checkbox:hover {
+:global(html.dark) .checkbox:hover {
   background: #273449;
 }
 
-:global(.dark) .checkbox input {
-  background: #0f172a;
+:global(html.dark) .checkbox.checked {
+  background: #052e16;
+  border-color: #16a34a;
+}
+
+:global(html.dark) .checkboxName {
+  color: #f8fafc;
+}
+
+:global(html.dark) .checkboxMeta {
+  color: #94a3b8;
+}
+
+:global(html.dark) .noSubjects {
+  color: #94a3b8;
+}
+
+:global(html.dark) .resultsHeader h4 {
+  color: #f8fafc;
+}
+
+:global(html.dark) .resultsSummary {
+  color: #94a3b8;
+}
+
+:global(html.dark) .unlockRow {
+  background: #1e293b;
   border-color: #334155;
+}
+
+:global(html.dark) .unlockCause {
   color: #f8fafc;
 }
 
-:global(.dark) .checkbox label {
+:global(html.dark) .unlockCauseName {
   color: #f8fafc;
 }
 
-button {
-  color: #ffffff !important;
+:global(html.dark) .unlockArrow {
+  color: #64748b;
 }
 
-:global(html.dark) .simulator button,
-:global(html.dark) .simulator button span,
-:global(html.dark) .simulator button svg {
-  color: #020617 !important;
-  stroke: #020617 !important;
+:global(html.dark) .unlockChip {
+  background: #052e16;
+  border-color: #166534;
+  color: #4ade80;
 }
+
+/* Dark mode area badges */
+:global(html.dark) .areaCB { background: #1e3a5f; color: #90caf9; }
+:global(html.dark) .areaAyL { background: #4a1c24; color: #f48fb1; }
+:global(html.dark) .areaASOyR { background: #1b3d1b; color: #a5d6a7; }
+:global(html.dark) .areaISBDySI { background: #4a2c0a; color: #ffcc80; }
+:global(html.dark) .areaTC { background: #3a1f4a; color: #ce93d8; }
+:global(html.dark) .areaUNAHUR { background: #0d3b40; color: #80deea; }
+:global(html.dark) .areaOptativa { background: #2d2d2d; color: #bdbdbd; }
+:global(html.dark) .areaAPyS { background: #4a3d0a; color: #ffd54f; }
+:global(html.dark) .areaOtros { background: #1e1e2e; color: #90a4ae; }
