@@ -1,9 +1,13 @@
-.title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 16px;
-  display: block;
-  color: var(--text);
+.planner {
+  width: 100%;
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .label {
@@ -12,60 +16,555 @@
   gap: 8px;
   font-size: 14px;
   color: var(--text-muted);
+  font-weight: 600;
 }
 
 .input {
-  width: 100%;
-  max-width: 200px;
-  padding: 8px 12px;
-  background: var(--bg);
+  width: 160px;
+  height: 42px;
+  padding: 0 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 14px;
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus {
-  outline: none;
-  ring: 2px;
-  ring-color: rgba(0, 188, 212, 0.5);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
-@media (max-width: 640px) {
-  .input {
-    max-width: 100%;
-  }
+.planner button.generateButton {
+  height: 42px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
 }
 
-/* Dark Mode - Following Figma mockup */
-
-:global(.dark) .title {
-  color: #f8fafc;
+.planner button.generateButton:hover {
+  transform: translateY(-1px);
+  opacity: 0.94;
 }
 
-:global(.dark) .label {
-  color: #94a3b8;
+.planHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-:global(.dark) .input {
-  background: #0f172a;
-  border-color: #334155;
-  color: #f8fafc;
+.dragHint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
-button {
+.planner button.saveButton {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-h) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.planner button.saveButton svg {
+  color: var(--text-h) !important;
+  stroke: var(--text-h) !important;
+}
+
+.planner button.generateButton svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:global(html.dark) .planner button.generateButton {
   color: #ffffff !important;
 }
 
-.input {
-  background: #ffffff !important;
-  color: #020617 !important;
-  border: 1px solid #e5e7eb;
+:global(html.dark) .planner button.generateButton svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
-:global(html.dark) .planner button,
-:global(html.dark) .planner button span,
-:global(html.dark) .planner button svg {
-  color: #020617 !important;
-  stroke: #020617 !important;
+:global(html.dark) .planner button.saveButton {
+  color: var(--text-h) !important;
+}
+
+:global(html.dark) .planner button.saveButton svg {
+  color: var(--text-h) !important;
+  stroke: var(--text-h) !important;
+}
+
+:global(html.dark) .planner button.corrButton {
+  background: var(--color-soft);
+  color: var(--text-muted) !important;
+  border-color: var(--border);
+}
+
+:global(html.dark) .planner button.corrButton svg {
+  color: var(--text-muted) !important;
+  stroke: var(--text-muted) !important;
+}
+
+:global(html.dark) .planner button.corrButton:hover {
+  color: var(--accent) !important;
+}
+
+:global(html.dark) .planner button.corrButton:hover svg {
+  color: var(--accent) !important;
+  stroke: var(--accent) !important;
+}
+
+:global(html.dark) .planner button.addGroupButton {
+  color: var(--text-muted) !important;
+}
+
+:global(html.dark) .planner button.addGroupButton:hover {
+  color: var(--accent) !important;
+}
+
+:global(html.dark) .planner button.deleteGroupButton {
+  color: #ef4444 !important;
+}
+
+:global(html.dark) .planner input.input,
+:global(html.dark) .planner .extraInput,
+:global(html.dark) .planner .labelInput {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+:global(html.dark) .planner .subjectUnmet {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+:global(html.dark) .planner .corrUnmet {
+  border-color: #f59e0b !important;
+}
+
+.planner button.saveButton:hover {
+  transform: translateY(-1px);
+  background: var(--color-soft);
+  border-color: var(--accent);
+}
+
+.summary {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 10px;
+}
+
+.summary strong {
+  color: #0d9488;
+}
+
+:global(html.dark) .planner .summary {
+  background: rgba(8, 183, 200, 0.12);
+  border-color: #00bcd4;
+  color: var(--text-muted);
+}
+
+:global(html.dark) .planner .summary strong {
+  color: #2dd4bf;
+}
+
+.emptyState {
+  padding: 48px 24px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 15px;
+}
+
+.groupsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.groupCard {
+  background: var(--color-soft);
+  border-radius: 12px;
+  padding: 18px;
+  border: 2px dashed var(--border);
+  transition: border-color 0.2s ease;
+  min-height: 80px;
+}
+
+.groupCard:hover {
+  border-color: var(--accent);
+}
+
+.groupCardEmpty {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.groupCardOver {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.groupCardEmpty:hover {
+  opacity: 1;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.groupHours {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.subjectsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subjectItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: move;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.subjectItem:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px var(--accent-bg);
+  transform: translateY(-1px);
+}
+
+.subjectItem:active {
+  cursor: grabbing;
+}
+
+.subjectUnmet {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.subjectUnmet:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15) !important;
+}
+
+.warnIcon {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.warnIconInline {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.corrUnmet {
+  border-color: #f59e0b !important;
+}
+
+.gripIcon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.subjectName {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.subjectHours {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.extraLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.extraInput {
+  width: 32px;
+  height: 22px;
+  padding: 0 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.extraInput::-webkit-inner-spin-button,
+.extraInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.extraInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg);
+}
+
+.groupExtra {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.groupCap {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.groupOver {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.planner button.corrButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #64748b !important;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.planner button.corrButton:hover {
+  color: var(--accent) !important;
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.planner button.corrButton svg {
+  color: #64748b !important;
+  stroke: #64748b !important;
+}
+
+.planner button.corrButton:hover svg {
+  color: var(--accent) !important;
+  stroke: var(--accent) !important;
+}
+
+.corrDropdown {
+  margin: 4px 0 4px 28px;
+  padding: 8px 12px;
+  background: var(--color-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.corrLabel {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.corrChip {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:global(html.dark) .planner .corrDropdown {
+  background: rgba(8, 183, 200, 0.12);
+  border-color: #00bcd4;
+}
+
+:global(html.dark) .planner .corrChip {
+  background: rgba(8, 183, 200, 0.2);
+  color: #5eead4;
+}
+
+
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+  color: var(--accent);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.groupHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.labelInput {
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--bg);
+  color: var(--text-h);
+  font-family: inherit;
+  outline: none;
+  width: 280px;
+}
+
+.planner button.addGroupButton {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted) !important;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  font-family: inherit;
+}
+
+.planner button.addGroupButton:hover {
+  border-color: var(--accent);
+  color: var(--accent) !important;
+}
+
+.planner button.deleteGroupButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: #ef4444 !important;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.planner button.deleteGroupButton:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.editIcon {
+  opacity: 0;
+  margin-left: 4px;
+  color: var(--text-muted);
+  transition: opacity 0.15s ease;
+}
+
+.groupTitle:hover .editIcon {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .inputRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input {
+    width: 100%;
+    max-width: none;
+  }
+
+  .planHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .groupHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
 }
