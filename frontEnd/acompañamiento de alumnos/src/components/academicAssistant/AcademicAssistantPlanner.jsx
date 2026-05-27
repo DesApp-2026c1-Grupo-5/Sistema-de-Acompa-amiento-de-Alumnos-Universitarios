@@ -89,9 +89,14 @@ function AcademicAssistantPlanner() {
       ensureGroup();
       let placed = false;
 
+      const earlierIds = new Set();
+      for (let g = 0; g < newPlan.length - 1; g++) {
+        for (const sub of newPlan[g].subjects) earlierIds.add(sub.id);
+      }
+
       for (let i = 0; i < remaining.length; i++) {
         const s = remaining[i];
-        const met = s.correlatives.every((cId) => !remaining.some((r) => r.id === cId));
+        const met = s.correlatives.length === 0 || s.correlatives.every((cId) => earlierIds.has(cId));
 
         if (!met) continue;
 
