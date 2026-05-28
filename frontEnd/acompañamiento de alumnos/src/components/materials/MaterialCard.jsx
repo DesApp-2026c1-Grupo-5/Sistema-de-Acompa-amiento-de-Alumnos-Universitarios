@@ -58,15 +58,17 @@ function MaterialCard({ material, onView, onDownload, onJoinDiscord }) {
 
       <p className={styles.description}>{material.description}</p>
 
-      {material.tags?.length > 0 && (
-        <div className={styles.tags}>
-          {material.tags.map((tag) => (
+      <div className={styles.tags}>
+        {material.tags?.length > 0 ? (
+          material.tags.map((tag) => (
             <Badge key={tag} variant="tag">
               #{tag}
             </Badge>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          <div className={styles.tagsPlaceholder} />
+        )}
+      </div>
 
       <div className={styles.meta}>
         <div className={styles.author}>
