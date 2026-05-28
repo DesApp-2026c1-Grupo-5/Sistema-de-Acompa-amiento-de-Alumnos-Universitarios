@@ -636,7 +636,7 @@
 
 .formActions button:last-child {
   background: linear-gradient(135deg, #08b7c8, #039b97);
-  color: #ffffff; 
+  color: #ffffff;
   transition: transform 0.18s ease, opacity 0.18s ease;
 }
 
@@ -704,6 +704,7 @@
 }
 
 @media (max-width: 900px) {
+
   .sessionsGrid,
   .filtersGrid {
     grid-template-columns: 1fr;
@@ -715,6 +716,7 @@
 }
 
 @media (max-width: 640px) {
+
   .titleRow,
   .mySessionItem {
     flex-direction: column;
@@ -1179,4 +1181,58 @@
 :global(.dark) .pendingButton * {
   background: #fef3c7 !important;
   color: #d97706 !important;
+}
+
+@media (max-width: 640px) {
+  .mySessionItem {
+    height: auto;
+    min-height: 0;
+    padding: 16px;
+    align-items: stretch;
+  }
+
+  .mySessionItem>div:first-child {
+    width: 100%;
+  }
+
+  .myActions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .myActions button {
+    min-height: 36px;
+  }
+
+  .myActions button:first-child {
+    flex: 1;
+  }
+
+  .iconButton {
+    width: 50px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffffff;
+    border-radius: 12px;
+  }
+
+  .iconButton svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .iconButton svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  :global(html.dark) .iconButton {
+    background: #0f172a;
+  }
 }
