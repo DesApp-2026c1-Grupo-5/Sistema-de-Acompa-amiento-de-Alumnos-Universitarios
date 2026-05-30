@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import Avatar from '../common/Avatar';
+import { aceptarInvitacion, ignorarInvitacion } from '../../services/contactoService';
 import styles from './PendingRequests.module.css';
 
-function RequestItem({ request, onAccept, onIgnore }) {
+function RequestItem({ request, disabled, onAccept, onIgnore }) {
   return (
     <li className={styles.item}>
       <Avatar initials={request.initials} size="md" />
@@ -18,7 +19,8 @@ function RequestItem({ request, onAccept, onIgnore }) {
         <button
           type="button"
           className={styles.btnAccept}
-          onClick={() => onAccept?.(request.id)}
+          disabled={disabled}
+          onClick={() => onAccept(request.id)}
         >
           Aceptar
         </button>
@@ -26,7 +28,8 @@ function RequestItem({ request, onAccept, onIgnore }) {
         <button
           type="button"
           className={styles.btnIgnore}
-          onClick={() => onIgnore?.(request.id)}
+          disabled={disabled}
+          onClick={() => onIgnore(request.id)}
         >
           Ignorar
         </button>
@@ -37,14 +40,27 @@ function RequestItem({ request, onAccept, onIgnore }) {
 
 function PendingRequests({ requests }) {
   const [currentRequests, setCurrentRequests] = useState(requests || []);
+  const [loadingId, setLoadingId] = useState(null);
   const hasRequests = currentRequests.length > 0;
 
-  const handleOnAccept = (id) => {
-    setCurrentRequests((prev) => prev.filter((r) => r.id !== id));
+  const handleOnAccept = async (id) => {
+    setLoadingId(id);
+    try {
+      await aceptarInvitacion(id);
+      setCurrentRequests((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      setLoadingId(null);
+    }
   };
 
-  const handleOnIgnore = (id) => {
-    setCurrentRequests((prev) => prev.filter((r) => r.id !== id));
+  const handleOnIgnore = async (id) => {
+    setLoadingId(id);
+    try {
+      await ignorarInvitacion(id);
+      setCurrentRequests((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      setLoadingId(null);
+    }
   };
 
   return (
@@ -60,6 +76,7 @@ function PendingRequests({ requests }) {
             <RequestItem
               key={request.id}
               request={request}
+              disabled={loadingId === request.id}
               onAccept={handleOnAccept}
               onIgnore={handleOnIgnore}
             />
