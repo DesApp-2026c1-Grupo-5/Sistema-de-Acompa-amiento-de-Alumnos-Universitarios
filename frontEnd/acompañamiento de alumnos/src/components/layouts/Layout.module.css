@@ -7,7 +7,6 @@
   min-height: calc(100vh - 66px);
   background: #ffffff;
   padding: 0;
-  padding-top: 66px;
 }
 
 .layout__sidebar {

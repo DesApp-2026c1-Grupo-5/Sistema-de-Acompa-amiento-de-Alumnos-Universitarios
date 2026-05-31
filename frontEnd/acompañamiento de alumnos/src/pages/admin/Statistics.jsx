@@ -250,7 +250,7 @@ function DistributionCard({ title, items, valueKey, valueLabel }) {
   const maxValue = Math.max(...items.map((item) => item[valueKey]));
 
   return (
-    <section className={styles.card}>
+    <section className={`${styles.card} ${styles.scrollTableCard}`}>
       <h2>{title}</h2>
 
       <div className={styles.distributionList}>

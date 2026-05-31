@@ -753,3 +753,36 @@
 :global(html.dark) .loading {
   color: #ffffff;
 }
+
+@media (max-width: 640px) {
+  .card {
+    overflow-x: auto;
+  }
+
+  .card .table {
+    min-width: 620px;
+  }
+
+  .card::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .card::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 999px;
+  }
+
+  .card::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+
+  :global(html.dark) .card::-webkit-scrollbar-track {
+    background: #081226;
+  }
+
+  :global(html.dark) .card::-webkit-scrollbar-thumb {
+    background: #31415f;
+  }
+}
+
