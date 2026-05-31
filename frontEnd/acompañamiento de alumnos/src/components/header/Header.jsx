@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Menu, Bell, Moon, User, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getNotifications } from '../../services/notificacionService';
 import styles from './Header.module.css';
 
 function Header({
@@ -15,33 +16,11 @@ function Header({
   useEffect(() => {
     const loadUnreadCount = async () => {
       try {
-        const savedNotifications = localStorage.getItem('student_notifications');
-
-        if (savedNotifications) {
-          const parsedNotifications = JSON.parse(savedNotifications);
-
-          setNotifications(
-            parsedNotifications.filter((notification) => !notification.read).length
-          );
-
-          return;
-        }
-
-        const response = await fetch('/data/notifications.json');
-
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar las notificaciones');
-        }
-
-        const data = await response.json();
-
-        localStorage.setItem('student_notifications', JSON.stringify(data));
-
-        setNotifications(
-          data.filter((notification) => !notification.read).length
-        );
+        const response = await getNotifications();
+        setNotifications(response.summary?.unreadCount ?? 0);
       } catch (error) {
         console.error(error);
+        setNotifications(0);
       }
     };
 
