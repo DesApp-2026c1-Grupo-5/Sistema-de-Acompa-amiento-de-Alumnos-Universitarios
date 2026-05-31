@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Bell,
@@ -11,9 +11,13 @@ import {
     Clock,
 } from 'lucide-react';
 
+import {
+    deleteNotification,
+    getNotifications,
+    markAllNotificationsAsRead,
+    markNotificationAsRead,
+} from '../../services/notificacionService';
 import styles from './Notifications.module.css';
-
-const STORAGE_KEY = 'student_notifications';
 
 const TYPE_CONFIG = {
     academic: {
@@ -56,42 +60,25 @@ export default function Notifications() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadNotifications = async () => {
-            try {
-                const savedNotifications = localStorage.getItem(STORAGE_KEY);
-
-                if (savedNotifications) {
-                    setNotifications(JSON.parse(savedNotifications));
-                    return;
-                }
-
-                const response = await fetch('/data/notifications.json');
-
-                if (!response.ok) {
-                    throw new Error('No se pudieron cargar las notificaciones');
-                }
-
-                const data = await response.json();
-
-                setNotifications(data);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadNotifications();
+    const loadNotifications = useCallback(async () => {
+        try {
+            const response = await getNotifications();
+            setNotifications(response.data ?? []);
+        } catch (error) {
+            console.error(error);
+            setNotifications([]);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    const syncNotifications = (updatedNotifications) => {
-        setNotifications(updatedNotifications);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNotifications));
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            void loadNotifications();
+        }, 0);
 
-        window.dispatchEvent(new Event('notifications-updated'));
-    };
+        return () => window.clearTimeout(timer);
+    }, [loadNotifications]);
 
     const unreadCount = notifications.filter((notification) => !notification.read).length;
 
@@ -109,31 +96,34 @@ export default function Notifications() {
         });
     }, [notifications, typeFilter, statusFilter]);
 
-    const handleMarkAsRead = (id) => {
-        const updatedNotifications = notifications.map((notification) =>
-            notification.id === id
-                ? { ...notification, read: true }
-                : notification
-        );
-
-        syncNotifications(updatedNotifications);
+    const handleMarkAsRead = async (id) => {
+        try {
+            await markNotificationAsRead(id);
+            await loadNotifications();
+            window.dispatchEvent(new Event('notifications-updated'));
+        } catch (error) {
+            console.error(error);
+        }
     };
 
-    const handleMarkAllAsRead = () => {
-        const updatedNotifications = notifications.map((notification) => ({
-            ...notification,
-            read: true,
-        }));
-
-        syncNotifications(updatedNotifications);
+    const handleMarkAllAsRead = async () => {
+        try {
+            await markAllNotificationsAsRead();
+            await loadNotifications();
+            window.dispatchEvent(new Event('notifications-updated'));
+        } catch (error) {
+            console.error(error);
+        }
     };
 
-    const handleDelete = (id) => {
-        const updatedNotifications = notifications.filter(
-            (notification) => notification.id !== id
-        );
-
-        syncNotifications(updatedNotifications);
+    const handleDelete = async (id) => {
+        try {
+            await deleteNotification(id);
+            await loadNotifications();
+            window.dispatchEvent(new Event('notifications-updated'));
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleViewDetail = (notification) => {
@@ -259,7 +249,10 @@ export default function Notifications() {
             ) : (
                 <section className={styles.notificationsList}>
                     {filteredNotifications.map((notification) => {
-                        const config = TYPE_CONFIG[notification.type];
+                        const config = TYPE_CONFIG[notification.type] ?? {
+                            icon: Bell,
+                            className: 'academic',
+                        };
                         const Icon = config.icon;
 
                         return (
