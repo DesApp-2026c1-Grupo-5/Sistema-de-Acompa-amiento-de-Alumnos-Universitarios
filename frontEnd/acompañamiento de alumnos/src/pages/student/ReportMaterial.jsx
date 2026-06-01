@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 import { getMaterial } from '../../services/materialService';
+import {
+    getMotivosDenuncia,
+    createDenuncia,
+} from '../../services/denunciaService';
 import styles from './ReportMaterial.module.css';
 
 export default function ReportMaterial() {
@@ -13,6 +18,10 @@ export default function ReportMaterial() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState(null);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
+
     const [formData, setFormData] = useState({
         motivo: '',
         detalle: '',
@@ -21,15 +30,13 @@ export default function ReportMaterial() {
     useEffect(() => {
         const cargarDatos = async () => {
             try {
-                const [materialRes, motivosResponse] = await Promise.all([
+                const [materialRes, motivosRes] = await Promise.all([
                     getMaterial(id),
-                    fetch('/data/reportReasons.json'),
+                    getMotivosDenuncia(),
                 ]);
 
-                const motivosData = await motivosResponse.json();
-
                 setMaterial(materialRes.data);
-                setMotivos(motivosData);
+                setMotivos(motivosRes.data);
             } catch (err) {
                 setError(err.message || 'No pudimos cargar el material.');
             } finally {
@@ -49,17 +56,26 @@ export default function ReportMaterial() {
         }));
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
-        console.log('Denuncia enviada:', {
-            materialId: id,
-            ...formData,
-        });
+        setSubmitting(true);
+        setSubmitError(null);
 
-        alert('Denuncia enviada correctamente');
+        try {
+            const detalle = formData.detalle.trim();
 
-        navigate('/student/materials');
+            await createDenuncia(id, {
+                motivo_id: Number(formData.motivo),
+                ...(detalle ? { detalle } : {}),
+            });
+
+            setSubmitSuccess(true);
+        } catch (err) {
+            setSubmitError(err.message || 'No pudimos enviar la denuncia.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     if (loading) {
@@ -103,6 +119,62 @@ export default function ReportMaterial() {
         );
     }
 
+    if (submitSuccess) {
+        return (
+            <section className={styles.page}>
+                <div className={styles.card}>
+                    <div className={styles.header}>
+                        <h1>Denuncia enviada</h1>
+                    </div>
+                    <div className={`${styles.content} ${styles.feedbackContent}`}>
+                        <div className={`${styles.feedbackIcon} ${styles.feedbackIconSuccess}`}>
+                            <CheckCircle2 size={56} />
+                        </div>
+                        <h2 className={styles.feedbackTitle}>¡Denuncia enviada con éxito!</h2>
+                        <p className={styles.feedbackMessage}>
+                            Nuestro equipo revisará el material denunciado lo antes posible.
+                        </p>
+                        <button
+                            type="button"
+                            className={styles.backButton}
+                            onClick={() => navigate('/student/materials')}
+                        >
+                            Volver a materiales
+                        </button>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    if (material.mi_denuncia_pendiente) {
+        return (
+            <section className={styles.page}>
+                <div className={styles.card}>
+                    <div className={styles.header}>
+                        <h1>Denunciar material</h1>
+                    </div>
+                    <div className={`${styles.content} ${styles.feedbackContent}`}>
+                        <div className={`${styles.feedbackIcon} ${styles.feedbackIconInfo}`}>
+                            <AlertCircle size={56} />
+                        </div>
+                        <h2 className={styles.feedbackTitle}>Ya denunciaste este material</h2>
+                        <p className={styles.feedbackMessage}>
+                            Tu denuncia sobre <strong>{material.titulo}</strong> está pendiente de revisión.
+                        </p>
+                        <button
+                            type="button"
+                            className={styles.backButton}
+                            onClick={() => navigate('/student/materials')}
+                        >
+                            Volver a materiales
+                        </button>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
     return (
         <section className={styles.page}>
             <div className={styles.card}>
@@ -132,11 +204,12 @@ export default function ReportMaterial() {
                                 value={formData.motivo}
                                 onChange={handleChange}
                                 required
+                                disabled={submitting}
                             >
                                 <option value="">Seleccionar motivo</option>
 
                                 {motivos.map((motivo) => (
-                                    <option key={motivo.id} value={motivo.nombre}>
+                                    <option key={motivo.id} value={motivo.id}>
                                         {motivo.nombre}
                                     </option>
                                 ))}
@@ -151,8 +224,15 @@ export default function ReportMaterial() {
                                 placeholder="Describe el motivo de la denuncia..."
                                 value={formData.detalle}
                                 onChange={handleChange}
+                                disabled={submitting}
                             />
                         </div>
+
+                        {submitError && (
+                            <p className={`${styles.statusText} ${styles.errorText}`}>
+                                {submitError}
+                            </p>
+                        )}
                     </div>
 
                     <div className={styles.footer}>
@@ -160,6 +240,7 @@ export default function ReportMaterial() {
                             type="button"
                             className={styles.cancelButton}
                             onClick={() => navigate('/student/materials')}
+                            disabled={submitting}
                         >
                             Cancelar
                         </button>
@@ -167,8 +248,9 @@ export default function ReportMaterial() {
                         <button
                             type="submit"
                             className={styles.submitButton}
+                            disabled={submitting}
                         >
-                            Enviar denuncia
+                            {submitting ? 'Enviando…' : 'Enviar denuncia'}
                         </button>
                     </div>
                 </form>

@@ -115,9 +115,11 @@ function MaterialDetailModal({
               onClose?.();
               navigate(`/student/report-material/${material.id}`);
             }}
+            disabled={material.miDenunciaPendiente}
+            title={material.miDenunciaPendiente ? 'Ya denunciaste este material' : undefined}
           >
             <Flag size={18} />
-            <span>Denunciar</span>
+            <span>{material.miDenunciaPendiente ? 'Ya denunciado' : 'Denunciar'}</span>
           </button>
         </div>
       </div>
