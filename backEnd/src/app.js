@@ -10,6 +10,8 @@ const profileRoutes = require("./routes/profile.routes");
 const sesionEstudioRoutes = require("./routes/sesionEstudio.routes");
 const contactoRoutes = require("./routes/contacto.routes");
 const notificacionRoutes = require("./routes/notificacion.routes");
+const denunciaRoutes = require("./routes/denuncia.routes");
+const denunciaAdminRoutes = require("./routes/denunciaAdmin.routes");
 
 const errorHandler = require("./middlewares/errorHandler");
 
@@ -27,6 +29,8 @@ app.use("/api", profileRoutes);
 app.use("/api", sesionEstudioRoutes);
 app.use("/api", contactoRoutes);
 app.use("/api", notificacionRoutes);
+app.use("/api", denunciaRoutes);
+app.use("/api", denunciaAdminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
