@@ -201,6 +201,16 @@
   border-color: #ffc4cc;
 }
 
+.actionBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.actionBtn:disabled:hover {
+  background: inherit;
+  border-color: inherit;
+}
+
 /* DARK MODE */
 
 :global(html.dark) .title {

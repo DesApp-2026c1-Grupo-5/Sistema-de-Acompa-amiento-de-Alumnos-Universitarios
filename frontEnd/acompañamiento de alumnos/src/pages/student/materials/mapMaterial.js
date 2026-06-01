@@ -22,6 +22,7 @@ export const mapMaterialFromApi = (m) => {
     likes: m.likes ?? 0,
     dislikes: m.dislikes ?? 0,
     miVoto: m.mi_voto ?? null,
+    miDenunciaPendiente: m.mi_denuncia_pendiente ?? false,
     publishedAt: m.createdAt,
   };
 };
