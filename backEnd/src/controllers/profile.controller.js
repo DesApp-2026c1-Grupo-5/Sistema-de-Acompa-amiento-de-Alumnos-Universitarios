@@ -148,10 +148,10 @@ const buildPublications = async (estudianteId) => {
       authorName: `${plain.estudiante?.nombre ?? ""} ${plain.estudiante?.apellido ?? ""}`.trim(),
       date: formatDate(plain.createdAt),
       content: plain.contenido,
+      eventType: plain.event_type ?? null,
+      eventSubject: plain.event_subject ?? null,
       likes,
       dislikes,
-      eventType: null,
-      eventSubject: null,
     };
   });
 

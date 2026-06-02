@@ -53,7 +53,14 @@ const obtenerPosts = async (req, res) => {
       ? votos.find((v) => v.estudiante_id === miEstudianteId)
       : null;
     delete plain.voto_posts;
-    return { ...plain, likes, dislikes, mi_voto: mio?.tipo ?? null };
+    return {
+      ...plain,
+      eventType: plain.event_type ?? null,
+      eventSubject: plain.event_subject ?? null,
+      likes,
+      dislikes,
+      mi_voto: mio?.tipo ?? null,
+    };
   });
 
   return res.json({
