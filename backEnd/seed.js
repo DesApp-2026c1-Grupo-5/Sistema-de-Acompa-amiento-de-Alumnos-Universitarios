@@ -179,7 +179,7 @@ async function seed() {
 
   const [postFacuAlgo, postLaraBD, postFacuResumen] = await db.post.bulkCreate(
     [
-      { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            createdAt: new Date("2024-07-16"), updatedAt: new Date("2024-07-16") },
+      { estudiante_id: estFacu.id, contenido: "Aprobé Algoritmos!",                            event_type: "approved", event_subject: "Algoritmos I", createdAt: new Date("2024-07-16"), updatedAt: new Date("2024-07-16") },
       { estudiante_id: estLara.id, contenido: "Buscando grupo de estudio para BD",             createdAt: new Date("2026-04-10"), updatedAt: new Date("2026-04-10") },
       { estudiante_id: estFacu.id, contenido: "Subí un resumen, lo encuentran en materiales", createdAt: new Date("2026-04-25"), updatedAt: new Date("2026-04-25") },
     ],
