@@ -23,6 +23,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   post.init({
     contenido: DataTypes.STRING,
+    event_type: DataTypes.STRING,
+    event_subject: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'post',
