@@ -177,9 +177,20 @@ const obtenerSesion = async (req, res, next) => {
         }))
     : [];
 
+  const participants = (plain.inscripcion_sesions || [])
+    .filter((i) => ESTADOS_ACTIVOS.includes(i.estado))
+    .map((i) => ({
+      inscripcionId: i.id,
+      estudianteId: i.estudiante_id,
+      name: i.estudiante
+        ? `${i.estudiante.nombre} ${i.estudiante.apellido}`.trim()
+        : "Estudiante",
+      estado: i.estado,
+    }));
+
   return res.status(200).json({
     ok: true,
-    data: { ...base, pendingRequests },
+    data: { ...base, pendingRequests, participants },
   });
 };
 

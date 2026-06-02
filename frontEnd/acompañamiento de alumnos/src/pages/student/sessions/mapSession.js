@@ -39,5 +39,9 @@ export const mapSessionFromApi = (s) => {
     creatorInitials: getInitials(s.creatorName),
     userStatus: s.userStatus,
     pendingRequests: s.pendingRequests ?? [],
+    participants: (s.participants ?? []).map((p) => ({
+      ...p,
+      initials: getInitials(p.name),
+    })),
   };
 };

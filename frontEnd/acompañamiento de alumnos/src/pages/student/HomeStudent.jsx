@@ -7,10 +7,12 @@ import ErrorState from '../../components/common/ErrorState';
 import CreatePostCard from '../../components/home/CreatePostCard';
 import FeedPost from '../../components/home/FeedPost';
 import UpcomingSessionsCard from '../../components/home/UpcomingSessionsCard';
+import SessionDetailModal from '../../components/sessions/SessionDetailModal';
 import { useAuth } from '../../context/useAuth';
 import { getPosts, createPost, votePost } from '../../services/postService';
-import { upcomingSessions } from './home/mockData';
+import { getSessions, getSession } from '../../services/sessionService';
 import { getInitials, mapPostFromApi } from './home/mapPost';
+import { mapSessionFromApi } from './sessions/mapSession';
 import styles from './HomeStudent.module.css';
 
 function HomeStudent() {
@@ -31,6 +33,11 @@ function HomeStudent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sessionsOpen, setSessionsOpen] = useState(false);
 
+  const [mySessions, setMySessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionsError, setSessionsError] = useState(null);
+  const [detailSession, setDetailSession] = useState(null);
+
   useEffect(() => {
     getPosts()
       .then((res) => {
@@ -40,6 +47,32 @@ function HomeStudent() {
         setError(err.message || 'No pudimos cargar el feed.');
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    getSessions()
+      .then((res) => {
+        const all = (res?.data ?? []).map(mapSessionFromApi);
+        const now = Date.now();
+        const mias = all
+          .filter((s) => s.userStatus === 'joined')
+          .filter((s) => !s.cancelled)
+          .filter((s) => {
+            if (!s.date || !s.time) return true;
+            const start = new Date(`${s.date}T${s.time}:00`).getTime();
+            const totalMinutes = (s.durationHours || 0) * 60 + (s.durationMinutes || 0);
+            return now < start + totalMinutes * 60 * 1000;
+          })
+          .sort((a, b) => {
+            const da = new Date(`${a.date}T${a.time || '00:00'}:00`).getTime();
+            const db = new Date(`${b.date}T${b.time || '00:00'}:00`).getTime();
+            return da - db;
+          })
+          .slice(0, 5);
+        setMySessions(mias);
+      })
+      .catch((err) => setSessionsError(err.message || 'No pudimos cargar tus sesiones.'))
+      .finally(() => setSessionsLoading(false));
   }, []);
 
   const filteredPublications = useMemo(() => {
@@ -98,8 +131,16 @@ function HomeStudent() {
 
   const handleLike = (postId) => handleReaction(postId, 'like');
   const handleDislike = (postId) => handleReaction(postId, 'dislike');
-  const handleViewSessionDetails = () => {
-    // TODO: navegar al detalle de sesión cuando exista la ruta
+  const handleViewSessionDetails = async (sessionId) => {
+    const target = mySessions.find((s) => s.id === sessionId);
+    if (!target) return;
+    setDetailSession(target);
+    try {
+      const res = await getSession(sessionId);
+      setDetailSession(mapSessionFromApi(res.data));
+    } catch {
+      // si falla, queda el dato del listado
+    }
   };
 
   const renderFeed = () => {
@@ -172,7 +213,9 @@ function HomeStudent() {
         <>
           <aside className={styles.aside}>
             <UpcomingSessionsCard
-              sessions={upcomingSessions}
+              sessions={mySessions}
+              loading={sessionsLoading}
+              error={sessionsError}
               onViewDetails={handleViewSessionDetails}
             />
           </aside>
@@ -206,7 +249,9 @@ function HomeStudent() {
                 </div>
 
                 <UpcomingSessionsCard
-                  sessions={upcomingSessions}
+                  sessions={mySessions}
+                  loading={sessionsLoading}
+                  error={sessionsError}
                   onViewDetails={handleViewSessionDetails}
                 />
               </div>
@@ -214,6 +259,12 @@ function HomeStudent() {
           )}
         </>
       </div>
+
+      <SessionDetailModal
+        session={detailSession}
+        open={Boolean(detailSession)}
+        onClose={() => setDetailSession(null)}
+      />
     </div>
   );
 }

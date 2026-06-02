@@ -70,6 +70,18 @@
   opacity: 0.75;
 }
 
+.status {
+  margin: 0;
+  padding: 12px 0;
+  text-align: center;
+  color: #526987;
+  font-size: 14px;
+}
+
+:global(html.dark) .status {
+  color: #94a3b8;
+}
+
 /* DARK MODE */
 
 :global(html.dark) .item {

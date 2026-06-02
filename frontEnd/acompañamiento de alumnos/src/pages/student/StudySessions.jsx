@@ -17,6 +17,7 @@ import Modal from "../../components/common/Modal";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 import ModalConfirmation from "../../components/common/ModalConfirmation";
+import SessionDetailModal from "../../components/sessions/SessionDetailModal";
 import SessionForm from "./SessionForm";
 import {
   getSessions,
@@ -38,6 +39,7 @@ function StudySessions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState("");
+  const [now, setNow] = useState(() => Date.now());
 
   const [formOpen, setFormOpen] = useState(false);
   const [editSession, setEditSession] = useState(null);
@@ -52,6 +54,11 @@ function StudySessions() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [sortBy, setSortBy] = useState("nextDate");
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     Promise.all([getSessions(), getMaterias()])
@@ -86,28 +93,73 @@ function StudySessions() {
   const isFull = (session) =>
     session.maxParticipants && session.participantsCount >= session.maxParticipants;
 
+  const getTimeStatus = (session) => {
+    if (!session.date || !session.time) return "future";
+    const start = new Date(`${session.date}T${session.time}:00`).getTime();
+    const totalMinutes = (session.durationHours || 0) * 60 + (session.durationMinutes || 0);
+    const end = start + totalMinutes * 60 * 1000;
+    if (now >= end) return "past";
+    if (now >= start) return "inProgress";
+    const startDate = new Date(start);
+    const today = new Date(now);
+    if (
+      startDate.getFullYear() === today.getFullYear() &&
+      startDate.getMonth() === today.getMonth() &&
+      startDate.getDate() === today.getDate()
+    ) {
+      return "today";
+    }
+    return "future";
+  };
+
   const getStatusText = (session) => {
     if (session.cancelled) return "Cancelada";
+    if (getTimeStatus(session) === "past") return "Finalizada";
     if (isFull(session)) return "Completa";
     if (session.userStatus === "pending") return "Pendiente";
     return "Disponible";
   };
 
   const getStatusClass = (session) => {
-    if (session.cancelled || isFull(session)) return styles.statusFull;
+    if (session.cancelled) return styles.statusFull;
+    if (getTimeStatus(session) === "past") return styles.statusEnded;
+    if (isFull(session)) return styles.statusFull;
     if (session.userStatus === "pending") return styles.statusPending;
     return styles.statusAvailable;
   };
 
+  const renderCornerBadge = (session) => {
+    if (session.cancelled) return null;
+    const ts = getTimeStatus(session);
+    if (ts === "inProgress") {
+      return <span className={`${styles.cornerBadge} ${styles.cornerInProgress}`}>En curso</span>;
+    }
+    if (ts === "today") {
+      return <span className={`${styles.cornerBadge} ${styles.cornerToday}`}>Hoy</span>;
+    }
+    return null;
+  };
+
   const mySessions = useMemo(() => {
-    if (activeMyTab === "created") {
-      return sessions.filter((session) => session.userStatus === "created");
+    const isPast = (session) => {
+      if (!session.date || !session.time) return false;
+      const start = new Date(`${session.date}T${session.time}:00`).getTime();
+      const totalMinutes = (session.durationHours || 0) * 60 + (session.durationMinutes || 0);
+      return now >= start + totalMinutes * 60 * 1000;
+    };
+    const mine = sessions.filter((s) =>
+      ["created", "joined", "pending"].includes(s.userStatus)
+    );
+    const sortByDateDesc = (a, b) =>
+      new Date(`${b.date}T${b.time || "00:00"}:00`).getTime() -
+      new Date(`${a.date}T${a.time || "00:00"}:00`).getTime();
+    if (activeMyTab === "finished") {
+      return mine.filter(isPast).sort(sortByDateDesc);
     }
-    if (activeMyTab === "joined") {
-      return sessions.filter((session) => session.userStatus === "joined");
-    }
-    return sessions.filter((session) => session.userStatus === "pending");
-  }, [sessions, activeMyTab]);
+    return mine
+      .filter((s) => s.userStatus === activeMyTab && !isPast(s))
+      .sort(sortByDateDesc);
+  }, [sessions, activeMyTab, now]);
 
   const availableSessions = useMemo(() => {
     let result = sessions.filter(
@@ -145,7 +197,7 @@ function StudySessions() {
         const spotsB = b.maxParticipants ? b.maxParticipants - b.participantsCount : 999;
         return spotsB - spotsA;
       }
-      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
+      return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
     });
 
     return result;
@@ -253,6 +305,13 @@ function StudySessions() {
     : null;
 
   const getJoinButton = (session) => {
+    if (getTimeStatus(session) === "past") {
+      return (
+        <button className={styles.fullButton} disabled>
+          Finalizada
+        </button>
+      );
+    }
     if (isFull(session)) {
       return (
         <button className={styles.fullButton} disabled>
@@ -405,6 +464,13 @@ function StudySessions() {
             >
               Pendientes
             </button>
+
+            <button
+              className={activeMyTab === "finished" ? styles.activeTab : ""}
+              onClick={() => setActiveMyTab("finished")}
+            >
+              Finalizadas
+            </button>
           </div>
 
           {mySessions.length === 0 ? (
@@ -414,7 +480,10 @@ function StudySessions() {
             />
           ) : (
             mySessions.map((session) => (
-              <article className={styles.mySessionItem} key={session.id}>
+              <article
+                className={`${styles.mySessionItem} ${getTimeStatus(session) === "past" ? styles.sessionCardPast : ""}`}
+                key={session.id}
+              >
                 <div>
                   <h3>
                     {session.subject}
@@ -432,6 +501,7 @@ function StudySessions() {
                 </div>
 
                 <div className={styles.myActions}>
+                  {renderCornerBadge(session)}
                   <button onClick={() => handleViewDetail(session)}>Ver detalle</button>
 
                   {session.userStatus === "created" && !session.cancelled && (
@@ -471,7 +541,10 @@ function StudySessions() {
           ) : (
             <div className={styles.sessionsGrid}>
               {availableSessions.map((session) => (
-                <article className={styles.sessionCard} key={session.id}>
+                <article
+                  className={`${styles.sessionCard} ${getTimeStatus(session) === "past" ? styles.sessionCardPast : ""}`}
+                  key={session.id}
+                >
                   <div className={styles.cardTop}>
                     <div>
                       <h3>
@@ -483,7 +556,17 @@ function StudySessions() {
                       <p>{session.topic}</p>
                     </div>
 
-                    <MoreVertical size={21} className={styles.moreIcon} />
+                    <div className={styles.cardTopRight}>
+                      {renderCornerBadge(session)}
+                      <button
+                        type="button"
+                        className={styles.moreButton}
+                        aria-label="Ver detalle de la sesión"
+                        onClick={() => handleViewDetail(session)}
+                      >
+                        <MoreVertical size={21} className={styles.moreIcon} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className={styles.cardMeta}>
@@ -538,60 +621,14 @@ function StudySessions() {
         />
       </Modal>
 
-      <Modal
+      <SessionDetailModal
+        session={detailSession}
         open={Boolean(detailSession)}
-        title="Detalle de sesión"
         onClose={() => setDetailSession(null)}
-        size="md"
-      >
-        {detailSession && (
-          <div className={styles.detailBox}>
-            <h3>{detailSession.subject}</h3>
-            <p>{detailSession.topic}</p>
-            <p>Tipo: {detailSession.type === "virtual" ? "Virtual" : "Presencial"}</p>
-            <p>
-              Fecha: {formatDate(detailSession.date)} · {detailSession.time}
-            </p>
-            <p>Duración: {formatDuration(detailSession)}</p>
-            <p>
-              Participantes: {detailSession.participantsCount}/
-              {detailSession.maxParticipants ?? "∞"}
-            </p>
-            <p>Creador: {detailSession.creatorName}</p>
-            {detailSession.description && <p>{detailSession.description}</p>}
-
-            {detailSession.userStatus === "created" &&
-              detailSession.pendingRequests?.length > 0 && (
-                <div className={styles.pendingBox}>
-                  <h4>Solicitudes pendientes</h4>
-                  {detailSession.pendingRequests.map((req) => (
-                    <div key={req.inscripcionId} className={styles.pendingItem}>
-                      <span>{req.name}</span>
-                      <div className={styles.pendingActions}>
-                        <button
-                          type="button"
-                          className={styles.approveBtn}
-                          onClick={() => handleApprove(req.inscripcionId)}
-                        >
-                          Aprobar
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.rejectBtn}
-                          onClick={() => handleReject(req.inscripcionId)}
-                        >
-                          Rechazar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-            {actionError && <p className={styles.actionError}>{actionError}</p>}
-          </div>
-        )}
-      </Modal>
+        onApprove={handleApprove}
+        onReject={handleReject}
+        actionError={actionError}
+      />
 
       <ModalConfirmation
         open={Boolean(sessionToCancel)}
