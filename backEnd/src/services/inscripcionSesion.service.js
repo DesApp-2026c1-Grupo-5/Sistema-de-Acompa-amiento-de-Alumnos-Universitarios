@@ -27,6 +27,12 @@ const inscribirse = async (sesionId, usuarioId) => {
     throw buildError("La sesion esta cancelada", 400);
   }
 
+  const fin = new Date(sesion.fecha_hora).getTime() +
+    (sesion.duracion_minutos || 0) * 60 * 1000;
+  if (Date.now() >= fin) {
+    throw buildError("La sesion ya finalizo", 400);
+  }
+
   if (sesion.creador_id === estudianteData.id) {
     throw buildError("No puede inscribirse a su propia sesion", 400);
   }
