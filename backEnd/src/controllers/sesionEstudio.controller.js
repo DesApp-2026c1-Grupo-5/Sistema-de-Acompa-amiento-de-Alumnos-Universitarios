@@ -4,6 +4,7 @@ const {
   estudiante,
   materia,
   inscripcion_sesion,
+  archivo_sesion_estudio,
 } = require("../db/models");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
@@ -154,6 +155,10 @@ const obtenerSesion = async (req, res, next) => {
           { model: estudiante, attributes: ["id", "nombre", "apellido"] },
         ],
       },
+      {
+        model: archivo_sesion_estudio,
+        attributes: ["id", "nombre_original", "nombre_archivo", "mime_type", "size_bytes", "url_o_path", "createdAt"],
+      },
     ],
   });
 
@@ -188,9 +193,19 @@ const obtenerSesion = async (req, res, next) => {
       estado: i.estado,
     }));
 
+  const archivos = (plain.archivo_sesion_estudios || []).map((archivo) => ({
+    id: archivo.id,
+    nombreOriginal: archivo.nombre_original,
+    nombreArchivo: archivo.nombre_archivo,
+    mimeType: archivo.mime_type,
+    sizeBytes: archivo.size_bytes,
+    url: archivo.url_o_path,
+    createdAt: archivo.createdAt,
+  }));
+
   return res.status(200).json({
     ok: true,
-    data: { ...base, pendingRequests, participants },
+    data: { ...base, pendingRequests, participants, archivos },
   });
 };
 
