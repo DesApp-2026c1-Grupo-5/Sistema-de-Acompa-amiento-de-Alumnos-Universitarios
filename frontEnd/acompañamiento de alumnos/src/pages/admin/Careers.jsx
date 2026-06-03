@@ -80,10 +80,6 @@ function Careers() {
 
       {!loading && !error && (
         <div className={styles.grid}>
-          {filteredCareers.map((career) => (
-            <CareerCard key={career.id} career={career} />
-          ))}
-
           <button
             type="button"
             className={styles.addCard}
@@ -93,8 +89,14 @@ function Careers() {
               <Plus size={32} />
             </div>
             <h3 className={styles.addTitle}>Agregar carrera</h3>
-            <p className={styles.addDescription}>Definir nueva carrera universitaria</p>
+            <p className={styles.addDescription}>
+              Definir nueva carrera universitaria
+            </p>
           </button>
+
+          {filteredCareers.map((career) => (
+            <CareerCard key={career.id} career={career} />
+          ))}
         </div>
       )}
 
