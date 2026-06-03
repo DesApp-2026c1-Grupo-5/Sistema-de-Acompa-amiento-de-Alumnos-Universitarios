@@ -27,18 +27,18 @@ async function seed() {
 
   const [planTPI2024, planLic2023] = await db.plan_estudio.bulkCreate(
     [
-      { carrera_id: carreraTPI.id,   nombre: "TPI 2024",     estado: "vigente", creditos_requeridos: 60,  niveles_ingles_requeridos: 1 },
-      { carrera_id: carreraLicSI.id, nombre: "Lic SI 2023",  estado: "vigente", creditos_requeridos: 120, niveles_ingles_requeridos: 2 },
+      { carrera_id: carreraTPI.id,   nombre: "TPI 2024",     anio: 2024, estado: "vigente", creditos_requeridos: 60,  niveles_ingles_requeridos: 1 },
+      { carrera_id: carreraLicSI.id, nombre: "Lic SI 2023",  anio: 2023, estado: "vigente", creditos_requeridos: 120, niveles_ingles_requeridos: 2 },
     ],
     { returning: true }
   );
 
   const [matAlgo, matBD, matPOO, matRedes] = await db.materia.bulkCreate(
     [
-      { plan_id: planTPI2024.id, nombre: "Algoritmos I",   anio_cursada: 1, tipo: "obligatoria", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, nombre: "Bases de Datos", anio_cursada: 2, tipo: "obligatoria", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, nombre: "POO",            anio_cursada: 2, tipo: "obligatoria", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planLic2023.id, nombre: "Redes",          anio_cursada: 3, tipo: "obligatoria", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "ALG-1", nombre: "Algoritmos I",   anio_cursada: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "BD-1",  nombre: "Bases de Datos", anio_cursada: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "POO-1", nombre: "POO",            anio_cursada: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planLic2023.id, codigo: "RED-1", nombre: "Redes",          anio_cursada: 3, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
     ],
     { returning: true }
   );

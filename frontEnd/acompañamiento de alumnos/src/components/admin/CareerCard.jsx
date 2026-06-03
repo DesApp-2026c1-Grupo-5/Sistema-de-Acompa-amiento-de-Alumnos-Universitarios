@@ -8,21 +8,25 @@ function CareerCard({ career }) {
 
   const handleViewPlan = () => {
     const activePlan = career.plans.find(p => p.status === 'Vigente') || career.plans[0];
-    navigate('/admin/study-plan', { 
-      state: { 
-        careerId: career.id, 
-        planYear: activePlan.year 
-      } 
+    if (!activePlan) return;
+    navigate('/admin/study-plan', {
+      state: {
+        careerId: career.id,
+        planId: activePlan.id,
+        planYear: activePlan.year,
+      },
     });
   };
 
   const handleEdit = () => {
     const activePlan = career.plans.find(p => p.status === 'Vigente') || career.plans[0];
-    navigate('/admin/study-plan', { 
-      state: { 
-        careerId: career.id, 
-        planYear: activePlan.year 
-      } 
+    if (!activePlan) return;
+    navigate('/admin/study-plan', {
+      state: {
+        careerId: career.id,
+        planId: activePlan.id,
+        planYear: activePlan.year,
+      },
     });
   };
 
