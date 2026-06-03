@@ -27,3 +27,6 @@ export const uploadSessionFiles = (sesionId, files) => {
 
   return api.postFormData(`/sesiones/${sesionId}/archivos`, formData);
 };
+
+export const deleteSessionFile = (sesionId, archivoId) =>
+  api.delete(`/sesiones/${sesionId}/archivos/${archivoId}`);

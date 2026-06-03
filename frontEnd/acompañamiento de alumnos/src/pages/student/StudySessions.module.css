@@ -1470,6 +1470,13 @@
   min-width: 0;
 }
 
+.fileMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .fileLink {
   color: #0f172a;
   font-size: 14px;
@@ -1530,6 +1537,21 @@
 .uploadButton:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.fileDeleteButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.fileDeleteIcon {
+  color: #ef4444;
 }
 
 .participantRow {
@@ -1632,6 +1654,13 @@
 :global(html.dark) .uploadBox {
   background: #0f172a;
   border-color: #334155;
+}
+
+:global(.dark) .fileDeleteButton,
+:global(html.dark) .fileDeleteButton,
+:global(.dark) .fileDeleteIcon,
+:global(html.dark) .fileDeleteIcon {
+  color: #f87171;
 }
 
 :global(.dark) .detailLink,

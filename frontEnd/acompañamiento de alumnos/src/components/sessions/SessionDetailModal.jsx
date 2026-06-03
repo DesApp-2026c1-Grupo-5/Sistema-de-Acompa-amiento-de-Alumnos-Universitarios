@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload } from 'lucide-react';
+import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload, Trash2 } from 'lucide-react';
 import Modal from '../common/Modal';
 import styles from '../../pages/student/StudySessions.module.css';
 
@@ -39,7 +39,16 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function SessionDetailModal({ session, open, onClose, onApprove, onReject, onUploadFiles, actionError }) {
+function SessionDetailModal({
+  session,
+  open,
+  onClose,
+  onApprove,
+  onReject,
+  onUploadFiles,
+  onDeleteFile,
+  actionError,
+}) {
   const status = session ? getStatusInfo(session) : null;
   const canManagePending =
     session?.userStatus === 'created' &&
@@ -47,11 +56,14 @@ function SessionDetailModal({ session, open, onClose, onApprove, onReject, onUpl
     onApprove &&
     onReject;
   const canUploadFiles = session?.userStatus === 'created' && onUploadFiles;
+  const canDeleteFiles = session?.userStatus === 'created' && onDeleteFile;
 
   const fileInputRef = useRef(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [deletingFileId, setDeletingFileId] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const handleSelectFiles = (event) => {
     setSelectedFiles(Array.from(event.target.files ?? []));
@@ -75,6 +87,21 @@ function SessionDetailModal({ session, open, onClose, onApprove, onReject, onUpl
       setUploadError(err.message || 'No pudimos subir los archivos.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDelete = async (archivo) => {
+    if (!window.confirm(`¿Borrar ${archivo.nombreOriginal}?`)) return;
+
+    setDeletingFileId(archivo.id);
+    setDeleteError('');
+
+    try {
+      await onDeleteFile?.(archivo.id);
+    } catch (err) {
+      setDeleteError(err.message || 'No pudimos borrar el archivo.');
+    } finally {
+      setDeletingFileId(null);
     }
   };
 
@@ -186,10 +213,24 @@ function SessionDetailModal({ session, open, onClose, onApprove, onReject, onUpl
                       <a href={archivo.url} target="_blank" rel="noreferrer" className={styles.fileLink}>
                         {archivo.nombreOriginal}
                       </a>
-                      <span className={styles.fileMeta}>
-                        {archivo.uploader ? `${archivo.uploader.nombre} ${archivo.uploader.apellido}` : 'Archivo'}
-                        {archivo.sizeBytes != null ? ` · ${formatSize(archivo.sizeBytes)}` : ''}
-                      </span>
+                      <div className={styles.fileMetaRow}>
+                        <span className={styles.fileMeta}>
+                          {archivo.uploader ? `${archivo.uploader.nombre} ${archivo.uploader.apellido}` : 'Archivo'}
+                          {archivo.sizeBytes != null ? ` · ${formatSize(archivo.sizeBytes)}` : ''}
+                        </span>
+
+                        {canDeleteFiles && (
+                          <button
+                            type="button"
+                            className={styles.fileDeleteButton}
+                            onClick={() => handleDelete(archivo)}
+                            disabled={deletingFileId === archivo.id}
+                            aria-label={`Borrar ${archivo.nombreOriginal}`}
+                          >
+                            <Trash2 size={16} className={styles.fileDeleteIcon} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -231,6 +272,7 @@ function SessionDetailModal({ session, open, onClose, onApprove, onReject, onUpl
                 )}
 
                 {uploadError && <p className={styles.actionError}>{uploadError}</p>}
+                {deleteError && <p className={styles.actionError}>{deleteError}</p>}
               </div>
             )}
           </div>

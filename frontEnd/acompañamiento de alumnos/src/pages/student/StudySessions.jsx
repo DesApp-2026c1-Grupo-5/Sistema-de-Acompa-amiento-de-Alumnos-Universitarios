@@ -29,6 +29,7 @@ import {
   approveParticipant,
   rejectParticipant,
   uploadSessionFiles,
+  deleteSessionFile,
 } from "../../services/sessionService";
 import { getMaterias } from "../../services/materialService";
 import { mapSessionFromApi } from "./sessions/mapSession";
@@ -266,6 +267,15 @@ function StudySessions() {
     if (!detailSession) return;
 
     await uploadSessionFiles(detailSession.id, files);
+    const res = await getSession(detailSession.id);
+    setDetailSession(mapSessionFromApi(res.data));
+    await reloadSessions();
+  };
+
+  const handleDeleteFile = async (archivoId) => {
+    if (!detailSession) return;
+
+    await deleteSessionFile(detailSession.id, archivoId);
     const res = await getSession(detailSession.id);
     setDetailSession(mapSessionFromApi(res.data));
     await reloadSessions();
@@ -639,6 +649,7 @@ function StudySessions() {
           onApprove={handleApprove}
           onReject={handleReject}
           onUploadFiles={handleUploadFiles}
+          onDeleteFile={handleDeleteFile}
           actionError={actionError}
         />
       )}
