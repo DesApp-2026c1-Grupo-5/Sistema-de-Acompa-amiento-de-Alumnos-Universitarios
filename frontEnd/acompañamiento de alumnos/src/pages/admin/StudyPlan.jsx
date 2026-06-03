@@ -34,6 +34,7 @@ function StudyPlan() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSubjects, setEditedSubjects] = useState(null);
   const [editedConditions, setEditedConditions] = useState(null);
+  const [editedStatus, setEditedStatus] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [pendingDeleteCode, setPendingDeleteCode] = useState(null);
@@ -68,6 +69,7 @@ function StudyPlan() {
   const handleStartEdit = () => {
     setEditedSubjects(studyPlan.subjects.map(s => ({ ...s })));
     setEditedConditions({ ...studyPlan.conditions });
+    setEditedStatus(studyPlan.status);
     setIsEditing(true);
   };
 
@@ -76,9 +78,10 @@ function StudyPlan() {
   };
 
   const confirmSave = () => {
-    setStudyPlan({ ...studyPlan, subjects: editedSubjects, conditions: editedConditions });
+    setStudyPlan({ ...studyPlan, subjects: editedSubjects, conditions: editedConditions, status: editedStatus });
     setEditedSubjects(null);
     setEditedConditions(null);
+    setEditedStatus('');
     setIsEditing(false);
     setShowSaveModal(false);
   };
@@ -90,6 +93,7 @@ function StudyPlan() {
   const confirmDiscard = () => {
     setEditedSubjects(null);
     setEditedConditions(null);
+    setEditedStatus('');
     setIsEditing(false);
     setShowDiscardModal(false);
     setNewSubject({
@@ -179,6 +183,15 @@ function StudyPlan() {
     return type === 'Obligatoria' ? styles.typeBadgeMandatory : styles.typeBadgeOptional;
   };
 
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Vigente': return styles.statusVigente;
+      case 'Transición': return styles.statusTransicion;
+      case 'Discontinuado': return styles.statusDiscontinuado;
+      default: return styles.statusVigente;
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -216,7 +229,21 @@ function StudyPlan() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <h1 className={styles.title}>{studyPlan.careerName} — Plan {studyPlan.planYear}</h1>
-          <span className={styles.badge}>{studyPlan.status}</span>
+          {isEditing ? (
+            <select
+              className={styles.statusSelect}
+              value={editedStatus}
+              onChange={(e) => setEditedStatus(e.target.value)}
+            >
+              <option value="Vigente">Vigente</option>
+              <option value="Transición">Transición</option>
+              <option value="Discontinuado">Discontinuado</option>
+            </select>
+          ) : (
+            <span className={`${styles.badge} ${getStatusBadgeClass(studyPlan.status)}`}>
+              {studyPlan.status}
+            </span>
+          )}
         </div>
         <div className={styles.headerActions}>
           <Button variant="outlineSoft" iconLeft={<Plus size={16} />}>
