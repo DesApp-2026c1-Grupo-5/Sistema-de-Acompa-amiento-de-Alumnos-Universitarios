@@ -11,7 +11,17 @@ const errorHandler = (err, req, res, next) => {
   }
 
   const statusCode = err.statusCode || 500;
-  const message = err.message || "Error interno del servidor";
+
+  // Errores inesperados (sin statusCode explícito) no deben filtrar mensajes
+  // técnicos (PG, Sequelize, etc.) al cliente. Se loguea el real y se devuelve
+  // un mensaje genérico.
+  if (!err.statusCode) {
+    console.error("[errorHandler]", err);
+  }
+
+  const message = err.statusCode
+    ? err.message || "Solicitud invalida"
+    : "Error interno del servidor";
 
   const response = {
     ok: false,
