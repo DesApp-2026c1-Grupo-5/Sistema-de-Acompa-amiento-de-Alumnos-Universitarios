@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Users,
   FileText,
@@ -8,6 +8,19 @@ import {
   BarChart3,
   ThumbsUp,
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
+
+import { getAdminStats } from '../../services/statsService';
 
 import styles from './Statistics.module.css';
 
@@ -22,26 +35,29 @@ const icons = {
 
 export default function Statistics() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('uso');
 
   useEffect(() => {
-    const fetchStats = async () => {
+    let cancelled = false;
+    (async () => {
       try {
-        const response = await fetch('/data/estadisticasReportes.json');
-
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar las estadísticas');
-        }
-
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error(error);
+        const res = await getAdminStats();
+        if (cancelled) return;
+        setData(res?.data ?? null);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err.message || 'No se pudieron cargar las estadísticas');
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    fetchStats();
   }, []);
+
+  if (error) {
+    return <p className={styles.loading}>{error}</p>;
+  }
 
   if (!data) {
     return <p className={styles.loading}>Cargando estadísticas...</p>;
@@ -157,11 +173,20 @@ export default function Statistics() {
 }
 
 function UsoSistema({ data }) {
+  const sesionesData = useMemo(
+    () =>
+      data.sesionesPeriodo.months.map((m, i) => ({
+        month: m,
+        value: data.sesionesPeriodo.data?.[i] ?? 0,
+      })),
+    [data.sesionesPeriodo]
+  );
+
   return (
     <>
-      <LargeEmptyChart
+      <MonthlyLineChart
         title="Usuarios activos en el tiempo"
-        labels={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14']}
+        data={data.usuariosActivosSerie || []}
       />
 
       <div className={styles.twoColumns}>
@@ -182,9 +207,9 @@ function UsoSistema({ data }) {
 
       <CareerSubjectsCard items={data.materiasPorCarrera} />
 
-      <LargeEmptyChart
+      <MonthlyLineChart
         title="Sesiones de estudio creadas por período"
-        labels={data.sesionesPeriodo.months}
+        data={sesionesData}
         footerLeft={`Total de sesiones creadas: ${data.sesionesPeriodo.total}`}
         footerRight={`Promedio mensual: ${data.sesionesPeriodo.promedio}`}
       />
@@ -200,11 +225,13 @@ function UsoSistema({ data }) {
 }
 
 function ReportesSociales({ data }) {
+  const conexionesData = data.distribucionConexionesData || [];
+
   return (
     <>
-      <LargeEmptyChart
+      <DistributionBarChart
         title="Distribución de conexiones entre estudiantes"
-        labels={data.distribucionConexiones}
+        data={conexionesData}
       />
 
       <div className={styles.twoColumns}>
@@ -223,17 +250,21 @@ function ReportesSociales({ data }) {
   );
 }
 
-function LargeEmptyChart({ title, labels, footerLeft, footerRight }) {
+function MonthlyLineChart({ title, data, footerLeft, footerRight }) {
   return (
     <section className={styles.chartCard}>
       <h2>{title}</h2>
 
-      <div className={styles.emptyChart}>
-        <div className={styles.chartLabels}>
-          {labels.map((label) => (
-            <span key={label}>{label}</span>
-          ))}
-        </div>
+      <div style={{ width: '100%', height: 220 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 8, right: 20, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke="#e5e7eb" vertical={false} />
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#405a7a' }} />
+            <YAxis tick={{ fontSize: 11, fill: '#405a7a' }} allowDecimals={false} />
+            <Tooltip />
+            <Line type="monotone" dataKey="value" stroke="#00a8c7" strokeWidth={2} dot={{ r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       {(footerLeft || footerRight) && (
@@ -246,9 +277,27 @@ function LargeEmptyChart({ title, labels, footerLeft, footerRight }) {
   );
 }
 
-function DistributionCard({ title, items, valueKey, valueLabel }) {
-  const maxValue = Math.max(...items.map((item) => item[valueKey]));
+function DistributionBarChart({ title, data }) {
+  return (
+    <section className={styles.chartCard}>
+      <h2>{title}</h2>
 
+      <div style={{ width: '100%', height: 220 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 8, right: 20, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke="#e5e7eb" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#405a7a' }} />
+            <YAxis tick={{ fontSize: 11, fill: '#405a7a' }} allowDecimals={false} />
+            <Tooltip />
+            <Bar dataKey="students" fill="#00a8c7" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
+
+function DistributionCard({ title, items, valueKey, valueLabel }) {
   return (
     <section className={`${styles.card} ${styles.scrollTableCard}`}>
       <h2>{title}</h2>
@@ -259,14 +308,14 @@ function DistributionCard({ title, items, valueKey, valueLabel }) {
             <div className={styles.distributionHeader}>
               <span>{item.label}</span>
               <span>
-                {item[valueKey]} {valueLabel}
+                {item[valueKey]} {valueLabel} ({item.percentage}%)
               </span>
             </div>
 
             <div className={styles.barTrack}>
               <div
                 className={styles.barFill}
-                style={{ width: `${(item[valueKey] / maxValue) * 100}%` }}
+                style={{ width: `${item.percentage}%` }}
               />
             </div>
           </div>
@@ -384,12 +433,22 @@ function ModerationStats({ stats }) {
 }
 
 function ModerationDonut({ stats }) {
+  const total = stats.total || 0;
+  const pPct = total > 0 ? (stats.pendientes / total) * 100 : 0;
+  const aPct = total > 0 ? (stats.aceptadas / total) * 100 : 0;
+  const donutStyle =
+    total > 0
+      ? {
+          background: `conic-gradient(#f59e0b 0 ${pPct}%, #ef4444 ${pPct}% ${pPct + aPct}%, #22c55e ${pPct + aPct}% 100%)`,
+        }
+      : { background: '#e5e7eb' };
+
   return (
     <section className={styles.card}>
       <h2>Distribución de denuncias</h2>
 
       <div className={styles.donutWrapper}>
-        <div className={styles.donut}>
+        <div className={styles.donut} style={donutStyle}>
           <div>
             <strong>{stats.total}</strong>
             <span>Total</span>
@@ -407,12 +466,17 @@ function ModerationDonut({ stats }) {
 }
 
 function OccupancyCard({ data }) {
+  const pct = data.percentage || 0;
+  const donutStyle = {
+    background: `conic-gradient(#06b6d4 0 ${pct}%, #e5e7eb ${pct}% 100%)`,
+  };
+
   return (
     <section className={styles.card}>
       <h2>Tasa de ocupación de sesiones</h2>
 
       <div className={styles.donutWrapper}>
-        <div className={styles.occupancyDonut}>
+        <div className={styles.occupancyDonut} style={donutStyle}>
           <div>
             <strong>{data.percentage}%</strong>
             <span>Ocupación</span>

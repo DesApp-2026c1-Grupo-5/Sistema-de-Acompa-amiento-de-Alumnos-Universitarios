@@ -17,4 +17,11 @@ router.post(
   adminController.crearAdmin
 );
 
+router.get(
+  "/admin/home/stats",
+  authMiddleware,
+  requireAdmin,
+  adminController.getHomeStats
+);
+
 module.exports = router;

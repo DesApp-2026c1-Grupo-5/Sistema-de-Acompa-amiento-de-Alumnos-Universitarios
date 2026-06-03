@@ -3,50 +3,91 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import ReasonList from '../../../components/ComplaintConfigPage/ReasonList';
+import {
+  getMotivosAdmin,
+  createMotivo,
+  updateMotivo,
+  deleteMotivo,
+} from '../../../services/motivoDenunciaService';
 
 import styles from './ComplaintConfigPage.module.css';
+
+const mapMotivo = (m) => ({
+  id: m.id,
+  texto: m.descripcion,
+  activo: m.activo,
+});
 
 function ComplaintConfigPage() {
   const navigate = useNavigate();
 
-  const [config, setConfig] = useState(null);
+  const [motivos, setMotivos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
-    const fetchConfig = async () => {
+    let cancelled = false;
+    (async () => {
       try {
-        const response = await fetch('/data/complaintConfig.json');
-
-        if (!response.ok) {
-          throw new Error('No se pudo cargar la configuración de denuncias');
-        }
-
-        const data = await response.json();
-        setConfig(data);
-      } catch (error) {
-        console.error(error);
+        const res = await getMotivosAdmin();
+        if (cancelled) return;
+        setMotivos((res?.data ?? []).map(mapMotivo));
+      } catch (err) {
+        if (cancelled) return;
+        setLoadError(err.message || 'No pudimos cargar la configuración.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    fetchConfig();
   }, []);
+
+  const handleCreate = async (descripcion) => {
+    setActionError('');
+    try {
+      const res = await createMotivo(descripcion);
+      setMotivos((prev) => [...prev, mapMotivo(res.data)]);
+    } catch (err) {
+      setActionError(err.message || 'No pudimos crear el motivo.');
+      throw err;
+    }
+  };
+
+  const handleEdit = async (id, descripcion) => {
+    setActionError('');
+    try {
+      const res = await updateMotivo(id, descripcion);
+      setMotivos((prev) =>
+        prev.map((m) => (m.id === id ? mapMotivo(res.data) : m))
+      );
+    } catch (err) {
+      setActionError(err.message || 'No pudimos editar el motivo.');
+      throw err;
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setActionError('');
+    try {
+      await deleteMotivo(id);
+      setMotivos((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      setActionError(err.message || 'No pudimos eliminar el motivo.');
+      throw err;
+    }
+  };
 
   if (loading) {
     return (
-      <p className={styles.loading}>
-        Cargando configuración de denuncias...
-      </p>
+      <p className={styles.loading}>Cargando configuración de denuncias...</p>
     );
   }
 
-  if (!config) {
-    return (
-      <p className={styles.loading}>
-        No se pudo cargar la configuración.
-      </p>
-    );
+  if (loadError) {
+    return <p className={styles.loading}>{loadError}</p>;
   }
 
   return (
@@ -68,8 +109,11 @@ function ComplaintConfigPage() {
       </header>
 
       <ReasonList
-        reasons={config.motivos}
-        setConfig={setConfig}
+        reasons={motivos}
+        onCreate={handleCreate}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        actionError={actionError}
       />
 
       <section className={styles.infoCard}>
