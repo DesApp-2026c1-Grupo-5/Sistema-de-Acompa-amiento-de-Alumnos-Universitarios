@@ -224,3 +224,26 @@
   background: #00a8ad;
   color: #ffffff;
 }
+
+@media (max-width: 640px) {
+  .topSection {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .actions {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+    margin-top: 0;
+  }
+
+  .btnPublico,
+  .btnEdit {
+    width: 100%;
+    justify-content: center;
+  }
+}
