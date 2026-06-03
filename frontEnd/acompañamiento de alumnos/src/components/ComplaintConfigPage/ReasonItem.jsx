@@ -16,7 +16,7 @@ function ReasonItem({
         <button
           type="button"
           className={styles.actionButton}
-          onClick={() => onEdit(reason.id)}
+          onClick={() => onEdit(reason.id, reason.texto)}
         >
           <Pencil size={18} />
         </button>
@@ -24,7 +24,7 @@ function ReasonItem({
         <button
           type="button"
           className={styles.actionButton}
-          onClick={() => onDelete(reason.id)}
+          onClick={() => onDelete(reason.id, reason.texto)}
         >
           <Trash2 size={18} />
         </button>
