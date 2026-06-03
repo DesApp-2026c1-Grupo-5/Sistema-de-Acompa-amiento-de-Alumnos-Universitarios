@@ -74,6 +74,56 @@ function FormModal({ open, title, onClose, onSubmit, fields = [], initialValues 
       disabled: field.readOnly,
     };
 
+    if (field.type === 'autocomplete') {
+      const currentValue = form[field.name] || '';
+
+      const filteredOptions = field.options?.filter((option) =>
+        option.toLowerCase().includes(currentValue.toLowerCase())
+      );
+
+      const showSuggestions =
+        currentValue.trim().length > 0 &&
+        filteredOptions?.length > 0 &&
+        !filteredOptions.includes(currentValue);
+
+      return (
+        <label className={styles.field} key={field.name}>
+          <span className={styles.label}>
+            {field.label}
+            {field.required && <span className={styles.required}>*</span>}
+          </span>
+
+          <div className={styles.autocompleteWrapper}>
+            <input {...commonProps} type="text" />
+
+            {showSuggestions && (
+              <div className={styles.autocompleteList}>
+                {filteredOptions.map((option) => (
+                  <button
+                    type="button"
+                    key={option}
+                    className={styles.autocompleteOption}
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        [field.name]: option,
+                      }))
+                    }
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {errors[field.name] && (
+            <span className={styles.error}>{errors[field.name]}</span>
+          )}
+        </label>
+      );
+    }
+
     if (field.type === 'textarea') {
       return (
         <label className={styles.field} key={field.name}>
