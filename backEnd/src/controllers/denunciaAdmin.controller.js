@@ -60,11 +60,22 @@ const listarStats = async (req, res) => {
 const listarDenuncias = async (req, res) => {
   const { q, estado, page, limit } = req.query;
 
-  const where = {
-    id: {
-      [Op.in]: sequelize.literal("(SELECT DISTINCT material_id FROM denuncias)"),
-    },
-  };
+  const idsRows = await denuncia.findAll({
+    attributes: ["material_id"],
+    group: ["material_id"],
+    raw: true,
+  });
+  const materialIds = idsRows.map((r) => r.material_id);
+
+  if (materialIds.length === 0) {
+    return res.status(200).json({
+      ok: true,
+      data: [],
+      pagination: { page, limit, total: 0, totalPages: 0 },
+    });
+  }
+
+  const where = { id: { [Op.in]: materialIds } };
 
   if (estado === "suspendido") {
     where.suspendido = true;
@@ -74,7 +85,7 @@ const listarDenuncias = async (req, res) => {
     where,
     include: [
       { model: estudiante, attributes: ["id", "nombre", "apellido"] },
-      { model: denuncia, attributes: ["id", "estado"] },
+      { model: denuncia, as: "denuncias", attributes: ["id", "estado"] },
     ],
     order: [["id", "DESC"]],
   });
@@ -146,6 +157,7 @@ const obtenerDetalle = async (req, res, next) => {
       { model: estudiante, attributes: ["id", "nombre", "apellido"] },
       {
         model: denuncia,
+        as: "denuncias",
         include: [
           {
             model: motivo_denuncia,
