@@ -157,6 +157,7 @@ const obtenerSesion = async (req, res, next) => {
       },
       {
         model: archivo_sesion_estudio,
+        as: "archivos",
         attributes: ["id", "nombre_original", "nombre_archivo", "mime_type", "size_bytes", "url_o_path", "createdAt"],
       },
     ],
@@ -193,7 +194,7 @@ const obtenerSesion = async (req, res, next) => {
       estado: i.estado,
     }));
 
-  const archivos = (plain.archivo_sesion_estudios || []).map((archivo) => ({
+  const archivos = (plain.archivos || []).map((archivo) => ({
     id: archivo.id,
     nombreOriginal: archivo.nombre_original,
     nombreArchivo: archivo.nombre_archivo,

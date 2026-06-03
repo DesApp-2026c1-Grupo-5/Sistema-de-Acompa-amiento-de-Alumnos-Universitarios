@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 const { archivo_sesion_estudio, estudiante } = require("../db/models");
 
 const buildPublicPath = (sesionId, nombreArchivo) =>
@@ -30,7 +33,25 @@ const listarArchivosSesion = async (sesionId) => {
   });
 };
 
+const eliminarArchivoSesion = async (archivo) => {
+  const filePath = path.join(
+    __dirname,
+    "..",
+    "..",
+    archivo.url_o_path.replace(/^\/+/, "")
+  );
+
+  if (fs.existsSync(filePath)) {
+    fs.rmSync(filePath, { force: true });
+  }
+
+  await archivo.destroy();
+
+  return { id: archivo.id };
+};
+
 module.exports = {
   crearArchivosSesion,
   listarArchivosSesion,
+  eliminarArchivoSesion,
 };

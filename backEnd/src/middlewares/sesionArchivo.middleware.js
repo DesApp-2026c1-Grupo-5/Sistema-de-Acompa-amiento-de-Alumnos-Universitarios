@@ -3,7 +3,7 @@ const path = require("path");
 const crypto = require("crypto");
 const multer = require("multer");
 const { existModelByPk, existModelBy } = require("./genericMiddleware");
-const { sesion_estudio, estudiante } = require("../db/models");
+const { sesion_estudio, estudiante, archivo_sesion_estudio } = require("../db/models");
 
 const uploadRoot = path.join(__dirname, "..", "..", "uploads", "sesiones");
 fs.mkdirSync(uploadRoot, { recursive: true });
@@ -37,6 +37,20 @@ const upload = multer({
 const cargarSesion = existModelByPk(sesion_estudio);
 
 const cargarEstudianteActual = existModelBy(estudiante, "usuario_id", "user.sub");
+
+const cargarArchivoSesion = async (req, res, next) => {
+  const archivo = await archivo_sesion_estudio.findByPk(req.params.archivoId);
+
+  if (!archivo || archivo.sesion_id !== req.sesion_estudio.id) {
+    return res.status(404).json({
+      ok: false,
+      message: "Archivo no encontrado",
+    });
+  }
+
+  req.archivo_sesion_estudio = archivo;
+  return next();
+};
 
 const validarPropietarioSesion = (req, res, next) => {
   if (req.sesion_estudio.creador_id !== req.estudiante.id) {
@@ -88,6 +102,7 @@ const validarCargaArchivos = (req, res, next) => {
 module.exports = {
   cargarSesion,
   cargarEstudianteActual,
+  cargarArchivoSesion,
   validarPropietarioSesion,
   validarCargaArchivos,
 };

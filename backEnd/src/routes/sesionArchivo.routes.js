@@ -5,10 +5,14 @@ const validate = require("../middlewares/validate.middleware");
 const {
   cargarSesion,
   cargarEstudianteActual,
+  cargarArchivoSesion,
   validarPropietarioSesion,
   validarCargaArchivos,
 } = require("../middlewares/sesionArchivo.middleware");
-const { sesionIdParamSchema } = require("../validators/sesionArchivo.validator");
+const {
+  sesionIdParamSchema,
+  sesionArchivoDeleteParamSchema,
+} = require("../validators/sesionArchivo.validator");
 const sesionArchivoController = require("../controllers/sesionArchivo.controller");
 
 const router = express.Router();
@@ -30,6 +34,17 @@ router.post(
   validarPropietarioSesion,
   validarCargaArchivos,
   sesionArchivoController.subirArchivosSesion
+);
+
+router.delete(
+  "/sesiones/:id/archivos/:archivoId",
+  authMiddleware,
+  validate(sesionArchivoDeleteParamSchema, "params"),
+  cargarSesion,
+  cargarEstudianteActual,
+  validarPropietarioSesion,
+  cargarArchivoSesion,
+  sesionArchivoController.eliminarArchivoSesion
 );
 
 module.exports = router;

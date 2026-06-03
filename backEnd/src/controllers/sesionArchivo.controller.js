@@ -43,7 +43,17 @@ const subirArchivosSesion = async (req, res) => {
   });
 };
 
+const eliminarArchivoSesion = async (req, res) => {
+  const data = await sesionArchivoService.eliminarArchivoSesion(req.archivo_sesion_estudio);
+
+  return res.status(200).json({
+    ok: true,
+    data,
+  });
+};
+
 module.exports = {
   listarArchivosSesion,
   subirArchivosSesion,
+  eliminarArchivoSesion,
 };
