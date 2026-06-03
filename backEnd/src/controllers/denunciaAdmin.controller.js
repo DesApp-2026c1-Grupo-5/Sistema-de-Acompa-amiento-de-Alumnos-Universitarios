@@ -7,8 +7,12 @@ const {
   material,
   estudiante,
   administrador,
+  usuario,
   sequelize,
 } = db;
+
+const { crearNotificacion } = require("../services/notificacion.service");
+const { sendMail } = require("../services/mailer.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -237,6 +241,36 @@ const resolverDenunciasPendientes = async (materialId, nuevoEstado, adminId) => 
   });
 };
 
+const notificarDenunciantes = async (pendientes, materialTitulo, nuevoEstado) => {
+  for (const d of pendientes) {
+    const denuncianteRaw = d.denunciante;
+    if (!denuncianteRaw) continue;
+
+    const esVerificada = nuevoEstado === "verificada";
+    const texto = esVerificada ? "verificada" : "rechazada";
+
+    await crearNotificacion({
+      usuario_id: denuncianteRaw.usuario_id,
+      titulo: `Denuncia ${texto}`,
+      tipo: "general",
+      mensaje: `Tu denuncia sobre "${materialTitulo}" fue ${texto}.`,
+      referencia_tipo: "denuncia",
+      referencia_id: d.id,
+      action_url: "/student/materials",
+    });
+
+    const userEmail = denuncianteRaw.usuario?.email;
+    if (userEmail) {
+      await sendMail({
+        to: userEmail,
+        subject: `Denuncia ${texto}`,
+        html: `       <p>Tu denuncia sobre <strong>"${materialTitulo}"</strong> fue <strong>${texto}</strong>.</p>
+               <p>Saludos,<br/>El equipo de SIVA</p>`,
+      });
+    }
+  }
+};
+
 const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
   const materialId = validarMaterialId(req.params.id);
   if (!materialId) {
@@ -248,10 +282,18 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
     return next(buildError("Material no encontrado", 404));
   }
 
-  const pendientes = await denuncia.count({
+  const pendientes = await denuncia.findAll({
     where: { material_id: materialId, estado: "pendiente" },
+    include: [
+      {
+        model: estudiante,
+        as: "denunciante",
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
   });
-  if (pendientes === 0) {
+
+  if (pendientes.length === 0) {
     return next(buildError("No hay denuncias pendientes para procesar", 400));
   }
 
@@ -265,6 +307,8 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
     nuevoEstado,
     adminId
   );
+
+  notificarDenunciantes(pendientes, mat.titulo, nuevoEstado);
 
   return res.status(200).json({
     ok: true,
@@ -285,13 +329,31 @@ const suspenderMaterial = async (req, res, next) => {
     return next(buildError("id de material invalido", 400));
   }
 
-  const mat = await material.findByPk(materialId);
+  const mat = await material.findByPk(materialId, {
+    include: [
+      {
+        model: estudiante,
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
+  });
   if (!mat) {
     return next(buildError("Material no encontrado", 404));
   }
   if (mat.suspendido) {
     return next(buildError("El material ya esta suspendido", 400));
   }
+
+  const pendientes = await denuncia.findAll({
+    where: { material_id: materialId, estado: "pendiente" },
+    include: [
+      {
+        model: estudiante,
+        as: "denunciante",
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
+  });
 
   const adminId = await getAdminId(req);
   if (!adminId) {
@@ -314,6 +376,30 @@ const suspenderMaterial = async (req, res, next) => {
     return count;
   });
 
+  const uploaderEmail = mat.estudiante?.usuario?.email;
+
+  await crearNotificacion({
+    usuario_id: mat.estudiante?.usuario_id,
+    titulo: "Material suspendido",
+    tipo: "general",
+    mensaje: `Tu material "${mat.titulo}" fue suspendido debido a denuncias verificadas.`,
+    referencia_tipo: "denuncia",
+    referencia_id: materialId,
+    action_url: "/student/materials",
+  });
+
+  if (uploaderEmail) {
+    await sendMail({
+      to: uploaderEmail,
+      subject: "Material suspendido",
+      html: `<p>Tu material <strong>"${mat.titulo}"</strong> fue suspendido debido a denuncias verificadas.</p>
+             <p>Si consideras que es un error, contacta con el administrador.</p>
+             <p>Saludos,<br/>El equipo de SIVA</p>`,
+    });
+  }
+
+  notificarDenunciantes(pendientes, mat.titulo, "verificada");
+
   return res.status(200).json({
     ok: true,
     data: {
@@ -330,7 +416,14 @@ const restaurarMaterial = async (req, res, next) => {
     return next(buildError("id de material invalido", 400));
   }
 
-  const mat = await material.findByPk(materialId);
+  const mat = await material.findByPk(materialId, {
+    include: [
+      {
+        model: estudiante,
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
+  });
   if (!mat) {
     return next(buildError("Material no encontrado", 404));
   }
@@ -339,6 +432,27 @@ const restaurarMaterial = async (req, res, next) => {
   }
 
   await mat.update({ suspendido: false });
+
+  const uploaderEmail = mat.estudiante?.usuario?.email;
+
+  await crearNotificacion({
+    usuario_id: mat.estudiante?.usuario_id,
+    titulo: "Material restaurado",
+    tipo: "general",
+    mensaje: `Tu material "${mat.titulo}" fue restaurado y ya está visible nuevamente.`,
+    referencia_tipo: "denuncia",
+    referencia_id: materialId,
+    action_url: "/student/materials",
+  });
+
+  if (uploaderEmail) {
+    await sendMail({
+      to: uploaderEmail,
+      subject: "Material restaurado",
+      html: `<p>Tu material <strong>"${mat.titulo}"</strong> fue restaurado y ya está visible nuevamente.</p>
+             <p>Saludos,<br/>El equipo de SIVA</p>`,
+    });
+  }
 
   return res.status(200).json({
     ok: true,

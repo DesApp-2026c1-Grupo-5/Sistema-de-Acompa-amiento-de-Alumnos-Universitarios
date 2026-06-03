@@ -1,9 +1,11 @@
-const { inscripcion_sesion, sesion_estudio } = require("../db/models");
+const { inscripcion_sesion, sesion_estudio, estudiante: Estudiante, usuario } = require("../db/models");
 const {
   ESTADOS_ACTIVOS,
   getEstudianteByUsuarioId,
   getSesionByIdOrFail,
 } = require("./sesionEstudio.service");
+const { crearNotificacion } = require("./notificacion.service");
+const { sendMail } = require("./mailer.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -56,13 +58,49 @@ const inscribirse = async (sesionId, usuarioId) => {
 
   const estadoInicial = sesion.requiere_aprobacion ? "pendiente" : "aprobada";
 
-  return inscripcion_sesion.create({
+  const inscripcion = await inscripcion_sesion.create({
     sesion_id: sesionId,
     estudiante_id: estudianteData.id,
     estado: estadoInicial,
     fecha_inscripcion: new Date(),
     notificado_recordatorio: false,
   });
+
+  const usuarioData = await usuario.findByPk(usuarioId);
+  const emailEstudiante = usuarioData?.email;
+
+  const tituloNotif = estadoInicial === "aprobada"
+    ? "Inscripción confirmada"
+    : "Solicitud de inscripción enviada";
+
+  const mensajeNotif = estadoInicial === "aprobada"
+    ? `Te inscribiste correctamente a la sesión "${sesion.tema}".`
+    : `Solicitaste inscripción a la sesión "${sesion.tema}". Espera la aprobación del creador.`;
+
+  await crearNotificacion({
+    usuario_id: usuarioId,
+    titulo: tituloNotif,
+    tipo: "session",
+    mensaje: mensajeNotif,
+    referencia_tipo: "sesion_estudio",
+    referencia_id: sesion.id,
+    action_url: "/student/study-sessions",
+  });
+
+  if (emailEstudiante) {
+    const mensajeHtml = estadoInicial === "aprobada"
+      ? `<p>Te inscribiste correctamente a la sesión <strong>"${sesion.tema}"</strong>.</p>`
+      : `<p>Solicitaste inscripción a la sesión <strong>"${sesion.tema}"</strong>.</p>
+         <p>Recibirás un correo cuando el creador apruebe o rechace tu solicitud.</p>`;
+
+    await sendMail({
+      to: emailEstudiante,
+      subject: tituloNotif,
+      html: `<p>Hola ${estudianteData.nombre},</p>${mensajeHtml}<p>Saludos,<br/>El equipo de SIVA</p>`,
+    });
+  }
+
+  return inscripcion;
 };
 
 const cancelarMiInscripcion = async (sesionId, usuarioId) => {
@@ -111,6 +149,38 @@ const actualizarEstadoParticipante = async (sesionId, inscripcionId, usuarioId, 
   }
 
   await inscripcion.update({ estado: estadoObjetivo });
+
+  const participante = await Estudiante.findByPk(inscripcion.estudiante_id, {
+    include: [{ model: usuario, attributes: ["email"] }],
+  });
+
+  if (participante) {
+    const emailParticipante = participante.usuario?.email;
+    const esAprobado = estadoObjetivo === "aprobada";
+
+    await crearNotificacion({
+      usuario_id: participante.usuario_id,
+      titulo: esAprobado ? "Inscripción aprobada" : "Inscripción rechazada",
+      tipo: "session",
+      mensaje: esAprobado
+        ? `Tu solicitud para la sesión "${sesion.tema}" fue aprobada.`
+        : `Tu solicitud para la sesión "${sesion.tema}" fue rechazada.`,
+      referencia_tipo: "sesion_estudio",
+      referencia_id: sesion.id,
+      action_url: "/student/study-sessions",
+    });
+
+    if (emailParticipante) {
+      await sendMail({
+        to: emailParticipante,
+        subject: esAprobado ? "Inscripción aprobada" : "Inscripción rechazada",
+        html: `<p>Hola ${participante.nombre},</p>
+               <p>Tu solicitud para la sesión <strong>"${sesion.tema}"</strong> fue <strong>${esAprobado ? "aprobada" : "rechazada"}</strong>.</p>
+               <p>Saludos,<br/>El equipo de SIVA</p>`,
+      });
+    }
+  }
+
   return inscripcion;
 };
 

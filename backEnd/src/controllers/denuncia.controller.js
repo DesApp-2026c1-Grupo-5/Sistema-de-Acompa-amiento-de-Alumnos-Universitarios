@@ -3,7 +3,11 @@ const {
   motivo_denuncia,
   material,
   estudiante,
+  usuario,
 } = require("../db/models");
+
+const { crearNotificacion } = require("../services/notificacion.service");
+const { sendMail } = require("../services/mailer.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -78,6 +82,30 @@ const crearDenuncia = async (req, res, next) => {
     fecha_creacion: new Date(),
     fecha_resolucion: null,
   });
+
+  const admins = await usuario.findAll({ where: { tipo: "administrador" } });
+
+  for (const admin of admins) {
+    await crearNotificacion({
+      usuario_id: admin.id,
+      titulo: "Nueva denuncia de material",
+      tipo: "general",
+      mensaje: `Se denunció el material "${materialData.titulo}". Revisa las denuncias pendientes.`,
+      referencia_tipo: "denuncia",
+      referencia_id: nueva.id,
+      action_url: "/admin/moderation",
+    });
+
+    if (admin.email) {
+      await sendMail({
+        to: admin.email,
+        subject: "Nueva denuncia de material",
+        html: `<p>Se denunció el material <strong>"${materialData.titulo}"</strong>.</p>
+               <p>Ingresa al panel de moderación para revisarla.</p>
+               <p>Saludos,<br/>El equipo de SIVA</p>`,
+      });
+    }
+  }
 
   return res.status(201).json({ ok: true, data: nueva });
 };
