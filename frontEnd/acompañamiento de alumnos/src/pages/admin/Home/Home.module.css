@@ -64,6 +64,23 @@
   font-size: 18px;
 }
 
+.errorText {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+:global(html.dark) .errorText {
+  background: rgba(127, 29, 29, 0.25);
+  border-color: #b91c1c;
+  color: #fca5a5;
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
