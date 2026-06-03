@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'sesion_id'
       });
 
+      sesion_estudio.hasMany(models.archivo_sesion_estudio, {
+        foreignKey: 'sesion_id',
+        as: 'archivos'
+      });
+
     }
   }
   sesion_estudio.init({

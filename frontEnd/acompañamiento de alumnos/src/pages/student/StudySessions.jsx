@@ -28,6 +28,8 @@ import {
   joinSession,
   approveParticipant,
   rejectParticipant,
+  uploadSessionFiles,
+  deleteSessionFile,
 } from "../../services/sessionService";
 import { getMaterias } from "../../services/materialService";
 import { mapSessionFromApi } from "./sessions/mapSession";
@@ -259,6 +261,24 @@ function StudySessions() {
     } catch {
       // si falla, queda el dato del listado
     }
+  };
+
+  const handleUploadFiles = async (files) => {
+    if (!detailSession) return;
+
+    await uploadSessionFiles(detailSession.id, files);
+    const res = await getSession(detailSession.id);
+    setDetailSession(mapSessionFromApi(res.data));
+    await reloadSessions();
+  };
+
+  const handleDeleteFile = async (archivoId) => {
+    if (!detailSession) return;
+
+    await deleteSessionFile(detailSession.id, archivoId);
+    const res = await getSession(detailSession.id);
+    setDetailSession(mapSessionFromApi(res.data));
+    await reloadSessions();
   };
 
   const handleApprove = async (inscripcionId) => {
@@ -621,14 +641,18 @@ function StudySessions() {
         />
       </Modal>
 
-      <SessionDetailModal
-        session={detailSession}
-        open={Boolean(detailSession)}
-        onClose={() => setDetailSession(null)}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        actionError={actionError}
-      />
+      {detailSession && (
+        <SessionDetailModal
+          session={detailSession}
+          open
+          onClose={() => setDetailSession(null)}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onUploadFiles={handleUploadFiles}
+          onDeleteFile={handleDeleteFile}
+          actionError={actionError}
+        />
+      )}
 
       <ModalConfirmation
         open={Boolean(sessionToCancel)}

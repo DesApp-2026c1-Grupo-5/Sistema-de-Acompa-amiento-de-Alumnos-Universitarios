@@ -24,6 +24,7 @@ frontEnd/acompañamiento de alumnos/*.sln
 frontEnd/acompañamiento de alumnos/*.sw?
 
 backEnd/node_modules
+backEnd/uploads
 
 .idea/
 CLAUDE.md

@@ -1442,6 +1442,118 @@
   line-height: 1.5;
 }
 
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fileRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f6f8fb;
+  border-radius: 10px;
+}
+
+.fileRow svg {
+  color: #00bcd4;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.fileRowText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fileMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fileLink {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.fileLink:hover {
+  text-decoration: underline;
+}
+
+.fileMeta,
+.emptyFiles,
+.uploadHint,
+.uploadSelected {
+  color: #526987;
+  font-size: 13px;
+}
+
+.uploadBox {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.uploadInput {
+  width: 100%;
+}
+
+.uploadActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.uploadButton {
+  height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.uploadButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fileDeleteButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.fileDeleteIcon {
+  color: #ef4444;
+}
+
 .participantRow {
   display: flex;
   align-items: center;
@@ -1515,6 +1627,40 @@
 :global(.dark) .detailDescription,
 :global(html.dark) .detailDescription {
   color: #cbd5e1;
+}
+
+:global(.dark) .fileRow,
+:global(html.dark) .fileRow {
+  background: #0f172a;
+}
+
+:global(.dark) .fileLink,
+:global(html.dark) .fileLink {
+  color: #f8fafc;
+}
+
+:global(.dark) .fileMeta,
+:global(html.dark) .fileMeta,
+:global(.dark) .emptyFiles,
+:global(html.dark) .emptyFiles,
+:global(.dark) .uploadHint,
+:global(html.dark) .uploadHint,
+:global(.dark) .uploadSelected,
+:global(html.dark) .uploadSelected {
+  color: #94a3b8;
+}
+
+:global(.dark) .uploadBox,
+:global(html.dark) .uploadBox {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .fileDeleteButton,
+:global(html.dark) .fileDeleteButton,
+:global(.dark) .fileDeleteIcon,
+:global(html.dark) .fileDeleteIcon {
+  color: #f87171;
 }
 
 :global(.dark) .detailLink,

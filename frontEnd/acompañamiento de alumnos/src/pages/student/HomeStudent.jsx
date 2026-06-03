@@ -260,11 +260,13 @@ function HomeStudent() {
         </>
       </div>
 
-      <SessionDetailModal
-        session={detailSession}
-        open={Boolean(detailSession)}
-        onClose={() => setDetailSession(null)}
-      />
+      {detailSession && (
+        <SessionDetailModal
+          session={detailSession}
+          open
+          onClose={() => setDetailSession(null)}
+        />
+      )}
     </div>
   );
 }
