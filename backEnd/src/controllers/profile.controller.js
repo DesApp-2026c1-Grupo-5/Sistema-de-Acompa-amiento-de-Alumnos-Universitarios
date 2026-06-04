@@ -10,6 +10,7 @@ const {
   plan_estudio,
   carrera,
 } = require("../db/models");
+const profileImagenService = require("../services/profileImagen.service");
 
 const getInitials = (nombre = "", apellido = "") => {
   const a = nombre.trim()[0] || "";
@@ -71,12 +72,12 @@ const buildContacts = async (estudianteId) => {
       {
         model: estudiante,
         as: "solicitante",
-        attributes: ["id", "nombre", "apellido"],
+        attributes: ["id", "nombre", "apellido", "foto_url"],
       },
       {
         model: estudiante,
         as: "receptor",
-        attributes: ["id", "nombre", "apellido"],
+        attributes: ["id", "nombre", "apellido", "foto_url"],
       },
     ],
   });
@@ -92,6 +93,7 @@ const buildContacts = async (estudianteId) => {
         id: persona.id,
         initials: getInitials(persona.nombre, persona.apellido),
         name: `${persona.nombre} ${persona.apellido}`.trim(),
+        foto_url: persona.foto_url ?? null,
       };
     })
     .filter(Boolean);
@@ -109,7 +111,7 @@ const buildPendingRequests = async (estudianteId) => {
       {
         model: estudiante,
         as: "solicitante",
-        attributes: ["id", "nombre", "apellido"],
+        attributes: ["id", "nombre", "apellido", "foto_url"],
       },
     ],
   });
@@ -118,6 +120,7 @@ const buildPendingRequests = async (estudianteId) => {
     id: row.id,
     initials: getInitials(row.solicitante?.nombre, row.solicitante?.apellido),
     name: `${row.solicitante?.nombre ?? ""} ${row.solicitante?.apellido ?? ""}`.trim(),
+    foto_url: row.solicitante?.foto_url ?? null,
     commonContacts: 0,
   }));
 };
@@ -145,6 +148,7 @@ const buildPublications = async (estudianteId) => {
     return {
       id: plain.id,
       authorInitials: getInitials(plain.estudiante?.nombre, plain.estudiante?.apellido),
+      authorImage: plain.estudiante?.foto_url ?? null,
       authorName: `${plain.estudiante?.nombre ?? ""} ${plain.estudiante?.apellido ?? ""}`.trim(),
       date: formatDate(plain.createdAt),
       content: plain.contenido,
@@ -194,6 +198,7 @@ const obtenerMiPerfil = async (req, res, next) => {
         bio: estudianteData.bio,
         contactsCount: contacts.length,
         foto_url: estudianteData.foto_url,
+        banner_url: estudianteData.banner_url,
         privacidad: estudianteData.privacidad,
         pub_inscripciones: estudianteData.pub_inscripciones,
         pub_regularizaciones: estudianteData.pub_regularizaciones,
@@ -297,9 +302,51 @@ const actualizarAvatarMiPerfil = async (req, res) => {
   });
 };
 
+const actualizarFotoMiPerfil = async (req, res) => {
+  const foto_url = await profileImagenService.guardarImagenPerfil(
+    req.estudiante,
+    "foto_url",
+    req.file
+  );
+
+  return res.status(200).json({ ok: true, data: { foto_url } });
+};
+
+const eliminarFotoMiPerfil = async (req, res) => {
+  const foto_url = await profileImagenService.eliminarImagenPerfil(
+    req.estudiante,
+    "foto_url"
+  );
+
+  return res.status(200).json({ ok: true, data: { foto_url } });
+};
+
+const actualizarBannerMiPerfil = async (req, res) => {
+  const banner_url = await profileImagenService.guardarImagenPerfil(
+    req.estudiante,
+    "banner_url",
+    req.file
+  );
+
+  return res.status(200).json({ ok: true, data: { banner_url } });
+};
+
+const eliminarBannerMiPerfil = async (req, res) => {
+  const banner_url = await profileImagenService.eliminarImagenPerfil(
+    req.estudiante,
+    "banner_url"
+  );
+
+  return res.status(200).json({ ok: true, data: { banner_url } });
+};
+
 module.exports = {
   obtenerMiPerfil,
   actualizarMiPerfil,
   actualizarPrivacidadMiPerfil,
   actualizarAvatarMiPerfil,
+  actualizarFotoMiPerfil,
+  eliminarFotoMiPerfil,
+  actualizarBannerMiPerfil,
+  eliminarBannerMiPerfil,
 };

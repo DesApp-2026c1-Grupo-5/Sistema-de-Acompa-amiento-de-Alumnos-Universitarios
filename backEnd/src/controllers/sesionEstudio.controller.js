@@ -43,6 +43,7 @@ const normalizarSesion = (plain, miEstudianteId) => {
     cancelled: plain.cancelada,
     creatorId: plain.creador_id,
     creatorName: plain.creador ? `${plain.creador.nombre} ${plain.creador.apellido}`.trim() : null,
+    creatorImage: plain.creador?.foto_url ?? null,
     userStatus,
   };
 };
@@ -106,7 +107,7 @@ const listarSesiones = async (req, res, next) => {
   const { rows, count } = await sesion_estudio.findAndCountAll({
     where,
     include: [
-      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido"] },
+      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: materia, attributes: ["id", "nombre", "anio_cursada"] },
       { model: inscripcion_sesion, attributes: ["id", "estado", "estudiante_id"] },
     ],
@@ -146,13 +147,13 @@ const obtenerSesion = async (req, res, next) => {
 
   const sesion = await sesion_estudio.findByPk(req.params.id, {
     include: [
-      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido"] },
+      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: materia, attributes: ["id", "nombre", "anio_cursada"] },
       {
         model: inscripcion_sesion,
         attributes: ["id", "estado", "estudiante_id"],
         include: [
-          { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+          { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
         ],
       },
       {
@@ -191,6 +192,7 @@ const obtenerSesion = async (req, res, next) => {
       name: i.estudiante
         ? `${i.estudiante.nombre} ${i.estudiante.apellido}`.trim()
         : "Estudiante",
+      foto_url: i.estudiante?.foto_url ?? null,
       estado: i.estado,
     }));
 

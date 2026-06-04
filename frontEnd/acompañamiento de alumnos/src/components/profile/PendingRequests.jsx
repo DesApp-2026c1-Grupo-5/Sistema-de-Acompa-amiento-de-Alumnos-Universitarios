@@ -6,7 +6,7 @@ import styles from './PendingRequests.module.css';
 function RequestItem({ request, disabled, onAccept, onIgnore }) {
   return (
     <li className={styles.item}>
-      <Avatar initials={request.initials} size="md" />
+      <Avatar initials={request.initials} src={request.foto_url} size="md" />
 
       <div className={styles.info}>
         <span className={styles.name}>{request.name}</span>

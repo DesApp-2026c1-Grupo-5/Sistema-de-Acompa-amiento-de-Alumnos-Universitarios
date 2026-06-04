@@ -24,7 +24,7 @@ function CreatePostCard({ user, onPublish, loading = false }) {
   return (
     <form className={styles.card} onSubmit={handleSubmit}>
       <div className={styles.row}>
-        <Avatar initials={user.initials} size="md" />
+        <Avatar initials={user.initials} src={user.image} size="md" />
 
         <textarea
           className={styles.textarea}

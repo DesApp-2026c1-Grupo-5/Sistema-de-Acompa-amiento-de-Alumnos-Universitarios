@@ -38,7 +38,7 @@ const obtenerPosts = async (req, res) => {
 
   const posts = await post.findAll({
     include: [
-      { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+      { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: voto_post, attributes: ["tipo", "estudiante_id"] },
     ],
     order: [["createdAt", "DESC"]],

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload, Trash2 } from 'lucide-react';
 import Modal from '../common/Modal';
+import Avatar from '../common/Avatar';
 import styles from '../../pages/student/StudySessions.module.css';
 
 function formatDate(date) {
@@ -183,7 +184,7 @@ function SessionDetailModal({
           <div className={styles.detailSection}>
             <h4 className={styles.detailSectionTitle}>Creador</h4>
             <div className={styles.participantRow}>
-              <div className={styles.participantAvatar}>{session.creatorInitials}</div>
+              <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
               <span className={styles.participantName}>{session.creatorName}</span>
             </div>
           </div>
@@ -193,7 +194,7 @@ function SessionDetailModal({
               <h4 className={styles.detailSectionTitle}>Participantes</h4>
               {session.participants.map((p) => (
                 <div key={p.inscripcionId} className={styles.participantRow}>
-                  <div className={styles.participantAvatar}>{p.initials}</div>
+                  <Avatar initials={p.initials} src={p.image} size="sm" />
                   <span className={styles.participantName}>{p.name}</span>
                   <span className={styles.confirmedBadge}>Confirmado</span>
                 </div>
