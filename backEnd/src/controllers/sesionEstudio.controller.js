@@ -4,6 +4,7 @@ const {
   estudiante,
   materia,
   inscripcion_sesion,
+  archivo_sesion_estudio,
 } = require("../db/models");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
@@ -42,6 +43,7 @@ const normalizarSesion = (plain, miEstudianteId) => {
     cancelled: plain.cancelada,
     creatorId: plain.creador_id,
     creatorName: plain.creador ? `${plain.creador.nombre} ${plain.creador.apellido}`.trim() : null,
+    creatorImage: plain.creador?.foto_url ?? null,
     userStatus,
   };
 };
@@ -105,7 +107,7 @@ const listarSesiones = async (req, res, next) => {
   const { rows, count } = await sesion_estudio.findAndCountAll({
     where,
     include: [
-      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido"] },
+      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: materia, attributes: ["id", "nombre", "anio_cursada"] },
       { model: inscripcion_sesion, attributes: ["id", "estado", "estudiante_id"] },
     ],
@@ -145,14 +147,19 @@ const obtenerSesion = async (req, res, next) => {
 
   const sesion = await sesion_estudio.findByPk(req.params.id, {
     include: [
-      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido"] },
+      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: materia, attributes: ["id", "nombre", "anio_cursada"] },
       {
         model: inscripcion_sesion,
         attributes: ["id", "estado", "estudiante_id"],
         include: [
-          { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+          { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
         ],
+      },
+      {
+        model: archivo_sesion_estudio,
+        as: "archivos",
+        attributes: ["id", "nombre_original", "nombre_archivo", "mime_type", "size_bytes", "url_o_path", "createdAt"],
       },
     ],
   });
@@ -177,9 +184,31 @@ const obtenerSesion = async (req, res, next) => {
         }))
     : [];
 
+  const participants = (plain.inscripcion_sesions || [])
+    .filter((i) => ESTADOS_ACTIVOS.includes(i.estado))
+    .map((i) => ({
+      inscripcionId: i.id,
+      estudianteId: i.estudiante_id,
+      name: i.estudiante
+        ? `${i.estudiante.nombre} ${i.estudiante.apellido}`.trim()
+        : "Estudiante",
+      foto_url: i.estudiante?.foto_url ?? null,
+      estado: i.estado,
+    }));
+
+  const archivos = (plain.archivos || []).map((archivo) => ({
+    id: archivo.id,
+    nombreOriginal: archivo.nombre_original,
+    nombreArchivo: archivo.nombre_archivo,
+    mimeType: archivo.mime_type,
+    sizeBytes: archivo.size_bytes,
+    url: archivo.url_o_path,
+    createdAt: archivo.createdAt,
+  }));
+
   return res.status(200).json({
     ok: true,
-    data: { ...base, pendingRequests },
+    data: { ...base, pendingRequests, participants, archivos },
   });
 };
 

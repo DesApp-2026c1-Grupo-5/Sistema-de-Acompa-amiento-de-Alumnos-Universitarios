@@ -1,19 +1,19 @@
 const BASE = "/api";
 
-const buildHeaders = (extra = {}) => {
+const buildHeaders = (extra = {}, includeJson = true) => {
   const token = localStorage.getItem("siva_token");
   return {
-    "Content-Type": "application/json",
+    ...(includeJson ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...extra,
   };
 };
 
-const request = async (path, { method = "GET", body, headers } = {}) => {
+const request = async (path, { method = "GET", body, headers, includeJson = true } = {}) => {
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: buildHeaders(headers),
-    body: body ? JSON.stringify(body) : undefined,
+    headers: buildHeaders(headers, includeJson),
+    body: body ? (includeJson ? JSON.stringify(body) : body) : undefined,
   });
 
   let data = null;
@@ -38,4 +38,6 @@ export const api = {
   post: (path, body) => request(path, { method: "POST", body }),
   put: (path, body) => request(path, { method: "PUT", body }),
   patch: (path, body) => request(path, { method: "PATCH", body }),
+  delete: (path) => request(path, { method: "DELETE" }),
+  postFormData: (path, formData) => request(path, { method: "POST", body: formData, includeJson: false }),
 };

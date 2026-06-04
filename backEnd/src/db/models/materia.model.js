@@ -48,9 +48,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   materia.init({
+    codigo: DataTypes.STRING,
     nombre: DataTypes.STRING,
     anio_cursada: DataTypes.INTEGER,
     tipo: DataTypes.STRING,
+    modalidad: DataTypes.STRING,
     carga_horaria_semanal: DataTypes.INTEGER,
     es_optativa: DataTypes.BOOLEAN,
     es_unahur: DataTypes.BOOLEAN,

@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import styles from './SituacionAcademica.module.css';
 
 export default function SituacionAcademica() {
   const [data, setData] = useState(null);
   const [editando, setEditando] = useState(false);
+  const [mostrarCargaExcel, setMostrarCargaExcel] = useState(false);
+  const [archivoExcel, setArchivoExcel] = useState(null);
+  const inputExcelRef = useRef(null);
 
   const [formMateria, setFormMateria] = useState({
     nombre: '',
@@ -41,6 +44,14 @@ export default function SituacionAcademica() {
       ...prevState,
       [name]: value,
     }));
+  };
+
+  const handleSeleccionarExcel = (event) => {
+    const archivo = event.target.files?.[0];
+
+    if (!archivo) return;
+
+    setArchivoExcel(archivo);
   };
 
   if (!data) {
@@ -103,181 +114,230 @@ export default function SituacionAcademica() {
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.primaryButton}>Carga manual</button>
-          <button className={styles.secondaryButton}>▣ Carga desde Excel</button>
+          <button
+            type="button"
+            className={mostrarCargaExcel ? styles.secondaryButton : styles.primaryButton}
+            onClick={() => setMostrarCargaExcel(false)}
+          >
+            Carga manual
+          </button>
+
+          <button
+            type="button"
+            className={mostrarCargaExcel ? styles.primaryButton : styles.secondaryButton}
+            onClick={() => setMostrarCargaExcel(true)}
+          >
+            ▣ Carga desde Excel
+          </button>
         </div>
 
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Materia</th>
-                <th>Estado</th>
-                <th>Año</th>
-                <th>Cuatrimestre</th>
-                <th>Nota</th>
-                <th>Tiene créditos</th>
-                <th>Cantidad de créditos</th>
-              </tr>
-            </thead>
+        {mostrarCargaExcel && (
+          <div className={styles.excelUploadBox}>
+            <input
+              ref={inputExcelRef}
+              type="file"
+              accept=".xls,.xlsx"
+              className={styles.excelInput}
+              onChange={handleSeleccionarExcel}
+            />
 
-            <tbody>
-              {data.materias.map((materia) => (
-                <tr key={materia.id}>
-                  <td>
-                    {editando ? (
-                      <input type="text" value={materia.nombre} readOnly />
-                    ) : (
-                      materia.nombre
-                    )}
-                  </td>
+            <div className={styles.excelIcon}>⇧</div>
 
-                  <td>
-                    {editando ? (
-                      <select value={materia.estado} readOnly>
-                        <option>Aprobada</option>
-                        <option>Regularizada</option>
-                        <option>Pendiente</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`${styles.badge} ${
-                          styles[`badge${materia.estado}`]
-                        }`}
-                      >
-                        {materia.estado}
-                      </span>
-                    )}
-                  </td>
+            <p className={styles.excelTitle}>Arrastra tu archivo Excel aquí</p>
+            <p className={styles.excelSubtitle}>o haz clic para seleccionar</p>
 
-                  <td>
-                    {editando ? (
-                      <input type="number" value={materia.anio} readOnly />
-                    ) : (
-                      `${materia.anio}°`
-                    )}
-                  </td>
+            <button
+              type="button"
+              className={styles.excelButton}
+              onClick={() => inputExcelRef.current?.click()}
+            >
+              Seleccionar archivo
+            </button>
 
-                  <td>
-                    {editando ? (
-                      <input
-                        type="number"
-                        value={materia.cuatrimestre}
-                        readOnly
-                      />
-                    ) : (
-                      `${materia.cuatrimestre}°`
-                    )}
-                  </td>
+            {archivoExcel && (
+              <p className={styles.excelFileName}>
+                Archivo seleccionado: {archivoExcel.name}
+              </p>
+            )}
+          </div>
+        )}
 
-                  <td>
-                    {editando ? (
-                      <input
-                        type="number"
-                        value={materia.nota || ''}
-                        readOnly
-                      />
-                    ) : (
-                      materia.nota || '-'
-                    )}
-                  </td>
+        {!mostrarCargaExcel && (
+          <>
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Materia</th>
+                    <th>Estado</th>
+                    <th>Año</th>
+                    <th>Cuatrimestre</th>
+                    <th>Nota</th>
+                    <th>Tiene créditos</th>
+                    <th>Cantidad de créditos</th>
+                  </tr>
+                </thead>
 
-                  <td>
-                    {editando ? (
-                      <select
-                        value={materia.tieneCreditos ? 'Sí' : 'No'}
-                        readOnly
-                      >
-                        <option>Sí</option>
-                        <option>No</option>
-                      </select>
-                    ) : (
-                      materia.tieneCreditos ? 'Sí' : 'No'
-                    )}
-                  </td>
+                <tbody>
+                  {data.materias.map((materia) => (
+                    <tr key={materia.id}>
+                      <td>
+                        {editando ? (
+                          <input type="text" value={materia.nombre} readOnly />
+                        ) : (
+                          materia.nombre
+                        )}
+                      </td>
 
-                  <td>
-                    {editando ? (
+                      <td>
+                        {editando ? (
+                          <select value={materia.estado} readOnly>
+                            <option>Aprobada</option>
+                            <option>Regularizada</option>
+                            <option>Pendiente</option>
+                          </select>
+                        ) : (
+                          <span
+                            className={`${styles.badge} ${styles[`badge${materia.estado}`]
+                              }`}
+                          >
+                            {materia.estado}
+                          </span>
+                        )}
+                      </td>
+
+                      <td>
+                        {editando ? (
+                          <input type="number" value={materia.anio} readOnly />
+                        ) : (
+                          `${materia.anio}°`
+                        )}
+                      </td>
+
+                      <td>
+                        {editando ? (
+                          <input
+                            type="number"
+                            value={materia.cuatrimestre}
+                            readOnly
+                          />
+                        ) : (
+                          `${materia.cuatrimestre}°`
+                        )}
+                      </td>
+
+                      <td>
+                        {editando ? (
+                          <input
+                            type="number"
+                            value={materia.nota || ''}
+                            readOnly
+                          />
+                        ) : (
+                          materia.nota || '-'
+                        )}
+                      </td>
+
+                      <td>
+                        {editando ? (
+                          <select
+                            value={materia.tieneCreditos ? 'Sí' : 'No'}
+                            readOnly
+                          >
+                            <option>Sí</option>
+                            <option>No</option>
+                          </select>
+                        ) : materia.tieneCreditos ? (
+                          'Sí'
+                        ) : (
+                          'No'
+                        )}
+                      </td>
+
+                      <td>
+                        {editando ? (
+                          <input
+                            type="text"
+                            value={materia.creditos || '-'}
+                            readOnly
+                          />
+                        ) : (
+                          materia.creditos || '-'
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+
+                  <tr className={styles.formRow}>
+                    <td>
                       <input
                         type="text"
-                        value={materia.creditos || '-'}
-                        readOnly
+                        name="nombre"
+                        placeholder="Nombre de la materia"
+                        value={formMateria.nombre}
+                        onChange={handleChange}
                       />
-                    ) : (
-                      materia.creditos || '-'
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
 
-              <tr className={styles.formRow}>
-                <td>
-                  <input
-                    type="text"
-                    name="nombre"
-                    placeholder="Nombre de la materia"
-                    value={formMateria.nombre}
-                    onChange={handleChange}
-                  />
-                </td>
+                    <td>
+                      <select
+                        name="estado"
+                        value={formMateria.estado}
+                        onChange={handleChange}
+                      >
+                        <option>Pendiente</option>
+                        <option>Aprobada</option>
+                        <option>Regularizada</option>
+                      </select>
+                    </td>
 
-                <td>
-                  <select
-                    name="estado"
-                    value={formMateria.estado}
-                    onChange={handleChange}
-                  >
-                    <option>Pendiente</option>
-                    <option>Aprobada</option>
-                    <option>Regularizada</option>
-                  </select>
-                </td>
+                    <td>
+                      <input
+                        type="number"
+                        name="anio"
+                        value={formMateria.anio}
+                        onChange={handleChange}
+                      />
+                    </td>
 
-                <td>
-                  <input
-                    type="number"
-                    name="anio"
-                    value={formMateria.anio}
-                    onChange={handleChange}
-                  />
-                </td>
+                    <td>
+                      <input
+                        type="number"
+                        name="cuatrimestre"
+                        value={formMateria.cuatrimestre}
+                        onChange={handleChange}
+                      />
+                    </td>
 
-                <td>
-                  <input
-                    type="number"
-                    name="cuatrimestre"
-                    value={formMateria.cuatrimestre}
-                    onChange={handleChange}
-                  />
-                </td>
+                    <td>
+                      <input
+                        type="number"
+                        name="nota"
+                        value={formMateria.nota}
+                        onChange={handleChange}
+                      />
+                    </td>
 
-                <td>
-                  <input
-                    type="number"
-                    name="nota"
-                    value={formMateria.nota}
-                    onChange={handleChange}
-                  />
-                </td>
+                    <td>
+                      <select
+                        name="tieneCreditos"
+                        value={formMateria.tieneCreditos}
+                        onChange={handleChange}
+                      >
+                        <option>No</option>
+                        <option>Sí</option>
+                      </select>
+                    </td>
 
-                <td>
-                  <select
-                    name="tieneCreditos"
-                    value={formMateria.tieneCreditos}
-                    onChange={handleChange}
-                  >
-                    <option>No</option>
-                    <option>Sí</option>
-                  </select>
-                </td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <button className={styles.addButton}>＋ Agregar materia</button>
+            <button className={styles.addButton}>＋ Agregar materia</button>
+          </>
+        )}
       </section>
     </section>
   );

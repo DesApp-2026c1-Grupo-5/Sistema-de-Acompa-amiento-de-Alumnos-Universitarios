@@ -276,6 +276,8 @@
   gap: 24px;
   border-bottom: 1px solid #334155;
   margin-bottom: 18px;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tabs button {
@@ -284,6 +286,8 @@
   padding: 12px 0;
   font-size: 15px;
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   color: #64748b;
   border-bottom: 2px solid transparent;
@@ -300,13 +304,19 @@
 }
 
 .mySessionItem {
+  position: relative;
   height: 95px;
+  margin-bottom: 12px;
   background: #f6f8fb;
   border-radius: 10px;
   padding: 15px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.mySessionItem:last-child {
+  margin-bottom: 0;
 }
 
 .mySessionItem h3 {
@@ -371,6 +381,7 @@
 }
 
 .sessionCard {
+  position: relative;
   min-height: 284px;
   border: 1px solid #e5e7eb;
   border-radius: 17px;
@@ -379,6 +390,81 @@
   display: flex;
   flex-direction: column;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cornerBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.cardTopRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cardTopRight .cornerBadge,
+.myActions .cornerBadge {
+  position: static;
+  top: auto;
+  right: auto;
+}
+
+.moreButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.moreButton:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+:global(.dark) .moreButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cornerToday {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.cornerInProgress {
+  background: #d1fae5;
+  color: #065f46;
+  animation: cornerPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes cornerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.statusEnded {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.sessionCardPast {
+  opacity: 0.72;
 }
 
 .sessionCard:hover {
@@ -436,6 +522,7 @@
 
 .cardMeta {
   margin-top: 23px;
+  padding-bottom: 14px;
   display: flex;
   flex-direction: column;
   gap: 11px;
@@ -636,7 +723,7 @@
 
 .formActions button:last-child {
   background: linear-gradient(135deg, #08b7c8, #039b97);
-  color: #ffffff; 
+  color: #ffffff;
   transition: transform 0.18s ease, opacity 0.18s ease;
 }
 
@@ -704,6 +791,7 @@
 }
 
 @media (max-width: 900px) {
+
   .sessionsGrid,
   .filtersGrid {
     grid-template-columns: 1fr;
@@ -715,6 +803,7 @@
 }
 
 @media (max-width: 640px) {
+
   .titleRow,
   .mySessionItem {
     flex-direction: column;
@@ -894,6 +983,21 @@
 :global(.dark) .statusFull {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+}
+
+:global(.dark) .cornerToday {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+}
+
+:global(.dark) .cornerInProgress {
+  background: rgba(16, 185, 129, 0.22);
+  color: #34d399;
+}
+
+:global(.dark) .statusEnded {
+  background: rgba(100, 116, 139, 0.4);
+  color: #cbd5e1;
 }
 
 :global(.dark) .statusPending {
@@ -1179,4 +1283,403 @@
 :global(.dark) .pendingButton * {
   background: #fef3c7 !important;
   color: #d97706 !important;
+}
+
+@media (max-width: 640px) {
+  .mySessionItem {
+    height: auto;
+    min-height: 0;
+    padding: 16px;
+    align-items: stretch;
+  }
+
+  .mySessionItem>div:first-child {
+    width: 100%;
+  }
+
+  .myActions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .myActions button {
+    min-height: 36px;
+  }
+
+  .myActions button:first-child {
+    flex: 1;
+  }
+
+  .iconButton {
+    width: 50px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffffff;
+    border-radius: 12px;
+  }
+
+  .iconButton svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .iconButton svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  :global(html.dark) .iconButton {
+    background: #0f172a;
+  }
+}
+/* Detail modal redesign */
+
+.detailHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.detailHeader h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.detailTopic {
+  margin: 0;
+  color: #526987;
+  font-size: 14px;
+}
+
+.detailInfoCard {
+  margin-top: 16px;
+  padding: 18px;
+  background: #f6f8fb;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detailRow {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.detailRow svg {
+  color: #00bcd4;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.detailRowText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.detailLabel {
+  font-size: 12px;
+  color: #526987;
+  text-transform: none;
+}
+
+.detailValue {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.detailLink {
+  font-size: 13px;
+  color: #00a8c2;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.detailLink:hover {
+  text-decoration: underline;
+}
+
+.detailLocation {
+  font-size: 13px;
+  color: #526987;
+}
+
+.detailSection {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detailSectionTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #526987;
+}
+
+.detailDescription {
+  margin: 0;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fileRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f6f8fb;
+  border-radius: 10px;
+}
+
+.fileRow svg {
+  color: #00bcd4;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.fileRowText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fileMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fileLink {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.fileLink:hover {
+  text-decoration: underline;
+}
+
+.fileMeta,
+.emptyFiles,
+.uploadHint,
+.uploadSelected {
+  color: #526987;
+  font-size: 13px;
+}
+
+.uploadBox {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.uploadInput {
+  width: 100%;
+}
+
+.uploadActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.uploadButton {
+  height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.uploadButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fileDeleteButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.fileDeleteIcon {
+  color: #ef4444;
+}
+
+.participantRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f6f8fb;
+  border-radius: 10px;
+}
+
+.participantAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #00bcd4;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.participantName {
+  flex: 1;
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.confirmedBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Dark mode detail modal */
+
+:global(.dark) .detailHeader h3,
+:global(html.dark) .detailHeader h3 {
+  color: #f8fafc;
+}
+
+:global(.dark) .detailTopic,
+:global(html.dark) .detailTopic {
+  color: #94a3b8;
+}
+
+:global(.dark) .detailInfoCard,
+:global(html.dark) .detailInfoCard {
+  background: #1e293b;
+}
+
+:global(.dark) .detailLabel,
+:global(html.dark) .detailLabel,
+:global(.dark) .detailSectionTitle,
+:global(html.dark) .detailSectionTitle {
+  color: #94a3b8;
+}
+
+:global(.dark) .detailValue,
+:global(html.dark) .detailValue {
+  color: #f8fafc;
+}
+
+:global(.dark) .detailLocation,
+:global(html.dark) .detailLocation,
+:global(.dark) .detailDescription,
+:global(html.dark) .detailDescription {
+  color: #cbd5e1;
+}
+
+:global(.dark) .fileRow,
+:global(html.dark) .fileRow {
+  background: #0f172a;
+}
+
+:global(.dark) .fileLink,
+:global(html.dark) .fileLink {
+  color: #f8fafc;
+}
+
+:global(.dark) .fileMeta,
+:global(html.dark) .fileMeta,
+:global(.dark) .emptyFiles,
+:global(html.dark) .emptyFiles,
+:global(.dark) .uploadHint,
+:global(html.dark) .uploadHint,
+:global(.dark) .uploadSelected,
+:global(html.dark) .uploadSelected {
+  color: #94a3b8;
+}
+
+:global(.dark) .uploadBox,
+:global(html.dark) .uploadBox {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .fileDeleteButton,
+:global(html.dark) .fileDeleteButton,
+:global(.dark) .fileDeleteIcon,
+:global(html.dark) .fileDeleteIcon {
+  color: #f87171;
+}
+
+:global(.dark) .detailLink,
+:global(html.dark) .detailLink {
+  color: #22d3ee;
+}
+
+:global(.dark) .participantRow,
+:global(html.dark) .participantRow {
+  background: #1e293b;
+}
+
+:global(.dark) .participantName,
+:global(html.dark) .participantName {
+  color: #f8fafc;
+}
+
+:global(.dark) .confirmedBadge,
+:global(html.dark) .confirmedBadge {
+  background: rgba(16, 185, 129, 0.22);
+  color: #34d399;
 }

@@ -21,7 +21,8 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       denuncia.belongsTo(models.motivo_denuncia, {
-        foreignKey: 'motivo_id'
+        foreignKey: 'motivo_id',
+        as: 'motivo'
       });
 
       denuncia.belongsTo(models.administrador, {

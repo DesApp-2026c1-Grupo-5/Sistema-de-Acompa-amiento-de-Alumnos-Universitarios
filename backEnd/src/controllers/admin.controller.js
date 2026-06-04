@@ -1,6 +1,6 @@
 const { hashPassword } = require("../utils/password");
 const db = require("../db/models");
-const { usuario, administrador, sequelize } = db;
+const { usuario, administrador, materia, sequelize } = db;
 
 const crearAdmin = async (req, res) => {
   const { nombre, apellido, email, password } = req.body;
@@ -74,4 +74,25 @@ const obtenerAdmins = async (req, res) => {
   return res.json({ ok: true, data });
 };
 
-module.exports = { crearAdmin, obtenerAdmins };
+const getHomeStats = async (req, res) => {
+  const [activeUsers, totalUsers, activeSubjects] = await Promise.all([
+    usuario.count({ where: { activo: true } }),
+    usuario.count(),
+    materia.count(),
+  ]);
+
+  const activityRate = totalUsers > 0
+    ? Math.round((activeUsers / totalUsers) * 100)
+    : 0;
+
+  return res.json({
+    ok: true,
+    data: {
+      active_users: activeUsers,
+      active_subjects: activeSubjects,
+      activity_rate: activityRate,
+    },
+  });
+};
+
+module.exports = { crearAdmin, obtenerAdmins, getHomeStats };

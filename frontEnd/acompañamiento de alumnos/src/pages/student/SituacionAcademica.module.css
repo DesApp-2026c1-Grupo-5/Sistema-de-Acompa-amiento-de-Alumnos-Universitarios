@@ -413,3 +413,89 @@
 :global([data-theme='dark']) .table input::placeholder {
   color: #94a3b8;
 }
+
+.excelUploadBox {
+  min-height: 188px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 13px;
+  background: transparent;
+  margin-top: -14px;
+  margin-bottom: 4px;
+  padding: 28px 16px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.excelInput {
+  display: none;
+}
+
+.excelIcon {
+  color: #64748b;
+  font-size: 46px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.excelTitle {
+  margin: 0;
+  color: #020617;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.excelSubtitle {
+  margin: 6px 0 15px;
+  color: #405a7a;
+  font-size: 11px;
+}
+
+.excelButton {
+  height: 32px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 9px;
+  background: #08aeb8;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.excelFileName {
+  margin: 12px 0 0;
+  color: #405a7a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:global(.dark) .excelUploadBox,
+:global(.dark-mode) .excelUploadBox,
+:global([data-theme='dark']) .excelUploadBox {
+  border-color: #334155;
+}
+
+:global(.dark) .excelIcon,
+:global(.dark-mode) .excelIcon,
+:global([data-theme='dark']) .excelIcon {
+  color: #94a3b8;
+}
+
+:global(.dark) .excelTitle,
+:global(.dark-mode) .excelTitle,
+:global([data-theme='dark']) .excelTitle {
+  color: #ffffff;
+}
+
+:global(.dark) .excelSubtitle,
+:global(.dark-mode) .excelSubtitle,
+:global([data-theme='dark']) .excelSubtitle,
+:global(.dark) .excelFileName,
+:global(.dark-mode) .excelFileName,
+:global([data-theme='dark']) .excelFileName {
+  color: #b7c8e6;
+}
+

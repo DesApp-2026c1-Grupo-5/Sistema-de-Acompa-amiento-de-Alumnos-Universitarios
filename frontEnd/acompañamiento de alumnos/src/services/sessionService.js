@@ -17,3 +17,16 @@ export const approveParticipant = (sesionId, inscripcionId) =>
 
 export const rejectParticipant = (sesionId, inscripcionId) =>
   api.patch(`/sesiones/${sesionId}/inscripciones/${inscripcionId}/rechazar`);
+
+export const uploadSessionFiles = (sesionId, files) => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append("archivos", file);
+  });
+
+  return api.postFormData(`/sesiones/${sesionId}/archivos`, formData);
+};
+
+export const deleteSessionFile = (sesionId, archivoId) =>
+  api.delete(`/sesiones/${sesionId}/archivos/${archivoId}`);

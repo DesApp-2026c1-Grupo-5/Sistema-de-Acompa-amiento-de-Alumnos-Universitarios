@@ -56,14 +56,6 @@
   font-weight: 700;
 }
 
-.themeButton {
-  border: none;
-  background: transparent;
-  color: inherit;
-  font-size: 22px;
-  cursor: pointer;
-}
-
 .loginLink {
   font-size: 15px;
 }

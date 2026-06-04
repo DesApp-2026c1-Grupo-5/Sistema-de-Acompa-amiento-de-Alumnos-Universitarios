@@ -349,3 +349,19 @@
 :global(html:not(.dark)) .backButton:hover {
   background: #f8fafc;
 }
+.actionError {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+:global(html.dark) .actionError {
+  background: rgba(127, 29, 29, 0.25);
+  border-color: #b91c1c;
+  color: #fca5a5;
+}

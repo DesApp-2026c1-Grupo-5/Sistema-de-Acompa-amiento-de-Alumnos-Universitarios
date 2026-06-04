@@ -38,7 +38,7 @@ const obtenerPosts = async (req, res) => {
 
   const posts = await post.findAll({
     include: [
-      { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+      { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: voto_post, attributes: ["tipo", "estudiante_id"] },
     ],
     order: [["createdAt", "DESC"]],
@@ -53,7 +53,14 @@ const obtenerPosts = async (req, res) => {
       ? votos.find((v) => v.estudiante_id === miEstudianteId)
       : null;
     delete plain.voto_posts;
-    return { ...plain, likes, dislikes, mi_voto: mio?.tipo ?? null };
+    return {
+      ...plain,
+      eventType: plain.event_type ?? null,
+      eventSubject: plain.event_subject ?? null,
+      likes,
+      dislikes,
+      mi_voto: mio?.tipo ?? null,
+    };
   });
 
   return res.json({

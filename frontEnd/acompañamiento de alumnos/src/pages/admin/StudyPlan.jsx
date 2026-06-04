@@ -17,23 +17,29 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X, Check } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import { getPlanEstudio } from '../../services/planEstudioService';
+import { mapPlanEstudioFromApi } from './careers/mapPlanEstudio';
 import styles from './StudyPlan.module.css';
 
 function StudyPlan() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const initialPlanId = location.state?.planId;
   const [studyPlan, setStudyPlan] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(initialPlanId));
+  const [loadError, setLoadError] = useState(null);
   const [selectedYear, setSelectedYear] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectToDelete, setSubjectToDelete] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedSubjects, setEditedSubjects] = useState(null);
   const [editedConditions, setEditedConditions] = useState(null);
+  const [editedStatus, setEditedStatus] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [pendingDeleteCode, setPendingDeleteCode] = useState(null);
@@ -48,26 +54,34 @@ function StudyPlan() {
   });
 
   const state = location.state || {};
-  const { careerId, planYear } = state;
+  const { planId } = state;
 
   useEffect(() => {
-    fetch('/data/studyPlans.json')
-      .then((res) => res.json())
-      .then((data) => {
-        if (careerId && planYear) {
-          const plan = data.find(p => p.careerId === careerId && p.planYear === planYear);
-          if (plan) {
-            setStudyPlan({ ...plan, subjects: [...plan.subjects] });
-          }
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [careerId, planYear]);
+    if (!planId) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getPlanEstudio(planId);
+        if (cancelled) return;
+        const mapped = mapPlanEstudioFromApi(res.data);
+        setStudyPlan({ ...mapped, subjects: [...mapped.subjects] });
+        setLoadError(null);
+      } catch (err) {
+        if (cancelled) return;
+        setLoadError(err.message || 'No pudimos cargar el plan de estudios.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [planId]);
 
   const handleStartEdit = () => {
     setEditedSubjects(studyPlan.subjects.map(s => ({ ...s })));
     setEditedConditions({ ...studyPlan.conditions });
+    setEditedStatus(studyPlan.status);
     setIsEditing(true);
   };
 
@@ -76,9 +90,10 @@ function StudyPlan() {
   };
 
   const confirmSave = () => {
-    setStudyPlan({ ...studyPlan, subjects: editedSubjects, conditions: editedConditions });
+    setStudyPlan({ ...studyPlan, subjects: editedSubjects, conditions: editedConditions, status: editedStatus });
     setEditedSubjects(null);
     setEditedConditions(null);
+    setEditedStatus('');
     setIsEditing(false);
     setShowSaveModal(false);
   };
@@ -90,6 +105,7 @@ function StudyPlan() {
   const confirmDiscard = () => {
     setEditedSubjects(null);
     setEditedConditions(null);
+    setEditedStatus('');
     setIsEditing(false);
     setShowDiscardModal(false);
     setNewSubject({
@@ -179,11 +195,41 @@ function StudyPlan() {
     return type === 'Obligatoria' ? styles.typeBadgeMandatory : styles.typeBadgeOptional;
   };
 
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Vigente': return styles.statusVigente;
+      case 'Transición': return styles.statusTransicion;
+      case 'Discontinuado': return styles.statusDiscontinuado;
+      default: return styles.statusVigente;
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
         <div className={styles.welcomeCard}>
           <p>Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className={styles.container}>
+        <PageTitle
+          title="Plan de Estudios"
+          description="Gestión de planes de estudio y materias"
+        />
+        <div className={styles.welcomeCard}>
+          <div className={styles.welcomeIcon}>
+            <BookOpen size={32} color="var(--text-muted)" />
+          </div>
+          <h2 className={styles.welcomeTitle}>No pudimos cargar el plan</h2>
+          <p className={styles.welcomeText}>{loadError}</p>
+          <Button variant="gradient" onClick={() => navigate('/admin/careers')}>
+            Volver a Carreras
+          </Button>
         </div>
       </div>
     );
@@ -216,7 +262,21 @@ function StudyPlan() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <h1 className={styles.title}>{studyPlan.careerName} — Plan {studyPlan.planYear}</h1>
-          <span className={styles.badge}>{studyPlan.status}</span>
+          {isEditing ? (
+            <select
+              className={styles.statusSelect}
+              value={editedStatus}
+              onChange={(e) => setEditedStatus(e.target.value)}
+            >
+              <option value="Vigente">Vigente</option>
+              <option value="Transición">Transición</option>
+              <option value="Discontinuado">Discontinuado</option>
+            </select>
+          ) : (
+            <span className={`${styles.badge} ${getStatusBadgeClass(studyPlan.status)}`}>
+              {studyPlan.status}
+            </span>
+          )}
         </div>
         <div className={styles.headerActions}>
           <Button variant="outlineSoft" iconLeft={<Plus size={16} />}>

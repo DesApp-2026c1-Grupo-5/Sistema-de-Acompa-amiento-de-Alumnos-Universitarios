@@ -44,12 +44,25 @@ function SessionItem({ session, onViewDetails }) {
   );
 }
 
-function UpcomingSessionsCard({ sessions, onViewDetails }) {
+function UpcomingSessionsCard({ sessions, onViewDetails, loading = false, error = null }) {
   const hasSessions = sessions && sessions.length > 0;
 
-  return (
-    <Card title="Mis sesiones" className={styles.card}>
-      {hasSessions ? (
+  const renderBody = () => {
+    if (loading) {
+      return <p className={styles.status}>Cargando sesiones…</p>;
+    }
+
+    if (error) {
+      return (
+        <EmptyState
+          title="No pudimos cargar tus sesiones"
+          description={error}
+        />
+      );
+    }
+
+    if (hasSessions) {
+      return (
         <ul className={styles.list}>
           {sessions.map((session) => (
             <SessionItem
@@ -59,12 +72,20 @@ function UpcomingSessionsCard({ sessions, onViewDetails }) {
             />
           ))}
         </ul>
-      ) : (
-        <EmptyState
-          title="Sin sesiones próximas"
-          description="Cuando te sumes a sesiones de estudio, aparecerán acá."
-        />
-      )}
+      );
+    }
+
+    return (
+      <EmptyState
+        title="Sin sesiones próximas"
+        description="Cuando te sumes a sesiones de estudio, aparecerán acá."
+      />
+    );
+  };
+
+  return (
+    <Card title="Mis sesiones" className={styles.card}>
+      {renderBody()}
     </Card>
   );
 }

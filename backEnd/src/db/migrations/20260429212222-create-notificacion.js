@@ -9,11 +9,26 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      usuario_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'usuarios',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+      },
+      titulo: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       tipo: {
         type: Sequelize.STRING
       },
       mensaje: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       referencia_tipo: {
         type: Sequelize.STRING
@@ -21,8 +36,13 @@ module.exports = {
       referencia_id: {
         type: Sequelize.INTEGER
       },
+      action_url: {
+        type: Sequelize.STRING
+      },
       leida: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
       },
       createdAt: {
         allowNull: false,

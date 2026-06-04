@@ -4,11 +4,25 @@ const {
   valoracion,
   materia,
   tag,
+  denuncia,
 } = require("../db/models");
 const { Op } = require("sequelize");
 
+const getMaterialIdsConDenunciaPendiente = async (miEstudianteId, materialIds) => {
+  if (!miEstudianteId || materialIds.length === 0) return new Set();
+  const filas = await denuncia.findAll({
+    where: {
+      denunciante_id: miEstudianteId,
+      estado: "pendiente",
+      material_id: { [Op.in]: materialIds },
+    },
+    attributes: ["material_id"],
+  });
+  return new Set(filas.map((f) => f.material_id));
+};
+
 const materialIncludes = [
-  { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+  { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
   { model: materia, as: "materia", attributes: ["id", "nombre", "anio_cursada"] },
   { model: valoracion, attributes: ["valor", "estudiante_id"] },
   {
@@ -71,9 +85,18 @@ const listarMateriales = async (req, res) => {
     distinct: true,
   });
 
-  const data = rows.map((item) =>
-    formatMaterial(item.get({ plain: true }), miEstudianteId)
+  const denunciadosSet = await getMaterialIdsConDenunciaPendiente(
+    miEstudianteId,
+    rows.map((r) => r.id)
   );
+
+  const data = rows.map((item) => {
+    const plain = item.get({ plain: true });
+    return {
+      ...formatMaterial(plain, miEstudianteId),
+      mi_denuncia_pendiente: denunciadosSet.has(plain.id),
+    };
+  });
 
   return res.status(200).json({
     ok: true,
@@ -102,9 +125,16 @@ const obtenerMaterialPorId = async (req, res, next) => {
 
   const miEstudianteId = await getMiEstudianteId(req);
 
+  const denunciadosSet = await getMaterialIdsConDenunciaPendiente(miEstudianteId, [
+    materialData.id,
+  ]);
+
   return res.status(200).json({
     ok: true,
-    data: formatMaterial(materialData.get({ plain: true }), miEstudianteId),
+    data: {
+      ...formatMaterial(materialData.get({ plain: true }), miEstudianteId),
+      mi_denuncia_pendiente: denunciadosSet.has(materialData.id),
+    },
   });
 };
 
@@ -215,7 +245,10 @@ const crearMaterial = async (req, res, next) => {
 
   return res.status(201).json({
     ok: true,
-    data: formatMaterial(completo.get({ plain: true }), estudianteData.id),
+    data: {
+      ...formatMaterial(completo.get({ plain: true }), estudianteData.id),
+      mi_denuncia_pendiente: false,
+    },
   });
 };
 

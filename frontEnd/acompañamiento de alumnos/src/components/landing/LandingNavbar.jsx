@@ -1,6 +1,6 @@
 import styles from "../../styles/landing.module.css";
 
-const LandingNavbar = ({ isDarkMode, toggleTheme }) => {
+const LandingNavbar = () => {
   return (
     <header className={styles.landingNavbar}>
       <div className={styles.landingNavbar__content}>
@@ -10,15 +10,6 @@ const LandingNavbar = ({ isDarkMode, toggleTheme }) => {
         </div>
 
         <nav className={styles.landingNavbar__actions}>
-          <button
-            className={styles.themeButton}
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Cambiar tema"
-          >
-            {isDarkMode ? "☀" : "☾"}
-          </button>
-
           <a href="/login" className={styles.loginLink}>
             Iniciar sesión
           </a>

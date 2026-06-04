@@ -1,18 +1,52 @@
-import { MapPin, Users, Globe, SquarePen, Mail, Lock } from 'lucide-react';
-import { useState } from 'react';
+import { MapPin, Users, Globe, SquarePen, Mail, Lock, Camera, Trash2 } from 'lucide-react';
+import { useState, useRef } from 'react';
 import FormModal from '../common/FormModal';
 import Avatar from '../common/Avatar';
 import styles from './ProfileHeader.module.css';
 
-function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
-  const { initials, name, career, location, contactsCount, email, academicStatus, privacidad } = user;
+function ProfileHeader({
+  user,
+  onEditProfile,
+  onToggleVisibility,
+  onUploadAvatar,
+  onDeleteAvatar,
+  onUploadBanner,
+  onDeleteBanner,
+}) {
+  const { initials, name, career, location, contactsCount, email, academicStatus, privacidad, foto_url, banner_url } = user;
   const isPublic = privacidad === 'publico';
 
   const [modalOpen, setModalOpen] = useState(false);
+  const fotoInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
+
+  const handleFotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) onUploadAvatar?.(file);
+    e.target.value = '';
+  };
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) onUploadBanner?.(file);
+    e.target.value = '';
+  };
 
   const fields = [
     { name: 'name', label: 'Nombre completo', type: 'text', required: true },
-    { name: 'career', label: 'Carrera', type: 'text', readOnly: true },
+    {
+      name: 'career',
+      label: 'Carrera',
+      type: 'autocomplete',
+      options: [
+        'Carrera no definida',
+        'Ingeniería en Sistemas',
+        'Licenciatura en Administración',
+        'Medicina',
+        'Derecho',
+        'Arquitectura',
+      ],
+    },
     { name: 'location', label: 'Ubicación', type: 'text', readOnly: true },
     { name: 'email', label: 'Email', type: 'email', readOnly: true },
     { name: 'academicStatus', label: 'Estado académico', type: 'text', readOnly: true },
@@ -26,8 +60,69 @@ function ProfileHeader({ user, onEditProfile, onToggleVisibility }) {
 
   return (
     <section className={styles.card}>
-      <div className={styles.gradientHeader}>
-        <Avatar initials={initials} size="xl" className={styles.avatar} />
+      <div
+        className={styles.gradientHeader}
+        style={banner_url ? { backgroundImage: `url(${banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
+        <div className={styles.bannerActions}>
+          <button
+            type="button"
+            className={styles.imgButton}
+            title="Cambiar banner"
+            onClick={() => bannerInputRef.current?.click()}
+          >
+            <Camera size={16} />
+          </button>
+          {banner_url && (
+            <button
+              type="button"
+              className={styles.imgButton}
+              title="Eliminar banner"
+              onClick={() => onDeleteBanner?.()}
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
+
+        <div className={styles.avatarWrapper}>
+          <Avatar initials={initials} src={foto_url || ''} size="xl" className={styles.avatar} />
+          <div className={styles.avatarActions}>
+            <button
+              type="button"
+              className={styles.imgButton}
+              title="Cambiar foto"
+              onClick={() => fotoInputRef.current?.click()}
+            >
+              <Camera size={16} />
+            </button>
+            {foto_url && (
+              <button
+                type="button"
+                className={styles.imgButton}
+                title="Eliminar foto"
+                onClick={() => onDeleteAvatar?.()}
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <input
+          ref={fotoInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleFotoChange}
+        />
+        <input
+          ref={bannerInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleBannerChange}
+        />
       </div>
 
       <div className={styles.content}>

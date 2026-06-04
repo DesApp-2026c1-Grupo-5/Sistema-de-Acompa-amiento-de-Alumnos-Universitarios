@@ -100,10 +100,17 @@
       "percentage": 0
     }
   ],
+  "studentStatus": {
+    "approvedIds": [1, 2, 3, 4, 8],
+    "inProgressIds": [5, 6, 7, 9, 11]
+  },
   "simulator": {
     "subjects": [
-      { "id": 1, "name": "Matemática II", "checked": false },
-      { "id": 2, "name": "Algoritmos y Estructuras", "checked": false }
+      { "id": 5, "name": "Estructuras de Datos", "checked": false },
+      { "id": 6, "name": "Programación con Objetos I", "checked": false },
+      { "id": 7, "name": "Bases de Datos", "checked": false },
+      { "id": 9, "name": "Matemática II", "checked": false },
+      { "id": 11, "name": "Redes de Computadoras", "checked": false }
     ]
   }
 }

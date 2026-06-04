@@ -29,7 +29,8 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       material.hasMany(models.denuncia, {
-        foreignKey: 'material_id'
+        foreignKey: 'material_id',
+        as: 'denuncias'
       });
 
     }

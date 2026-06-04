@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from '../header/Header';
 import Navbar from '../navbar/Navbar';
@@ -10,12 +10,16 @@ function Layout({
   headerBrand = 'SIVA UNAHUR',
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => localStorage.getItem('darkMode') === 'true'
+  );
 
-  const handleToggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
-  };
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('darkMode', isDarkMode);
+  }, [isDarkMode]);
+
+  const handleToggleTheme = () => setIsDarkMode((prev) => !prev);
 
   const handleMenuToggle = () => {
     setSidebarOpen(!sidebarOpen);

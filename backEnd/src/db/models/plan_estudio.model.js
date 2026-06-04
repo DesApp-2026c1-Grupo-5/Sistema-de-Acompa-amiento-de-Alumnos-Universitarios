@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       plan_estudio.hasMany(models.materia, {
-        foreignKey: 'plan_id'
+        foreignKey: 'plan_id',
+        as: 'materias'
       });
 
       plan_estudio.hasMany(models.situacion_academica, {
@@ -27,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   plan_estudio.init({
     nombre: DataTypes.STRING,
+    anio: DataTypes.INTEGER,
     estado: DataTypes.STRING,
     condiciones_creditos: DataTypes.STRING,
     condiciones_unahur: DataTypes.STRING,

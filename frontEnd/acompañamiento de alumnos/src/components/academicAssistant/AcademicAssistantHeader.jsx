@@ -1,14 +1,16 @@
 import { PieChart, Pie, Cell } from 'recharts';
 import Card from '../common/Card';
 import styles from './AcademicAssistantHeader.module.css';
-import academicData from '../../pages/student/academicAssistant/academicAssistantData.json';
 
 const COLORS = ['#00bcd4', '#e5e7eb'];
 
-function AcademicAssistantHeader() {
+function AcademicAssistantHeader({ progress }) {
+  const percentage = progress?.percentage ?? 0;
+  const label = progress?.label ?? 'Avance de carrera';
+
   const progressData = [
-    { name: 'Completado', value: academicData.progress.percentage },
-    { name: 'Restante', value: 100 - academicData.progress.percentage }
+    { name: 'Completado', value: percentage },
+    { name: 'Restante', value: 100 - percentage }
   ];
 
   return (
@@ -35,9 +37,9 @@ function AcademicAssistantHeader() {
                 ))}
               </Pie>
             </PieChart>
-            <span className={styles.percentage}>{academicData.progress.percentage}%</span>
+            <span className={styles.percentage}>{percentage}%</span>
           </div>
-          <span className={styles.progressLabel}>{academicData.progress.label}</span>
+          <span className={styles.progressLabel}>{label}</span>
         </div>
       </div>
     </Card>

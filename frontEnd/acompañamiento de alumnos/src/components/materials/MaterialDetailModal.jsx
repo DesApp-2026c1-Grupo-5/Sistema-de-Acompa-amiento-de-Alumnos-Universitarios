@@ -2,6 +2,7 @@ import { ThumbsUp, ThumbsDown, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../common/Modal';
 import Badge from '../common/Badge';
+import Avatar from '../common/Avatar';
 import {
   formatDate,
   calcRatio,
@@ -15,7 +16,6 @@ function MaterialDetailModal({
   onClose,
   onLike,
   onDislike,
-  onReport,
   userVote = null,
 }) {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ function MaterialDetailModal({
         <div className={styles.authorBlock}>
           <span className={styles.infoLabel}>Subido por</span>
           <div className={styles.author}>
-            <span className={styles.avatar}>{material.author?.initials}</span>
+            <Avatar initials={material.author?.initials} src={material.author?.image} size="sm" />
             <span className={styles.authorName}>{material.author?.name}</span>
           </div>
         </div>
@@ -115,9 +115,11 @@ function MaterialDetailModal({
               onClose?.();
               navigate(`/student/report-material/${material.id}`);
             }}
+            disabled={material.miDenunciaPendiente}
+            title={material.miDenunciaPendiente ? 'Ya denunciaste este material' : undefined}
           >
             <Flag size={18} />
-            <span>Denunciar</span>
+            <span>{material.miDenunciaPendiente ? 'Ya denunciado' : 'Denunciar'}</span>
           </button>
         </div>
       </div>

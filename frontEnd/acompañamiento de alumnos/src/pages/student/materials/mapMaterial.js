@@ -18,10 +18,11 @@ export const mapMaterialFromApi = (m) => {
         ? { serverName: m.discord_servidor, channelName: m.discord_canal }
         : undefined,
     tags: (m.tags ?? []).map((t) => t.nombre),
-    author: { id: est.id, name, initials: initialsFromName(name) },
+    author: { id: est.id, name, initials: initialsFromName(name), image: est.foto_url ?? null },
     likes: m.likes ?? 0,
     dislikes: m.dislikes ?? 0,
     miVoto: m.mi_voto ?? null,
+    miDenunciaPendiente: m.mi_denuncia_pendiente ?? false,
     publishedAt: m.createdAt,
   };
 };

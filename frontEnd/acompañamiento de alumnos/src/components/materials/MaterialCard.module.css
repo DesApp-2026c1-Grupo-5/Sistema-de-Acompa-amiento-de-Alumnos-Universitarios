@@ -103,9 +103,19 @@
 
 .tags {
   display: flex;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 6px;
+
+  min-height: 30px;
+
   margin-bottom: 14px;
+}
+
+.tagsPlaceholder {
+  height: 24px;
+  width: 1px;
+  opacity: 0;
 }
 
 .meta {
@@ -359,3 +369,22 @@
   stroke: #00d4ff !important;
 }
 
+.card {
+  min-height: 264px;
+}
+
+.cardDiscord {
+  min-height: 264px;
+}
+
+.head {
+  min-height: 72px;
+}
+
+.description {
+  min-height: 42px;
+}
+
+.meta {
+  margin-top: auto;
+}

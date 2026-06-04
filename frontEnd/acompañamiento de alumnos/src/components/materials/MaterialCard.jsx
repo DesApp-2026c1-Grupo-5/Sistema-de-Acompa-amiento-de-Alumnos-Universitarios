@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
+import Avatar from '../common/Avatar';
 import { formatDate } from '../../pages/student/materials/helpers';
 import styles from './MaterialCard.module.css';
 
@@ -58,19 +59,21 @@ function MaterialCard({ material, onView, onDownload, onJoinDiscord }) {
 
       <p className={styles.description}>{material.description}</p>
 
-      {material.tags?.length > 0 && (
-        <div className={styles.tags}>
-          {material.tags.map((tag) => (
+      <div className={styles.tags}>
+        {material.tags?.length > 0 ? (
+          material.tags.map((tag) => (
             <Badge key={tag} variant="tag">
               #{tag}
             </Badge>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          <div className={styles.tagsPlaceholder} />
+        )}
+      </div>
 
       <div className={styles.meta}>
         <div className={styles.author}>
-          <span className={styles.avatar}>{material.author?.initials}</span>
+          <Avatar initials={material.author?.initials} src={material.author?.image} size="sm" />
           <span className={styles.authorName}>{material.author?.name}</span>
         </div>
         <span className={styles.date}>{formatDate(material.publishedAt)}</span>

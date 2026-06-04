@@ -37,7 +37,23 @@ export const mapSessionFromApi = (s) => {
     creatorId: s.creatorId,
     creatorName: s.creatorName ?? "Estudiante",
     creatorInitials: getInitials(s.creatorName),
+    creatorImage: s.creatorImage ?? null,
     userStatus: s.userStatus,
     pendingRequests: s.pendingRequests ?? [],
+    participants: (s.participants ?? []).map((p) => ({
+      ...p,
+      initials: getInitials(p.name),
+      image: p.foto_url ?? null,
+    })),
+    archivos: (s.archivos ?? []).map((archivo) => ({
+      id: archivo.id,
+      nombreOriginal: archivo.nombreOriginal ?? archivo.nombre_original ?? "Archivo",
+      nombreArchivo: archivo.nombreArchivo ?? archivo.nombre_archivo ?? "",
+      mimeType: archivo.mimeType ?? archivo.mime_type ?? "",
+      sizeBytes: archivo.sizeBytes ?? archivo.size_bytes ?? null,
+      url: archivo.url ?? archivo.url_o_path ?? "",
+      uploader: archivo.uploader ?? null,
+      createdAt: archivo.createdAt ?? null,
+    })),
   };
 };

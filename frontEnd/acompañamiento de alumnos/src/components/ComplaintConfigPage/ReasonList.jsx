@@ -2,56 +2,64 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 
 import ReasonItem from './ReasonItem';
+import ModalConfirmation from '../common/ModalConfirmation';
 
 import styles from '../../pages/admin/ComplaintConfigPage/ComplaintConfigPage.module.css';
 
-function ReasonList({
-  reasons,
-  setConfig,
-}) {
+function ReasonList({ reasons, onCreate, onEdit, onDelete, actionError }) {
   const [newReason, setNewReason] = useState('');
   const [showInput, setShowInput] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [reasonToDelete, setReasonToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const handleAddReason = () => {
-    if (!newReason.trim()) return;
+  const handleAddReason = async () => {
+    const value = newReason.trim();
+    if (!value) return;
 
-    const newItem = {
-      id: Date.now(),
-      texto: newReason,
-      activo: true,
-    };
-
-    setConfig((prevConfig) => ({
-      ...prevConfig,
-      motivos: [...prevConfig.motivos, newItem],
-    }));
-
-    setNewReason('');
-    setShowInput(false);
+    setSubmitting(true);
+    try {
+      await onCreate(value);
+      setNewReason('');
+      setShowInput(false);
+    } catch {
+      // El error queda visible via actionError del padre
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    setConfig((prevConfig) => ({
-      ...prevConfig,
-      motivos: prevConfig.motivos.filter(
-        (reason) => reason.id !== id
-      ),
-    }));
+  const handleEdit = async (id, currentText) => {
+    const nuevoTexto = window.prompt('Editar motivo', currentText ?? '');
+    if (!nuevoTexto || !nuevoTexto.trim()) return;
+
+    try {
+      await onEdit(id, nuevoTexto.trim());
+    } catch {
+      // Error mostrado por el padre
+    }
   };
 
-  const handleEdit = (id) => {
-    const nuevoTexto = prompt('Editar motivo');
+  const handleDelete = (id, texto) => {
+    setReasonToDelete({ id, texto });
+  };
 
-    if (!nuevoTexto) return;
+  const confirmDelete = async () => {
+    if (!reasonToDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(reasonToDelete.id);
+      setReasonToDelete(null);
+    } catch {
+      // Error mostrado por el padre, el modal queda abierto para reintentar/cancelar
+    } finally {
+      setDeleting(false);
+    }
+  };
 
-    setConfig((prevConfig) => ({
-      ...prevConfig,
-      motivos: prevConfig.motivos.map((reason) =>
-        reason.id === id
-          ? { ...reason, texto: nuevoTexto }
-          : reason
-      ),
-    }));
+  const cancelDelete = () => {
+    if (deleting) return;
+    setReasonToDelete(null);
   };
 
   return (
@@ -63,11 +71,16 @@ function ReasonList({
           type="button"
           className={styles.addButton}
           onClick={() => setShowInput(true)}
+          disabled={submitting}
         >
           <Plus size={18} />
           Agregar motivo
         </button>
       </div>
+
+      {actionError && (
+        <p className={styles.actionError}>{actionError}</p>
+      )}
 
       {showInput && (
         <div className={styles.newReasonBox}>
@@ -75,9 +88,8 @@ function ReasonList({
             type="text"
             placeholder="Nuevo motivo de denuncia..."
             value={newReason}
-            onChange={(event) =>
-              setNewReason(event.target.value)
-            }
+            onChange={(event) => setNewReason(event.target.value)}
+            disabled={submitting}
           />
 
           <div className={styles.newReasonActions}>
@@ -85,8 +97,9 @@ function ReasonList({
               type="button"
               className={styles.saveButton}
               onClick={handleAddReason}
+              disabled={submitting}
             >
-              Guardar
+              {submitting ? 'Guardando…' : 'Guardar'}
             </button>
 
             <button
@@ -96,6 +109,7 @@ function ReasonList({
                 setShowInput(false);
                 setNewReason('');
               }}
+              disabled={submitting}
             >
               Cancelar
             </button>
@@ -113,6 +127,21 @@ function ReasonList({
           />
         ))}
       </div>
+
+      <ModalConfirmation
+        open={Boolean(reasonToDelete)}
+        title="Eliminar motivo de denuncia"
+        message={
+          reasonToDelete
+            ? `¿Seguro que querés eliminar el motivo "${reasonToDelete.texto}"? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmText={deleting ? 'Eliminando…' : 'Eliminar'}
+        cancelText="Cancelar"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </section>
   );
 }
