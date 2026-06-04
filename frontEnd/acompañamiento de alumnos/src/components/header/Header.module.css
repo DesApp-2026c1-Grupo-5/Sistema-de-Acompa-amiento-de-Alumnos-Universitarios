@@ -114,24 +114,20 @@
 }
 
 .header__userBtn {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 999px;
-  background: #00a8ad;
-  color: #ffffff;
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
   display: grid;
   place-items: center;
   cursor: pointer;
 }
 
-.header__userBtn svg {
-  color: #ffffff;
-  stroke: #ffffff;
-}
-
 .header__userBtn:hover {
-  background: #00949a;
+  opacity: 0.9;
 }
 
 /* DARK MODE */
@@ -183,13 +179,7 @@
 }
 
 :global(html.dark) .header__userBtn {
-  background: #00a8ad;
-  color: #ffffff;
-}
-
-:global(html.dark) .header__userBtn svg {
-  color: #ffffff;
-  stroke: #ffffff;
+  background: transparent;
 }
 
 @media (max-width: 1200px) {

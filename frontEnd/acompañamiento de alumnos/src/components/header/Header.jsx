@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Menu, Bell, Moon, User, GraduationCap } from 'lucide-react';
+import { Menu, Bell, Moon, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getNotifications } from '../../services/notificacionService';
+import { useAuth } from '../../context/useAuth';
+import Avatar from '../common/Avatar';
 import styles from './Header.module.css';
 
 function Header({
@@ -11,7 +13,16 @@ function Header({
   brand = 'SIVA UNAHUR',
 }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState(0);
+
+  const persona = user?.estudiante ?? user?.administrador ?? null;
+  const userInitials = persona
+    ? `${persona.nombre?.[0] ?? ''}${persona.apellido?.[0] ?? ''}`.toUpperCase()
+    : '';
+  const userFoto = user?.estudiante?.foto_url ?? '';
+  const goToProfile = () =>
+    navigate(user?.tipo === 'administrador' ? '/admin/home' : '/student/profile');
 
   useEffect(() => {
     const loadUnreadCount = async () => {
@@ -78,8 +89,12 @@ function Header({
           <Moon size={20} />
         </button>
 
-        <button className={styles.header__userBtn} aria-label="Perfil de usuario">
-          <User size={20} />
+        <button
+          className={styles.header__userBtn}
+          aria-label="Perfil de usuario"
+          onClick={goToProfile}
+        >
+          <Avatar initials={userInitials} src={userFoto} size="md" />
         </button>
       </div>
     </header>

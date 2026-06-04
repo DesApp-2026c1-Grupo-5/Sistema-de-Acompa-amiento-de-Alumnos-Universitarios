@@ -14,7 +14,7 @@ const login = async (req, res) => {
   const usuarioData = await usuario.findOne({
     where: { email },
     include: [
-      { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+      { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: administrador, attributes: ["id", "nombre", "apellido"] },
     ],
   });
@@ -113,16 +113,36 @@ const register = async (req, res) => {
         id: nuevoEstudiante.id,
         nombre: nuevoEstudiante.nombre,
         apellido: nuevoEstudiante.apellido,
+        foto_url: nuevoEstudiante.foto_url ?? null,
       },
       administrador: null,
     },
   });
 };
 
-const me = (req, res) => {
+const me = async (req, res) => {
+  const usuarioData = await usuario.findByPk(req.user.sub, {
+    include: [
+      { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
+      { model: administrador, attributes: ["id", "nombre", "apellido"] },
+    ],
+  });
+
+  if (!usuarioData) {
+    const error = new Error("Usuario no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
   return res.status(200).json({
     ok: true,
-    user: req.user,
+    user: {
+      id: usuarioData.id,
+      email: usuarioData.email,
+      tipo: usuarioData.tipo,
+      estudiante: usuarioData.estudiante,
+      administrador: usuarioData.administrador,
+    },
   });
 };
 

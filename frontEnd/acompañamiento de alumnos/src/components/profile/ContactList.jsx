@@ -4,7 +4,7 @@ import styles from './ContactList.module.css';
 function ContactItem({ contact }) {
   return (
     <li className={styles.item}>
-      <Avatar initials={contact.initials} size="md" />
+      <Avatar initials={contact.initials} src={contact.foto_url} size="md" />
       <span className={styles.name}>{contact.name}</span>
     </li>
   );

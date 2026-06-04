@@ -14,6 +14,11 @@ const monthsAgo = (n, day = 1) => {
   d.setMonth(d.getMonth() - n);
   d.setDate(day);
   d.setHours(12, 0, 0, 0);
+  // Evita fechas futuras: para el mes actual con un día posterior a hoy,
+  // retrocede hasta caer en el pasado.
+  while (d.getTime() > Date.now()) {
+    d.setMonth(d.getMonth() - 1);
+  }
   return d;
 };
 

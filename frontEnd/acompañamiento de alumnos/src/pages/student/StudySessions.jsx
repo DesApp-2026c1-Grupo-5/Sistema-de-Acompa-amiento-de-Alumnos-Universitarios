@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import Modal from "../../components/common/Modal";
+import Avatar from "../../components/common/Avatar";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 import ModalConfirmation from "../../components/common/ModalConfirmation";
@@ -613,7 +614,7 @@ function StudySessions() {
 
                   <footer className={styles.cardFooter}>
                     <div className={styles.creator}>
-                      <div className={styles.creatorAvatar}>{session.creatorInitials}</div>
+                      <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
                       <span>{session.creatorName}</span>
                     </div>
 

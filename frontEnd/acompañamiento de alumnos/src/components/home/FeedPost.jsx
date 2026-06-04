@@ -37,6 +37,7 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
     id,
     authorName,
     authorInitials,
+    authorImage,
     createdAt,
     content,
     likes = 0,
@@ -51,7 +52,7 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
   return (
     <article className={styles.card}>
       <header className={styles.header}>
-        <Avatar initials={authorInitials} size="md" />
+        <Avatar initials={authorInitials} src={authorImage} size="md" />
 
         <div className={styles.meta}>
           <div className={styles.authorRow}>

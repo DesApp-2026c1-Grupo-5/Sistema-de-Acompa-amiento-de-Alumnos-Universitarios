@@ -24,10 +24,10 @@ function EventBadge({ eventType, eventSubject }) {
   );
 }
 
-function PostHeader({ authorInitials, authorName, date, eventType, eventSubject }) {
+function PostHeader({ authorInitials, authorImage, authorName, date, eventType, eventSubject }) {
   return (
     <header className={styles.header}>
-      <Avatar initials={authorInitials} size="md" />
+      <Avatar initials={authorInitials} src={authorImage} size="md" />
 
       <div className={styles.meta}>
         <div className={styles.authorRow}>
@@ -99,6 +99,7 @@ function Publication({ post, userReaction, onLike, onDislike, onComment }) {
   const {
     id,
     authorInitials,
+    authorImage,
     authorName,
     date,
     content,
@@ -113,6 +114,7 @@ function Publication({ post, userReaction, onLike, onDislike, onComment }) {
     <article className={styles.publication}>
       <PostHeader
         authorInitials={authorInitials}
+        authorImage={authorImage}
         authorName={authorName}
         date={date}
         eventType={eventType}

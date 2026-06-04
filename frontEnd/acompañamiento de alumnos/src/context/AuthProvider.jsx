@@ -18,6 +18,12 @@ export const AuthProvider = ({ children }) => {
 
     authService
       .me()
+      .then((res) => {
+        if (res?.user) {
+          localStorage.setItem("siva_user", JSON.stringify(res.user));
+          setUser(res.user);
+        }
+      })
       .catch(() => {
         localStorage.removeItem("siva_token");
         localStorage.removeItem("siva_user");
@@ -46,6 +52,14 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
+  const updateUser = (partial) => {
+    setUser((prev) => {
+      const next = prev ? { ...prev, ...partial } : partial;
+      localStorage.setItem("siva_user", JSON.stringify(next));
+      return next;
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem("siva_token");
     localStorage.removeItem("siva_user");
@@ -55,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, register, logout }}
+      value={{ user, token, loading, login, register, logout, updateUser }}
     >
       {children}
     </AuthContext.Provider>

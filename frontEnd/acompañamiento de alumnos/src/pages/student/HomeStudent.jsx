@@ -23,6 +23,7 @@ function HomeStudent() {
     id: est.id,
     name: `${est.nombre ?? ''} ${est.apellido ?? ''}`.trim() || 'Estudiante',
     initials: getInitials(est.nombre, est.apellido),
+    image: est.foto_url ?? null,
   };
 
   const [publications, setPublications] = useState([]);
@@ -98,6 +99,7 @@ function HomeStudent() {
           id: est.id,
           nombre: est.nombre,
           apellido: est.apellido,
+          foto_url: est.foto_url ?? null,
         },
       });
       setPublications((prev) => [nuevo, ...prev]);

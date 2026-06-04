@@ -22,7 +22,7 @@ const getMaterialIdsConDenunciaPendiente = async (miEstudianteId, materialIds) =
 };
 
 const materialIncludes = [
-  { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+  { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
   { model: materia, as: "materia", attributes: ["id", "nombre", "anio_cursada"] },
   { model: valoracion, attributes: ["valor", "estudiante_id"] },
   {

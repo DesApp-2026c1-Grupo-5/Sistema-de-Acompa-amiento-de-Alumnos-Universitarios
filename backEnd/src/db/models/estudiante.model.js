@@ -70,6 +70,7 @@ module.exports = (sequelize, DataTypes) => {
     nombre: DataTypes.STRING,
     apellido: DataTypes.STRING,
     foto_url: DataTypes.STRING,
+    banner_url: DataTypes.STRING,
     bio: DataTypes.TEXT,
     privacidad: DataTypes.STRING,
     pub_inscripciones: DataTypes.BOOLEAN,

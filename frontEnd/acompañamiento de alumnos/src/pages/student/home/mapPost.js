@@ -12,6 +12,7 @@ export const mapPostFromApi = (apiPost) => {
     authorId: est.id ?? apiPost.estudiante_id,
     authorName: `${nombre} ${apellido}`.trim() || "Estudiante",
     authorInitials: getInitials(nombre, apellido),
+    authorImage: est.foto_url ?? null,
     createdAt: apiPost.createdAt,
     content: apiPost.contenido,
     likes: apiPost.likes ?? 0,
