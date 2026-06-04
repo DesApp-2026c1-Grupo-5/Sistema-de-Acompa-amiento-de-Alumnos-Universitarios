@@ -17,22 +17,30 @@ function AcademicAssistantSubjects({ subjects }) {
           </tr>
         </thead>
         <tbody>
-          {subjects.map((subject) => (
-            <tr key={subject.id}>
-              <td>{subject.name}</td>
-              <td>{subject.year}</td>
-              <td>{subject.type}</td>
-              <td>
-                <span className={styles.correlatives}>
-                  <CircleCheckBig size={16} />
-                  {subject.correlatives.text}
-                </span>
-              </td>
-              <td>
-                <Badge variant="success">Disponible</Badge>
+          {subjects.length === 0 ? (
+            <tr>
+              <td colSpan={5} className={styles.emptyRow}>
+                No tenés materias disponibles para cursar en este momento.
               </td>
             </tr>
-          ))}
+          ) : (
+            subjects.map((subject) => (
+              <tr key={subject.id}>
+                <td>{subject.name}</td>
+                <td>{subject.year}</td>
+                <td>{subject.type}</td>
+                <td>
+                  <span className={styles.correlatives}>
+                    <CircleCheckBig size={16} />
+                    {subject.correlatives.text}
+                  </span>
+                </td>
+                <td>
+                  <Badge variant="success">Disponible</Badge>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </Card>
