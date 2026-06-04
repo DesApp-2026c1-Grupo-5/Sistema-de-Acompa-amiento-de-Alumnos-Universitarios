@@ -34,7 +34,19 @@ function ProfileHeader({
 
   const fields = [
     { name: 'name', label: 'Nombre completo', type: 'text', required: true },
-    { name: 'career', label: 'Carrera', type: 'text' },
+    {
+      name: 'career',
+      label: 'Carrera',
+      type: 'autocomplete',
+      options: [
+        'Carrera no definida',
+        'Ingeniería en Sistemas',
+        'Licenciatura en Administración',
+        'Medicina',
+        'Derecho',
+        'Arquitectura',
+      ],
+    },
     { name: 'location', label: 'Ubicación', type: 'text', readOnly: true },
     { name: 'email', label: 'Email', type: 'email', readOnly: true },
     { name: 'academicStatus', label: 'Estado académico', type: 'text', readOnly: true },

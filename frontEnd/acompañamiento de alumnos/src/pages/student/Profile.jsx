@@ -45,11 +45,21 @@ function Profile() {
     const [nombre, ...resto] = fullName.split(/\s+/);
     const apellido = resto.join(' ');
 
-    await updateMyProfile({ nombre, apellido, bio: data.bio });
+    await updateMyProfile({
+      nombre,
+      apellido,
+      bio: data.bio,
+      career: data.career,
+    });
 
     setProfile((prev) => ({
       ...prev,
-      user: { ...prev.user, name: fullName, bio: data.bio },
+      user: {
+        ...prev.user,
+        name: fullName,
+        bio: data.bio,
+        career: data.career,
+      },
     }));
   };
 
