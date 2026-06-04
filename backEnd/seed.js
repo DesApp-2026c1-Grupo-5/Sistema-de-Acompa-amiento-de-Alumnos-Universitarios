@@ -180,16 +180,14 @@ async function seed() {
       mk(sitLara.id,  matMat1.id,   "aprobada", 2024, 2, 6, new Date("2024-12-10")),
       mk(sitLara.id,  matProg1.id,  "aprobada", 2024, 2, 8, new Date("2024-12-10")),
       mk(sitLara.id,  matBD.id,     "cursando", 2026, 1),
-      // Sofia (TPI): 7 aprobadas, 2 cursando — alumna avanzada
+      // Sofia (TPI): 6 aprobadas. Algoritmos II y Programación Web quedan
+      // sin cursar (pendientes) con sus correlativas aprobadas → disponibles.
       mk(sitSofia.id, matAlgo.id,   "aprobada", 2023, 1, 10, new Date("2023-07-10")),
       mk(sitSofia.id, matMat1.id,   "aprobada", 2023, 1, 9,  new Date("2023-07-10")),
       mk(sitSofia.id, matProg1.id,  "aprobada", 2023, 2, 9,  new Date("2023-12-15")),
       mk(sitSofia.id, matBD.id,     "aprobada", 2024, 1, 8,  new Date("2024-07-20")),
       mk(sitSofia.id, matPOO.id,    "aprobada", 2024, 1, 9,  new Date("2024-07-20")),
-      mk(sitSofia.id, matAlgo2.id,  "aprobada", 2024, 2, 8,  new Date("2024-12-12")),
       mk(sitSofia.id, matIng.id,    "aprobada", 2024, 2, 10, new Date("2024-12-12")),
-      mk(sitSofia.id, matWeb.id,    "cursando", 2026, 1),
-      mk(sitSofia.id, matAlgo2.id,  "cursando", 2026, 1),
       // Mateo (TPI): 4 aprobadas, 1 regular, 1 cursando
       mk(sitMateo.id, matAlgo.id,   "aprobada", 2023, 1, 8,  new Date("2023-07-10")),
       mk(sitMateo.id, matMat1.id,   "aprobada", 2023, 1, 7,  new Date("2023-07-10")),

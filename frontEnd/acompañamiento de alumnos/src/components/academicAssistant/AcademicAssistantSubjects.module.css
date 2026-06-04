@@ -37,6 +37,16 @@
   color: #22c55e;
 }
 
+.emptyRow {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-muted);
+}
+
+.table tr:hover .emptyRow {
+  background: transparent;
+}
+
 @media (max-width: 768px) {
   .table th:nth-child(3),
   .table td:nth-child(3),
