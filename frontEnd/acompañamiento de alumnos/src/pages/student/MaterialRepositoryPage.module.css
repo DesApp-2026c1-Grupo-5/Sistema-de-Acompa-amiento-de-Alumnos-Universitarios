@@ -46,6 +46,12 @@
   width: 100%;
 }
 
+.paginationSection {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+}
+
 .statusText {
   margin: 0;
   padding: 24px 4px;

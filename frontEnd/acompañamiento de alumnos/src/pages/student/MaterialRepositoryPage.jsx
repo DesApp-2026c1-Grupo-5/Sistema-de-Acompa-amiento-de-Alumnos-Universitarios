@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import SearchBar from '../../components/materials/SearchBar';
 import MaterialGrid from '../../components/materials/MaterialGrid';
@@ -6,7 +6,7 @@ import UploadMaterialModal from '../../components/materials/UploadMaterialModal'
 import MaterialDetailModal from '../../components/materials/MaterialDetailModal';
 import Button from '../../components/common/Button';
 import ErrorState from '../../components/common/ErrorState';
-import { filterMaterials } from './materials/helpers';
+import Pagination from '../../components/common/Pagination';
 import { mapMaterialFromApi } from './materials/mapMaterial';
 import {
   getMaterials,
@@ -23,27 +23,48 @@ function MaterialRepositoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [detailMaterial, setDetailMaterial] = useState(null);
 
   useEffect(() => {
-    Promise.all([getMaterials(), getMaterias()])
-      .then(([matRes, materiasRes]) => {
-        setMaterials((matRes?.data ?? []).map(mapMaterialFromApi));
-        setMaterias(materiasRes?.data ?? []);
-      })
-      .catch((err) => {
-        setError(err.message || 'No pudimos cargar los materiales.');
-      })
-      .finally(() => setLoading(false));
+    getMaterias()
+      .then((res) => setMaterias(res?.data ?? []))
+      .catch(() => setMaterias([]));
   }, []);
 
-  const filtered = useMemo(
-    () => filterMaterials(materials, { query, type: typeFilter }),
-    [materials, query, typeFilter]
-  );
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedQuery(query);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchMaterials = async () => {
+      setLoading(true);
+      try {
+        const res = await getMaterials({ page, limit: 12, q: debouncedQuery, tipo: typeFilter });
+        if (!active) return;
+        setMaterials((res?.data ?? []).map(mapMaterialFromApi));
+        setTotalPages(res?.pagination?.totalPages ?? 1);
+      } catch (err) {
+        if (active) setError(err.message || 'No pudimos cargar los materiales.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchMaterials();
+    return () => {
+      active = false;
+    };
+  }, [page, debouncedQuery, typeFilter]);
 
   const updateMaterial = (id, updater) => {
     setMaterials((prev) =>
@@ -112,7 +133,10 @@ function MaterialRepositoryPage() {
             query={query}
             onQueryChange={setQuery}
             typeFilter={typeFilter}
-            onTypeFilterChange={setTypeFilter}
+            onTypeFilterChange={(v) => {
+              setTypeFilter(v);
+              setPage(1);
+            }}
           />
         </section>
 
@@ -125,12 +149,19 @@ function MaterialRepositoryPage() {
               description={error}
             />
           ) : (
-            <MaterialGrid
-              materials={filtered}
-              onView={handleView}
-              onDownload={handleDownload}
-              onJoinDiscord={handleJoinDiscord}
-            />
+            <>
+              <MaterialGrid
+                materials={materials}
+                onView={handleView}
+                onDownload={handleDownload}
+                onJoinDiscord={handleJoinDiscord}
+              />
+              {totalPages > 1 && (
+                <div className={styles.paginationSection}>
+                  <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>

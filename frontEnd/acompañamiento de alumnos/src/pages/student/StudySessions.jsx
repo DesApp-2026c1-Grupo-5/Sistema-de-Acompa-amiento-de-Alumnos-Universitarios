@@ -18,6 +18,7 @@ import Avatar from "../../components/common/Avatar";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 import ModalConfirmation from "../../components/common/ModalConfirmation";
+import Pagination from "../../components/common/Pagination";
 import SessionDetailModal from "../../components/sessions/SessionDetailModal";
 import SessionForm from "./SessionForm";
 import {
@@ -36,13 +37,20 @@ import { getMaterias } from "../../services/materialService";
 import { mapSessionFromApi } from "./sessions/mapSession";
 import styles from "./StudySessions.module.css";
 
+const PAGE_SIZE = 12;
+
 function StudySessions() {
-  const [sessions, setSessions] = useState([]);
+  const [mine, setMine] = useState([]);
+  const [available, setAvailable] = useState([]);
   const [materias, setMaterias] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [availableLoading, setAvailableLoading] = useState(false);
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState("");
   const [now, setNow] = useState(() => Date.now());
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editSession, setEditSession] = useState(null);
@@ -53,20 +61,24 @@ function StudySessions() {
   const [activeMyTab, setActiveMyTab] = useState("created");
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [availabilityFilter, setAvailabilityFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("nextDate");
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30 * 1000);
     return () => clearInterval(id);
   }, []);
 
+  const reloadMine = async () => {
+    const res = await getSessions({ vista: "mias", limit: 50 });
+    setMine((res?.data ?? []).map(mapSessionFromApi));
+  };
+
   useEffect(() => {
-    Promise.all([getSessions(), getMaterias()])
+    Promise.all([getSessions({ vista: "mias", limit: 50 }), getMaterias()])
       .then(([sesRes, matRes]) => {
-        setSessions((sesRes?.data ?? []).map(mapSessionFromApi));
+        setMine((sesRes?.data ?? []).map(mapSessionFromApi));
         setMaterias(matRes?.data ?? []);
       })
       .catch((err) => {
@@ -75,12 +87,58 @@ function StudySessions() {
       .finally(() => setLoading(false));
   }, []);
 
-  const reloadSessions = async () => {
-    const res = await getSessions();
-    setSessions((res?.data ?? []).map(mapSessionFromApi));
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchAvailable = async () => {
+      setAvailableLoading(true);
+      try {
+        const res = await getSessions({
+          vista: "disponibles",
+          page,
+          limit: PAGE_SIZE,
+          q: debouncedSearch,
+          materia_id: subjectFilter,
+          tipo: typeFilter,
+        });
+        if (!active) return;
+        setAvailable((res?.data ?? []).map(mapSessionFromApi));
+        setTotalPages(res?.pagination?.totalPages ?? 1);
+      } catch (err) {
+        if (active) setError(err.message || "No pudimos cargar las sesiones.");
+      } finally {
+        if (active) setAvailableLoading(false);
+      }
+    };
+    fetchAvailable();
+    return () => {
+      active = false;
+    };
+  }, [page, debouncedSearch, subjectFilter, typeFilter]);
+
+  const reloadAvailable = async () => {
+    const res = await getSessions({
+      vista: "disponibles",
+      page,
+      limit: PAGE_SIZE,
+      q: debouncedSearch,
+      materia_id: subjectFilter,
+      tipo: typeFilter,
+    });
+    setAvailable((res?.data ?? []).map(mapSessionFromApi));
+    setTotalPages(res?.pagination?.totalPages ?? 1);
   };
 
-  const subjects = [...new Set(sessions.map((session) => session.subject))];
+  const reloadSessions = async () => {
+    await Promise.all([reloadMine(), reloadAvailable()]);
+  };
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -117,7 +175,6 @@ function StudySessions() {
 
   const getStatusText = (session) => {
     if (session.cancelled) return "Cancelada";
-    if (getTimeStatus(session) === "past") return "Finalizada";
     if (isFull(session)) return "Completa";
     if (session.userStatus === "pending") return "Pendiente";
     return "Disponible";
@@ -125,7 +182,6 @@ function StudySessions() {
 
   const getStatusClass = (session) => {
     if (session.cancelled) return styles.statusFull;
-    if (getTimeStatus(session) === "past") return styles.statusEnded;
     if (isFull(session)) return styles.statusFull;
     if (session.userStatus === "pending") return styles.statusPending;
     return styles.statusAvailable;
@@ -144,67 +200,13 @@ function StudySessions() {
   };
 
   const mySessions = useMemo(() => {
-    const isPast = (session) => {
-      if (!session.date || !session.time) return false;
-      const start = new Date(`${session.date}T${session.time}:00`).getTime();
-      const totalMinutes = (session.durationHours || 0) * 60 + (session.durationMinutes || 0);
-      return now >= start + totalMinutes * 60 * 1000;
-    };
-    const mine = sessions.filter((s) =>
-      ["created", "joined", "pending"].includes(s.userStatus)
-    );
     const sortByDateDesc = (a, b) =>
       new Date(`${b.date}T${b.time || "00:00"}:00`).getTime() -
       new Date(`${a.date}T${a.time || "00:00"}:00`).getTime();
-    if (activeMyTab === "finished") {
-      return mine.filter(isPast).sort(sortByDateDesc);
-    }
     return mine
-      .filter((s) => s.userStatus === activeMyTab && !isPast(s))
+      .filter((s) => s.userStatus === activeMyTab)
       .sort(sortByDateDesc);
-  }, [sessions, activeMyTab, now]);
-
-  const availableSessions = useMemo(() => {
-    let result = sessions.filter(
-      (session) => session.userStatus !== "created" && !session.cancelled
-    );
-
-    if (search.trim()) {
-      const value = search.toLowerCase();
-      result = result.filter(
-        (session) =>
-          session.subject.toLowerCase().includes(value) ||
-          session.topic.toLowerCase().includes(value)
-      );
-    }
-
-    if (subjectFilter !== "all") {
-      result = result.filter((session) => session.subject === subjectFilter);
-    }
-
-    if (typeFilter !== "all") {
-      result = result.filter((session) => session.type === typeFilter);
-    }
-
-    if (availabilityFilter === "available") {
-      result = result.filter((session) => !isFull(session));
-    }
-
-    if (availabilityFilter === "full") {
-      result = result.filter((session) => isFull(session));
-    }
-
-    result.sort((a, b) => {
-      if (sortBy === "spots") {
-        const spotsA = a.maxParticipants ? a.maxParticipants - a.participantsCount : 999;
-        const spotsB = b.maxParticipants ? b.maxParticipants - b.participantsCount : 999;
-        return spotsB - spotsA;
-      }
-      return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
-    });
-
-    return result;
-  }, [sessions, search, subjectFilter, typeFilter, availabilityFilter, sortBy]);
+  }, [mine, activeMyTab]);
 
   const openCreateForm = () => {
     setEditSession(null);
@@ -326,13 +328,6 @@ function StudySessions() {
     : null;
 
   const getJoinButton = (session) => {
-    if (getTimeStatus(session) === "past") {
-      return (
-        <button className={styles.fullButton} disabled>
-          Finalizada
-        </button>
-      );
-    }
     if (isFull(session)) {
       return (
         <button className={styles.fullButton} disabled>
@@ -417,11 +412,17 @@ function StudySessions() {
             <div className={styles.filtersGrid}>
               <label>
                 <span>Materia</span>
-                <select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
+                <select
+                  value={subjectFilter}
+                  onChange={(e) => {
+                    setSubjectFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
                   <option value="all">Todas las materias</option>
-                  {subjects.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
+                  {materias.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nombre}
                     </option>
                   ))}
                 </select>
@@ -429,30 +430,16 @@ function StudySessions() {
 
               <label>
                 <span>Tipo</span>
-                <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
                   <option value="all">Todos</option>
                   <option value="virtual">Virtual</option>
                   <option value="presencial">Presencial</option>
-                </select>
-              </label>
-
-              <label>
-                <span>Disponibilidad</span>
-                <select
-                  value={availabilityFilter}
-                  onChange={(e) => setAvailabilityFilter(e.target.value)}
-                >
-                  <option value="all">Todas</option>
-                  <option value="available">Con cupo</option>
-                  <option value="full">Llenas</option>
-                </select>
-              </label>
-
-              <label>
-                <span>Ordenar por</span>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="nextDate">Fecha próxima</option>
-                  <option value="spots">Cupos disponibles</option>
                 </select>
               </label>
             </div>
@@ -485,13 +472,6 @@ function StudySessions() {
             >
               Pendientes
             </button>
-
-            <button
-              className={activeMyTab === "finished" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("finished")}
-            >
-              Finalizadas
-            </button>
           </div>
 
           {mySessions.length === 0 ? (
@@ -501,10 +481,7 @@ function StudySessions() {
             />
           ) : (
             mySessions.map((session) => (
-              <article
-                className={`${styles.mySessionItem} ${getTimeStatus(session) === "past" ? styles.sessionCardPast : ""}`}
-                key={session.id}
-              >
+              <article className={styles.mySessionItem} key={session.id}>
                 <div>
                   <h3>
                     {session.subject}
@@ -554,18 +531,17 @@ function StudySessions() {
         <section className={styles.availableSection}>
           <h2>Sesiones disponibles</h2>
 
-          {availableSessions.length === 0 ? (
+          {availableLoading ? (
+            <p className={styles.statusText}>Cargando sesiones…</p>
+          ) : available.length === 0 ? (
             <EmptyState
               title="No hay sesiones disponibles"
               description="Cuando haya sesiones de otros estudiantes, aparecerán acá."
             />
           ) : (
             <div className={styles.sessionsGrid}>
-              {availableSessions.map((session) => (
-                <article
-                  className={`${styles.sessionCard} ${getTimeStatus(session) === "past" ? styles.sessionCardPast : ""}`}
-                  key={session.id}
-                >
+              {available.map((session) => (
+                <article className={styles.sessionCard} key={session.id}>
                   <div className={styles.cardTop}>
                     <div>
                       <h3>
@@ -622,6 +598,12 @@ function StudySessions() {
                   </footer>
                 </article>
               ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className={styles.paginationSection}>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </div>
           )}
         </section>

@@ -1,6 +1,13 @@
 import { api } from "./api";
 
-export const getSessions = () => api.get("/sesiones?limit=50");
+export const getSessions = (params = {}) => {
+  const sp = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "" && v !== "all") sp.set(k, v);
+  });
+  const qs = sp.toString();
+  return api.get(`/sesiones${qs ? `?${qs}` : ""}`);
+};
 
 export const getSession = (id) => api.get(`/sesiones/${id}`);
 
