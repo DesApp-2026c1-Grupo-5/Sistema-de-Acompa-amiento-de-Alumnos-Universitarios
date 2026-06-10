@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import styles from "../../styles/landing.module.css";
 
 const Footer = () => {
@@ -25,7 +26,7 @@ const Footer = () => {
           <p>© 2026 SIVA UNAHUR. Todos los derechos reservados.</p>
 
           <div>
-            <a href="#">Privacidad</a>
+            <Link to="/privacidad">Privacidad</Link>
             <a href="#">Términos</a>
             <a href="#">Cookies</a>
           </div>

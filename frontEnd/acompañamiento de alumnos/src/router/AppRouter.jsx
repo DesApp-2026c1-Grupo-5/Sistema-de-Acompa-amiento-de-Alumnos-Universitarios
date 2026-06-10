@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
+import PrivacyPage from "../pages/public/PrivacyPage";
 import Layout from '../components/layouts/Layout';
 import PrivateRoute from '../components/auth/PrivateRoute';
 import { adminLinks } from '../components/navbar/AdminNavbar';
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/privacidad',
+    element: <PrivacyPage />,
   },
   {
     element: <PrivateRoute requiredTipo="estudiante" />,
