@@ -17,13 +17,6 @@ function formatDuration(session) {
 
 function getStatusInfo(session) {
   if (session.cancelled) return { text: 'Cancelada', className: styles.statusFull };
-  if (session.date && session.time) {
-    const start = new Date(`${session.date}T${session.time}:00`).getTime();
-    const totalMinutes = (session.durationHours || 0) * 60 + (session.durationMinutes || 0);
-    if (Date.now() >= start + totalMinutes * 60 * 1000) {
-      return { text: 'Finalizada', className: styles.statusEnded };
-    }
-  }
   if (session.maxParticipants && session.participantsCount >= session.maxParticipants) {
     return { text: 'Completa', className: styles.statusFull };
   }

@@ -1,4 +1,4 @@
-const { Op } = require("sequelize");
+const { Op, literal } = require("sequelize");
 const {
   sesion_estudio,
   estudiante,
@@ -88,7 +88,8 @@ const listarSesiones = async (req, res, next) => {
     return next(buildError("Estudiante no encontrado", 404));
   }
 
-  const { materia_id, tipo, desde, hasta, q, disponibilidad, solo_disponibles, page, limit } = req.query;
+  const { materia_id, tipo, desde, hasta, q, disponibilidad, solo_disponibles, vista, page, limit } = req.query;
+  const me = estudianteData.id;
   const where = {};
 
   if (materia_id) where.materia_id = materia_id;
@@ -102,6 +103,25 @@ const listarSesiones = async (req, res, next) => {
   if (q) {
     where[Op.or] = [{ tema: { [Op.like]: `%${q}%` } }];
   }
+
+  // Excluir sesiones finalizadas (inicio + duracion ya paso)
+  const andConds = [
+    literal(`"fecha_hora" + ("duracion_minutos" * interval '1 minute') >= NOW()`),
+  ];
+
+  if (vista === "disponibles") {
+    where.creador_id = { [Op.ne]: me };
+    where.cancelada = false;
+  } else if (vista === "mias") {
+    const insc = await inscripcion_sesion.findAll({
+      where: { estudiante_id: me },
+      attributes: ["sesion_id"],
+    });
+    const ids = insc.map((i) => i.sesion_id);
+    andConds.push({ [Op.or]: [{ creador_id: me }, { id: { [Op.in]: ids } }] });
+  }
+
+  where[Op.and] = andConds;
 
   const offset = (page - 1) * limit;
   const { rows, count } = await sesion_estudio.findAndCountAll({

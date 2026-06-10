@@ -91,7 +91,7 @@ function HomeStudent() {
   }, [hasMore, searchTerm, loading, loadMore]);
 
   useEffect(() => {
-    getSessions()
+    getSessions({ vista: 'mias', limit: 50 })
       .then((res) => {
         const all = (res?.data ?? []).map(mapSessionFromApi);
         const now = Date.now();

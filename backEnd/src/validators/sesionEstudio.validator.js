@@ -43,6 +43,7 @@ const listarSesionesQuerySchema = Joi.object({
   q: Joi.string().trim().max(100),
   disponibilidad: Joi.string().valid("all", "con_cupo", "llenas").default("all"),
   solo_disponibles: Joi.string().valid("true", "false").default("false"),
+  vista: Joi.string().valid("todas", "disponibles", "mias").default("todas"),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(50).default(10),
 });
