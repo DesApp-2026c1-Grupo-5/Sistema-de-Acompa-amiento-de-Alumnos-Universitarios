@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, X } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import SearchBar from '../../components/common/SearchBar';
@@ -15,6 +15,8 @@ import { getInitials, mapPostFromApi } from './home/mapPost';
 import { mapSessionFromApi } from './sessions/mapSession';
 import styles from './HomeStudent.module.css';
 
+const PAGE_SIZE = 10;
+
 function HomeStudent() {
   const { user } = useAuth();
   const est = user?.estudiante ?? {};
@@ -28,27 +30,65 @@ function HomeStudent() {
 
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const [publishError, setPublishError] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sessionsOpen, setSessionsOpen] = useState(false);
+  const loaderRef = useRef(null);
+  const pageRef = useRef(1);
+  const loadingMoreRef = useRef(false);
+  const hasMoreRef = useRef(true);
 
   const [mySessions, setMySessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState(null);
   const [detailSession, setDetailSession] = useState(null);
 
-  useEffect(() => {
-    getPosts()
-      .then((res) => {
-        setPublications((res?.data ?? []).map(mapPostFromApi));
-      })
-      .catch((err) => {
-        setError(err.message || 'No pudimos cargar el feed.');
-      })
-      .finally(() => setLoading(false));
+  const fetchPage = useCallback((pageNum) => {
+    return getPosts({ page: pageNum, limit: PAGE_SIZE }).then((res) => {
+      const mapped = (res?.data ?? []).map(mapPostFromApi);
+      setPublications((prev) => (pageNum === 1 ? mapped : [...prev, ...mapped]));
+      const more = res?.pagination?.hasMore ?? false;
+      hasMoreRef.current = more;
+      pageRef.current = pageNum;
+      setHasMore(more);
+    });
   }, []);
+
+  useEffect(() => {
+    fetchPage(1)
+      .catch((err) => setError(err.message || 'No pudimos cargar el feed.'))
+      .finally(() => setLoading(false));
+  }, [fetchPage]);
+
+  const loadMore = useCallback(() => {
+    if (loadingMoreRef.current || !hasMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    fetchPage(pageRef.current + 1)
+      .catch((err) => setError(err.message || 'No pudimos cargar más publicaciones.'))
+      .finally(() => {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      });
+  }, [fetchPage]);
+
+  useEffect(() => {
+    if (!hasMore || searchTerm) return undefined;
+    const el = loaderRef.current;
+    if (!el) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, searchTerm, loading, loadMore]);
 
   useEffect(() => {
     getSessions()
@@ -209,7 +249,16 @@ function HomeStudent() {
             <p className={styles.feedStatus}>{publishError}</p>
           )}
 
-          <div className={styles.feed}>{renderFeed()}</div>
+          <div className={styles.feed}>
+            {renderFeed()}
+            {!loading && !error && !searchTerm && hasMore && (
+              <div ref={loaderRef} className={styles.feedSentinel}>
+                {loadingMore && (
+                  <p className={styles.feedStatus}>Cargando más publicaciones…</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <>

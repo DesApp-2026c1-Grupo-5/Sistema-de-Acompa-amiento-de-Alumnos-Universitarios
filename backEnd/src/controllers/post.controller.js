@@ -36,15 +36,22 @@ const obtenerPosts = async (req, res) => {
   });
   const miEstudianteId = estudianteData?.id ?? null;
 
-  const posts = await post.findAll({
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await post.findAndCountAll({
     include: [
       { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: voto_post, attributes: ["tipo", "estudiante_id"] },
     ],
     order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+    distinct: true,
   });
 
-  const data = posts.map((p) => {
+  const data = rows.map((p) => {
     const plain = p.get({ plain: true });
     const votos = plain.voto_posts ?? [];
     const likes = votos.filter((v) => v.tipo === "like").length;
@@ -66,6 +73,13 @@ const obtenerPosts = async (req, res) => {
   return res.json({
     ok: true,
     data,
+    pagination: {
+      page,
+      limit,
+      total: count,
+      totalPages: Math.ceil(count / limit),
+      hasMore: offset + rows.length < count,
+    },
   });
 };
 
