@@ -1,6 +1,11 @@
 import { api } from "./api";
 
-export const getMaterials = () => api.get("/materiales?limit=50");
+export const getMaterials = ({ page = 1, limit = 12, q = "", tipo = "all" } = {}) => {
+  const params = new URLSearchParams({ page, limit });
+  if (q.trim()) params.set("q", q.trim());
+  if (tipo && tipo !== "all") params.set("tipo", tipo);
+  return api.get(`/materiales?${params.toString()}`);
+};
 
 export const getMaterial = (id) => api.get(`/materiales/${id}`);
 
