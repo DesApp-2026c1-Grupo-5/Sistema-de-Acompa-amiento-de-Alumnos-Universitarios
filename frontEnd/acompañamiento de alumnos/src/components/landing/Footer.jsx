@@ -28,7 +28,7 @@ const Footer = () => {
           <div>
             <Link to="/privacidad">Privacidad</Link>
             <Link to="/terminos">Términos</Link>
-            <a href="#">Cookies</a>
+            <Link to="/cookies">Cookies</Link>
           </div>
         </div>
       </div>

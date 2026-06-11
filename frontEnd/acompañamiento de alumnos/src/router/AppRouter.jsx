@@ -3,6 +3,7 @@ import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
 import PrivacyPage from "../pages/public/PrivacyPage";
 import TermsPage from '../pages/public/TermsPage';
+import InfoNotice from '../components/cookies/InfoNotice';
 import Layout from '../components/layouts/Layout';
 import PrivateRoute from '../components/auth/PrivateRoute';
 import { adminLinks } from '../components/navbar/AdminNavbar';
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
   {
   path: '/terminos',
   element: <TermsPage />,
+  },
+  {
+  path: '/cookies',
+  element: <InfoNotice />,
   },
   {
     element: <PrivateRoute requiredTipo="estudiante" />,
