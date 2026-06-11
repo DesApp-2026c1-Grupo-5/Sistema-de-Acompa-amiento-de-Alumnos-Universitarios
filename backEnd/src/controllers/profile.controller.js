@@ -147,6 +147,7 @@ const buildPublications = async (estudianteId) => {
 
     return {
       id: plain.id,
+      authorId: plain.estudiante?.id ?? plain.estudiante_id,
       authorInitials: getInitials(plain.estudiante?.nombre, plain.estudiante?.apellido),
       authorImage: plain.estudiante?.foto_url ?? null,
       authorName: `${plain.estudiante?.nombre ?? ""} ${plain.estudiante?.apellido ?? ""}`.trim(),
@@ -206,6 +207,53 @@ const obtenerMiPerfil = async (req, res, next) => {
       },
       contacts: contacts.slice(0, 6),
       pendingRequests,
+      publications,
+      userReactions,
+    },
+  });
+};
+
+const obtenerPerfilPorId = async (req, res, next) => {
+  const { id } = req.params;
+
+  const estudianteData = await estudiante.findOne({
+    where: { id },
+    include: [
+      {
+        model: usuario,
+        attributes: ["id", "email", "tipo", "activo"],
+      },
+    ],
+  });
+
+  if (!estudianteData) {
+    const error = new Error("Perfil de estudiante no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const contacts = await buildContacts(estudianteData.id);
+  const { publications, userReactions } = await buildPublications(estudianteData.id);
+  const career = await buildCareerLabel(estudianteData.id);
+  const academicStatus = await buildAcademicStatus(estudianteData.id);
+
+  return res.status(200).json({
+    ok: true,
+    data: {
+      user: {
+        initials: getInitials(estudianteData.nombre, estudianteData.apellido),
+        name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+        career,
+        location: null,
+        email: estudianteData.usuario.email,
+        academicStatus,
+        bio: estudianteData.bio,
+        contactsCount: contacts.length,
+        foto_url: estudianteData.foto_url,
+        banner_url: estudianteData.banner_url,
+        privacidad: estudianteData.privacidad,
+      },
+      contacts: contacts.slice(0, 6),
       publications,
       userReactions,
     },
@@ -342,6 +390,7 @@ const eliminarBannerMiPerfil = async (req, res) => {
 
 module.exports = {
   obtenerMiPerfil,
+  obtenerPerfilPorId,
   actualizarMiPerfil,
   actualizarPrivacidadMiPerfil,
   actualizarAvatarMiPerfil,

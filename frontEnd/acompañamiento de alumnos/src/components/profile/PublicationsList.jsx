@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, MessageCircle, BookOpen, CheckCircle2, TrendingUp } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
@@ -24,14 +25,16 @@ function EventBadge({ eventType, eventSubject }) {
   );
 }
 
-function PostHeader({ authorInitials, authorImage, authorName, date, eventType, eventSubject }) {
+function PostHeader({ authorId, authorInitials, authorImage, authorName, date, eventType, eventSubject }) {
   return (
     <header className={styles.header}>
       <Avatar initials={authorInitials} src={authorImage} size="md" />
 
       <div className={styles.meta}>
         <div className={styles.authorRow}>
-          <span className={styles.author}>{authorName}</span>
+          <Link to={`/student/profile/${authorId}`} className={styles.authorLink}>
+            <span className={styles.author}>{authorName}</span>
+          </Link>
           {eventType && (
             <EventBadge eventType={eventType} eventSubject={eventSubject} />
           )}
@@ -98,6 +101,7 @@ function PostActions({
 function Publication({ post, userReaction, onLike, onDislike, onComment }) {
   const {
     id,
+    authorId,
     authorInitials,
     authorImage,
     authorName,
@@ -113,6 +117,7 @@ function Publication({ post, userReaction, onLike, onDislike, onComment }) {
   return (
     <article className={styles.publication}>
       <PostHeader
+        authorId={authorId}
         authorInitials={authorInitials}
         authorImage={authorImage}
         authorName={authorName}

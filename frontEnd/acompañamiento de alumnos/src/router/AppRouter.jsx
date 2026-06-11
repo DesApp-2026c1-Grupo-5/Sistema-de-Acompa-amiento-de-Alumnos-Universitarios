@@ -64,6 +64,10 @@ const router = createBrowserRouter([
             element: <Profile />,
           },
           {
+            path: '/student/profile/:userId',
+            element: <Profile />,
+          },
+          {
             path: '/student/academic-status',
             element: <SituacionAcademica />,
           },

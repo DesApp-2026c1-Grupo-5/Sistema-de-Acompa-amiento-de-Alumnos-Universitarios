@@ -11,6 +11,7 @@ const profileController = require("../controllers/profile.controller");
 const router = express.Router();
 
 router.get("/profile/me", authMiddleware, profileController.obtenerMiPerfil);
+router.get("/profile/:id", authMiddleware, profileController.obtenerPerfilPorId);
 router.put("/profile/me", authMiddleware, profileController.actualizarMiPerfil);
 router.patch(
   "/profile/me/privacy",

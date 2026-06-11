@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import ContactList from '../../components/profile/ContactList';
 import PendingRequests from '../../components/profile/PendingRequests';
@@ -6,6 +7,7 @@ import PublicationsList from '../../components/profile/PublicationsList';
 import ErrorState from '../../components/common/ErrorState';
 import {
   getMyProfile,
+  getProfileById,
   updateMyPrivacy,
   updateMyProfile,
   uploadAvatar,
@@ -18,27 +20,32 @@ import { useAuth } from '../../context/useAuth';
 import styles from './Profile.module.css';
 
 function Profile() {
+  const { userId } = useParams();
   const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const ownId = user?.estudiante?.id;
+  const isOwnProfile = !userId || String(userId) === String(ownId);
 
   const syncAuthFoto = (foto_url) => {
     updateUser({ estudiante: { ...(user?.estudiante ?? {}), foto_url } });
   };
 
   useEffect(() => {
-    getMyProfile()
+    const fetch = isOwnProfile ? getMyProfile() : getProfileById(userId);
+    fetch
       .then((res) => {
         setProfile(res.data);
-        if ((user?.estudiante?.foto_url ?? null) !== (res.data.user.foto_url ?? null)) {
+        if (isOwnProfile && (user?.estudiante?.foto_url ?? null) !== (res.data.user.foto_url ?? null)) {
           syncAuthFoto(res.data.user.foto_url);
         }
       })
       .catch((err) => setError(err.message || 'No pudimos cargar el perfil.'))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userId]);
 
   const handleEditProfile = async (data) => {
     const fullName = (data.name ?? '').trim();
@@ -151,17 +158,17 @@ function Profile() {
     <div className={styles.container}>
       <ProfileHeader
         user={profile.user}
-        onEditProfile={handleEditProfile}
-        onToggleVisibility={handleToggleVisibility}
-        onUploadAvatar={handleUploadAvatar}
-        onDeleteAvatar={handleDeleteAvatar}
-        onUploadBanner={handleUploadBanner}
-        onDeleteBanner={handleDeleteBanner}
+        onEditProfile={isOwnProfile ? handleEditProfile : null}
+        onToggleVisibility={isOwnProfile ? handleToggleVisibility : null}
+        onUploadAvatar={isOwnProfile ? handleUploadAvatar : null}
+        onDeleteAvatar={isOwnProfile ? handleDeleteAvatar : null}
+        onUploadBanner={isOwnProfile ? handleUploadBanner : null}
+        onDeleteBanner={isOwnProfile ? handleDeleteBanner : null}
       />
 
       <ContactList contacts={profile.contacts} />
 
-      <PendingRequests requests={profile.pendingRequests} />
+      {isOwnProfile && <PendingRequests requests={profile.pendingRequests} />}
 
       {profile.user.bio && (
         <section className={styles.aboutCard}>
