@@ -21,7 +21,6 @@ import CollapsibleItem from '../../components/privacy/CollapsibleItem';
 import styles from './PrivacyPage.module.css';
 
 function PrivacyPage() {
-  const [highlightedId] = useState('');
   const [openFaq, setOpenFaq] = useState('faq-1');
 
   return (
@@ -40,22 +39,17 @@ function PrivacyPage() {
           protege y permite controlar la información personal y académica dentro
           de la plataforma.
         </p>
-
       </section>
 
       <div className={styles.layout}>
         <div className={styles.content}>
-          <PrivacySection
-            id="datos"
-            title="Qué datos recopilamos"
-            icon={FileText}
-            isHighlighted={highlightedId === 'datos'}
-          >
+          <PrivacySection id="datos" title="Qué datos recopilamos" icon={FileText}>
             <p>
               SIVA UNAHUR recopila únicamente los datos necesarios para brindar
               sus funcionalidades académicas, sociales y administrativas. Estos
               datos pueden incluir información de registro, como nombre, apellido,
-              correo electrónico institucional o personal, carrera seleccionada, entre otros.
+              correo electrónico institucional o personal, carrera seleccionada,
+              entre otros.
             </p>
 
             <p>
@@ -73,12 +67,7 @@ function PrivacyPage() {
             </ul>
           </PrivacySection>
 
-          <PrivacySection
-            id="uso"
-            title="Cómo usamos tus datos"
-            icon={UserRoundCog}
-            isHighlighted={highlightedId === 'uso'}
-          >
+          <PrivacySection id="uso" title="Cómo usamos tus datos" icon={UserRoundCog}>
             <p>
               Usamos tus datos para personalizar la experiencia académica dentro
               de SIVA UNAHUR. La información de carrera, materias aprobadas,
@@ -103,12 +92,7 @@ function PrivacyPage() {
             </ul>
           </PrivacySection>
 
-          <PrivacySection
-            id="compartidos"
-            title="Datos que compartís con otros usuarios"
-            icon={Users}
-            isHighlighted={highlightedId === 'compartidos'}
-          >
+          <PrivacySection id="compartidos" title="Datos que compartís con otros usuarios" icon={Users}>
             <p>
               SIVA UNAHUR permite configurar el perfil como público o privado.
               Si tu perfil es público, otros estudiantes pueden ver información
@@ -129,12 +113,7 @@ function PrivacyPage() {
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="materiales"
-            title="Repositorio de materiales"
-            icon={BookOpen}
-            isHighlighted={highlightedId === 'materiales'}
-          >
+          <PrivacySection id="materiales" title="Repositorio de materiales" icon={BookOpen}>
             <p>
               Los archivos, enlaces, descripciones, materias asociadas y
               valoraciones que subís al repositorio de materiales pueden ser
@@ -147,18 +126,13 @@ function PrivacyPage() {
             <p>
               Las denuncias realizadas sobre materiales se tratan de forma
               reservada. El resto de los estudiantes no puede ver quién realizó
-              una denuncia. Los administradores autorizados pueden
-              revisar la información necesaria para moderar el contenido,
-              analizar incumplimientos y tomar medidas dentro de la plataforma.
+              una denuncia. Los administradores autorizados pueden revisar la
+              información necesaria para moderar el contenido, analizar
+              incumplimientos y tomar medidas dentro de la plataforma.
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="sesiones"
-            title="Sesiones de estudio"
-            icon={CalendarDays}
-            isHighlighted={highlightedId === 'sesiones'}
-          >
+          <PrivacySection id="sesiones" title="Sesiones de estudio" icon={CalendarDays}>
             <p>
               Cuando creás o te unís a una sesión de estudio, SIVA UNAHUR puede
               almacenar el nombre de la sesión, materia asociada, descripción,
@@ -175,12 +149,7 @@ function PrivacyPage() {
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="notificaciones"
-            title="Correo electrónico y notificaciones"
-            icon={Bell}
-            isHighlighted={highlightedId === 'notificaciones'}
-          >
+          <PrivacySection id="notificaciones" title="Correo electrónico y notificaciones" icon={Bell}>
             <p>
               Tu correo electrónico se utiliza para comunicaciones vinculadas con
               el funcionamiento de SIVA UNAHUR, como confirmaciones de cuenta,
@@ -198,17 +167,12 @@ function PrivacyPage() {
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="seguridad"
-            title="Seguridad de los datos"
-            icon={ShieldCheck}
-            isHighlighted={highlightedId === 'seguridad'}
-          >
+          <PrivacySection id="seguridad" title="Seguridad de los datos" icon={ShieldCheck}>
             <p>
               SIVA UNAHUR aplica medidas técnicas y organizativas razonables para
               proteger la información personal y académica contra accesos no
-              autorizados, pérdida, o uso incompatible con
-              los fines de la plataforma.
+              autorizados, pérdida, o uso incompatible con los fines de la
+              plataforma.
             </p>
 
             <p>
@@ -220,12 +184,7 @@ function PrivacyPage() {
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="derechos"
-            title="Tus derechos"
-            icon={Scale}
-            isHighlighted={highlightedId === 'derechos'}
-          >
+          <PrivacySection id="derechos" title="Tus derechos" icon={Scale}>
             <p>
               Como usuario de SIVA UNAHUR, podés solicitar el acceso a tus datos,
               pedir la corrección de información incorrecta, actualizar tu perfil,
@@ -235,12 +194,7 @@ function PrivacyPage() {
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="contacto"
-            title="Contacto"
-            icon={Mail}
-            isHighlighted={highlightedId === 'contacto'}
-          >
+          <PrivacySection id="contacto" title="Contacto" icon={Mail}>
             <p>
               Para consultas vinculadas con privacidad, uso de datos personales,
               visibilidad del perfil, eliminación de cuenta o revisión de
@@ -255,24 +209,14 @@ function PrivacyPage() {
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="cambios"
-            title="Cambios en esta política"
-            icon={RefreshCw}
-            isHighlighted={highlightedId === 'cambios'}
-          >
+          <PrivacySection id="cambios" title="Cambios en esta política" icon={RefreshCw}>
             <p>
               SIVA UNAHUR puede actualizar esta Política de Privacidad para
               reflejar cambios funcionales, técnicos, legales o institucionales.
             </p>
           </PrivacySection>
 
-          <PrivacySection
-            id="faq"
-            title="Preguntas frecuentes sobre privacidad"
-            icon={HelpCircle}
-            isHighlighted={highlightedId === 'faq'}
-          >
+          <PrivacySection id="faq" title="Preguntas frecuentes sobre privacidad" icon={HelpCircle}>
             <div className={styles.faqList}>
               <CollapsibleItem
                 question="¿Otros estudiantes pueden ver mi situación académica completa?"
