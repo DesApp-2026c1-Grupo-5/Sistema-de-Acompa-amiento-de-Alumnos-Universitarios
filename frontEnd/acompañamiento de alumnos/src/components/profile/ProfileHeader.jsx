@@ -64,65 +64,73 @@ function ProfileHeader({
         className={styles.gradientHeader}
         style={banner_url ? { backgroundImage: `url(${banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       >
-        <div className={styles.bannerActions}>
-          <button
-            type="button"
-            className={styles.imgButton}
-            title="Cambiar banner"
-            onClick={() => bannerInputRef.current?.click()}
-          >
-            <Camera size={16} />
-          </button>
-          {banner_url && (
+        {onUploadBanner && (
+          <div className={styles.bannerActions}>
             <button
               type="button"
               className={styles.imgButton}
-              title="Eliminar banner"
-              onClick={() => onDeleteBanner?.()}
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
-        </div>
-
-        <div className={styles.avatarWrapper}>
-          <Avatar initials={initials} src={foto_url || ''} size="xl" className={styles.avatar} />
-          <div className={styles.avatarActions}>
-            <button
-              type="button"
-              className={styles.imgButton}
-              title="Cambiar foto"
-              onClick={() => fotoInputRef.current?.click()}
+              title="Cambiar banner"
+              onClick={() => bannerInputRef.current?.click()}
             >
               <Camera size={16} />
             </button>
-            {foto_url && (
+            {banner_url && (
               <button
                 type="button"
                 className={styles.imgButton}
-                title="Eliminar foto"
-                onClick={() => onDeleteAvatar?.()}
+                title="Eliminar banner"
+                onClick={() => onDeleteBanner?.()}
               >
                 <Trash2 size={16} />
               </button>
             )}
           </div>
+        )}
+
+        <div className={styles.avatarWrapper}>
+          <Avatar initials={initials} src={foto_url || ''} size="xl" className={styles.avatar} />
+          {onUploadAvatar && (
+            <div className={styles.avatarActions}>
+              <button
+                type="button"
+                className={styles.imgButton}
+                title="Cambiar foto"
+                onClick={() => fotoInputRef.current?.click()}
+              >
+                <Camera size={16} />
+              </button>
+              {foto_url && (
+                <button
+                  type="button"
+                  className={styles.imgButton}
+                  title="Eliminar foto"
+                  onClick={() => onDeleteAvatar?.()}
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        <input
-          ref={fotoInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={handleFotoChange}
-        />
-        <input
-          ref={bannerInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={handleBannerChange}
-        />
+        {onUploadBanner && (
+          <>
+            <input
+              ref={fotoInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleFotoChange}
+            />
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleBannerChange}
+            />
+          </>
+        )}
       </div>
 
       <div className={styles.content}>
@@ -146,25 +154,31 @@ function ProfileHeader({
             </p>
           </div>
 
-          <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.btnPublico}
-              onClick={() => onToggleVisibility?.()}
-            >
-              {isPublic ? <Globe size={16} /> : <Lock size={16} />}
-              {isPublic ? 'Público' : 'Privado'}
-            </button>
+          {(onToggleVisibility || onEditProfile) && (
+            <div className={styles.actions}>
+              {onToggleVisibility && (
+                <button
+                  type="button"
+                  className={styles.btnPublico}
+                  onClick={() => onToggleVisibility?.()}
+                >
+                  {isPublic ? <Globe size={16} /> : <Lock size={16} />}
+                  {isPublic ? 'Público' : 'Privado'}
+                </button>
+              )}
 
-            <button
-              type="button"
-              className={styles.btnEdit}
-              onClick={() => setModalOpen(true)}
-            >
-              <SquarePen className={styles.btnIcon} />
-              Editar perfil
-            </button>
-          </div>
+              {onEditProfile && (
+                <button
+                  type="button"
+                  className={styles.btnEdit}
+                  onClick={() => setModalOpen(true)}
+                >
+                  <SquarePen className={styles.btnIcon} />
+                  Editar perfil
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <hr className={styles.divider} />
@@ -186,14 +200,16 @@ function ProfileHeader({
         </div>
       </div>
 
-      <FormModal
-        open={modalOpen}
-        title="Editar perfil"
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-        fields={fields}
-        initialValues={user}
-      />
+      {onEditProfile && (
+        <FormModal
+          open={modalOpen}
+          title="Editar perfil"
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleSubmit}
+          fields={fields}
+          initialValues={user}
+        />
+      )}
     </section>
   );
 }

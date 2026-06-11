@@ -53,6 +53,15 @@
   flex-wrap: wrap;
 }
 
+.authorLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.authorLink:hover .author {
+  text-decoration: underline;
+}
+
 .author {
   color: #020617 !important;
   font-size: 16px;
@@ -145,6 +154,10 @@
 :global(html.dark) .section {
   background: #1e293b;
   border-color: #334155;
+}
+
+:global(html.dark) .authorLink {
+  color: inherit;
 }
 
 :global(html.dark) .title,

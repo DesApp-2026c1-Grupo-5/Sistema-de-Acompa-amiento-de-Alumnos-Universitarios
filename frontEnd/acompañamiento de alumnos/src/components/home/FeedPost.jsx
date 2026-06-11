@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   ThumbsUp,
   ThumbsDown,
@@ -35,6 +36,7 @@ function EventBadge({ eventType, eventSubject }) {
 function FeedPost({ post, userReaction, onLike, onDislike }) {
   const {
     id,
+    authorId,
     authorName,
     authorInitials,
     authorImage,
@@ -56,7 +58,9 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
 
         <div className={styles.meta}>
           <div className={styles.authorRow}>
-            <span className={styles.author}>{authorName}</span>
+            <Link to={`/student/profile/${authorId}`} className={styles.authorLink}>
+              <span className={styles.author}>{authorName}</span>
+            </Link>
             {eventType && (
               <EventBadge eventType={eventType} eventSubject={eventSubject} />
             )}
