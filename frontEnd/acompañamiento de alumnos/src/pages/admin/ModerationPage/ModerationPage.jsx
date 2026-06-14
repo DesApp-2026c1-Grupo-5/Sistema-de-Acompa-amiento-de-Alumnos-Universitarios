@@ -20,7 +20,10 @@ import {
     suspenderMaterialAdmin,
     restaurarMaterialAdmin,
 } from '../../../services/denunciaAdminService';
+import Pagination from '../../../components/common/Pagination';
 import styles from './ModerationPage.module.css';
+
+const PAGE_SIZE = 6;
 
 const SEVERIDAD_LABEL = { alta: 'Alta', media: 'Media', baja: 'Baja' };
 const ESTADO_LABEL = {
@@ -80,6 +83,8 @@ function ModerationPage() {
 
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('todos');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const [loading, setLoading] = useState(true);
     const [listError, setListError] = useState('');
@@ -96,11 +101,12 @@ function ModerationPage() {
         }
     }, []);
 
-    const fetchList = useCallback(async ({ q, estado }) => {
+    const fetchList = useCallback(async ({ q, estado, page }) => {
         try {
-            const res = await getDenunciasAdmin({ q, estado });
+            const res = await getDenunciasAdmin({ q, estado, page, limit: PAGE_SIZE });
             const items = (res.data ?? []).map(mapListItem);
             setMaterials(items);
+            setTotalPages(res.pagination?.totalPages ?? 1);
             return items;
         } catch (err) {
             setListError(err.message || 'No pudimos cargar la lista de denuncias.');
@@ -126,7 +132,7 @@ function ModerationPage() {
         const load = async () => {
             setLoading(true);
             await fetchStats();
-            const items = await fetchList({ q: '', estado: 'todos' });
+            const items = await fetchList({ q: '', estado: 'todos', page: 1 });
             if (cancelled) return;
             if (items.length > 0) {
                 setSelectedId(items[0].id);
@@ -143,7 +149,8 @@ function ModerationPage() {
     useEffect(() => {
         if (loading) return;
         const timer = setTimeout(async () => {
-            const items = await fetchList({ q: search, estado: statusFilter });
+            setPage(1);
+            const items = await fetchList({ q: search, estado: statusFilter, page: 1 });
             if (selectedId && !items.find((it) => it.id === selectedId)) {
                 setSelectedId(items[0]?.id ?? null);
                 if (items[0]) {
@@ -156,6 +163,11 @@ function ModerationPage() {
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search, statusFilter]);
+
+    const handlePageChange = (n) => {
+        setPage(n);
+        fetchList({ q: search, estado: statusFilter, page: n });
+    };
 
     const handleSelectMaterial = (material) => {
         setSelectedId(material.id);
@@ -172,7 +184,7 @@ function ModerationPage() {
             await actionFn(selectedDetail.id);
             await Promise.all([
                 fetchStats(),
-                fetchList({ q: search, estado: statusFilter }),
+                fetchList({ q: search, estado: statusFilter, page }),
                 fetchDetail(selectedDetail.id),
             ]);
         } catch (err) {
@@ -320,6 +332,12 @@ function ModerationPage() {
                             );
                         })}
                     </div>
+
+                    {totalPages > 1 && (
+                        <div className={styles.paginationSection}>
+                            <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
+                        </div>
+                    )}
                 </section>
 
                 {selectedDetail && detailModalOpen && (
