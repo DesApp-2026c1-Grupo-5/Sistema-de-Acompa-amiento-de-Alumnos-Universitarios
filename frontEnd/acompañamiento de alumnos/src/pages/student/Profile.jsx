@@ -51,12 +51,21 @@ function Profile() {
     const fullName = (data.name ?? '').trim();
     const [nombre, ...resto] = fullName.split(/\s+/);
     const apellido = resto.join(' ');
+    const careersStr = (data.careers || []).join(', ');
+
+    localStorage.setItem('profileCareers', JSON.stringify(data.careers || []));
+    localStorage.setItem('autoPublishPrefs', JSON.stringify(data.autoPublish || {}));
+    localStorage.setItem('profileExtraData', JSON.stringify({
+      phone: data.phone || '',
+      birthDate: data.birthDate || '',
+    }));
 
     await updateMyProfile({
       nombre,
       apellido,
       bio: data.bio,
-      career: data.career,
+      career: careersStr,
+      location: data.localidad,
     });
 
     setProfile((prev) => ({
@@ -65,7 +74,8 @@ function Profile() {
         ...prev.user,
         name: fullName,
         bio: data.bio,
-        career: data.career,
+        career: careersStr,
+        location: data.localidad,
       },
     }));
   };
