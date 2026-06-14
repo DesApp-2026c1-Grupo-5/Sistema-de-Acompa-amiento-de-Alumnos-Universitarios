@@ -6,6 +6,19 @@ import InputField from '../common/InputField';
 import Avatar from '../common/Avatar';
 import styles from './ProfileHeader.module.css';
 
+const CAREER_OPTIONS = [
+  'Carrera no definida',
+  'Ingeniería en Sistemas',
+  'Licenciatura en Administración',
+  'Medicina',
+  'Derecho',
+  'Arquitectura',
+  'Contador Público',
+  'Licenciatura en Economía',
+  'Ingeniería Industrial',
+  'Licenciatura en Psicología',
+];
+
 const AUTO_PUBLISH_OPTIONS = [
   { key: 'enrollment', label: 'Inscripción', Icon: BookOpen },
   { key: 'regular', label: 'Regularización', Icon: TrendingUp },
@@ -35,6 +48,15 @@ function ProfileHeader({
   const [formBio, setFormBio] = useState('');
   const [formCareers, setFormCareers] = useState([]);
   const [formNewCareer, setFormNewCareer] = useState('');
+  const [showCareerSuggestions, setShowCareerSuggestions] = useState(false);
+
+  const filteredCareerOptions = formNewCareer.trim()
+    ? CAREER_OPTIONS.filter(
+        (opt) =>
+          opt.toLowerCase().includes(formNewCareer.toLowerCase()) &&
+          !formCareers.includes(opt)
+      )
+    : CAREER_OPTIONS.filter((opt) => !formCareers.includes(opt));
   const [formAutoPublish, setFormAutoPublish] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('autoPublishPrefs') || '{"enrollment":true,"regular":true,"approved":true}');
@@ -249,10 +271,28 @@ function ProfileHeader({
 
             <label className={styles.editLabel}>Carreras</label>
             <div className={styles.editCareerRow}>
-              <input className={styles.editInput} value={formNewCareer}
-                onChange={(e) => setFormNewCareer(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCareer(); } }}
-                placeholder="Agregar carrera..." />
+              <div className={styles.autocompleteWrapper}>
+                <input className={styles.editInput} value={formNewCareer}
+                  onChange={(e) => { setFormNewCareer(e.target.value); setShowCareerSuggestions(true); }}
+                  onFocus={() => setShowCareerSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowCareerSuggestions(false), 200)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCareer(); } }}
+                  placeholder="Agregar carrera..." />
+                {showCareerSuggestions && filteredCareerOptions.length > 0 && (
+                  <div className={styles.autocompleteList}>
+                    {filteredCareerOptions.map((opt) => (
+                      <button
+                        type="button"
+                        key={opt}
+                        className={styles.autocompleteOption}
+                        onMouseDown={(e) => { e.preventDefault(); setFormNewCareer(opt); setShowCareerSuggestions(false); }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button type="button" className={styles.editCareerAddBtn} onClick={addCareer}>
                 <Plus size={16} />
               </button>

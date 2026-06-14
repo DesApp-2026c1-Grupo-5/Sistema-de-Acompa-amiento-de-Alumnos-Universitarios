@@ -366,6 +366,62 @@
   flex: 1;
 }
 
+.autocompleteWrapper {
+  flex: 1;
+  position: relative;
+}
+
+.autocompleteList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.autocompleteOption {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #020617;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.autocompleteOption:hover {
+  background: rgba(0, 188, 212, 0.1);
+  color: #00bcd4;
+}
+
+:global(html.dark) .autocompleteList {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(html.dark) .autocompleteOption {
+  color: #ffffff;
+}
+
+:global(html.dark) .autocompleteOption:hover {
+  background: rgba(0, 188, 212, 0.2);
+  color: #00cfe8;
+}
+
 .editCareerAddBtn {
   width: 42px;
   height: 42px;
