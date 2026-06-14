@@ -55,12 +55,19 @@ const crearAdmin = async (req, res) => {
 };
 
 const obtenerAdmins = async (req, res) => {
-  const admins = await administrador.findAll({
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await administrador.findAndCountAll({
     include: { model: usuario, attributes: ["email"] },
     order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+    distinct: true,
   });
 
-  const data = admins.map((a) => {
+  const data = rows.map((a) => {
     const plain = a.get({ plain: true });
     return {
       id: plain.id,
@@ -71,7 +78,16 @@ const obtenerAdmins = async (req, res) => {
     };
   });
 
-  return res.json({ ok: true, data });
+  return res.json({
+    ok: true,
+    data,
+    pagination: {
+      page,
+      limit,
+      total: count,
+      totalPages: Math.ceil(count / limit),
+    },
+  });
 };
 
 const getHomeStats = async (req, res) => {
