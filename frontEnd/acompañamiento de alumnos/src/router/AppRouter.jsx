@@ -16,6 +16,7 @@ import StudySessions from '../pages/student/StudySessions';
 import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
 import HomeAdmin from '../pages/admin/Home/HomeAdmin';
 import Careers from '../pages/admin/Careers';
+import CareerEdit from '../pages/admin/CareerEdit';
 import StudyPlan from '../pages/admin/StudyPlan';
 import Admins from '../pages/admin/Admins';
 import Statistics from '../pages/admin/Statistics';
@@ -104,6 +105,10 @@ const router = createBrowserRouter([
           {
             path: '/admin/careers',
             element: <Careers />,
+          },
+          {
+            path: '/admin/careers/:careerId/edit',
+            element: <CareerEdit />,
           },
           {
             path: '/admin/study-plan/:id?',

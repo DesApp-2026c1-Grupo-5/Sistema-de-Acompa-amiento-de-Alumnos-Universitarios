@@ -11,6 +11,8 @@ import {
   Users,
   Edit,
   Trash2,
+  Globe,
+  Lock,
 } from "lucide-react";
 
 import Modal from "../../components/common/Modal";
@@ -488,6 +490,10 @@ function StudySessions() {
                     <span className={`${styles.statusBadge} ${getStatusClass(session)}`}>
                       {getStatusText(session)}
                     </span>
+                    <span className={styles.privacyBadge}>
+                      {session.privacy === 'public' ? <Globe size={14} /> : <Lock size={14} />}
+                      {session.privacy === 'public' ? 'Pública' : 'Privada'}
+                    </span>
                   </h3>
 
                   <p>{session.topic}</p>
@@ -585,6 +591,11 @@ function StudySessions() {
                     <span>
                       <Users size={16} />
                       {session.participantsCount}/{session.maxParticipants ?? "∞"} participantes
+                    </span>
+
+                    <span className={styles.privacyMeta}>
+                      {session.privacy === 'public' ? <Globe size={16} /> : <Lock size={16} />}
+                      {session.privacy === 'public' ? 'Pública' : 'Privada'}
                     </span>
                   </div>
 
