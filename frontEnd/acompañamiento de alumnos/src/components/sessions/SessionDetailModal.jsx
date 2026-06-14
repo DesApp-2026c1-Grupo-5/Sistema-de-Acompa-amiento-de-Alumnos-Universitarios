@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload, Trash2 } from 'lucide-react';
+import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload, Trash2, Globe, Lock } from 'lucide-react';
 import Modal from '../common/Modal';
 import Avatar from '../common/Avatar';
 import styles from '../../pages/student/StudySessions.module.css';
@@ -162,6 +162,16 @@ function SessionDetailModal({
                 <span className={styles.detailLabel}>Participantes</span>
                 <span className={styles.detailValue}>
                   {session.participantsCount}/{session.maxParticipants ?? '∞'}
+                </span>
+              </div>
+            </div>
+
+            <div className={styles.detailRow}>
+              {session.privacy === 'public' ? <Globe size={18} /> : <Lock size={18} />}
+              <div className={styles.detailRowText}>
+                <span className={styles.detailLabel}>Privacidad</span>
+                <span className={styles.detailValue}>
+                  {session.privacy === 'public' ? 'Pública' : 'Privada'}
                 </span>
               </div>
             </div>

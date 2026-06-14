@@ -517,6 +517,30 @@
   color: #d97706;
 }
 
+.privacyBadge {
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #526987;
+  vertical-align: middle;
+}
+
+.privacyMeta {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  color: #526987;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.privacyMeta svg {
+  color: #526987;
+}
+
 .cardMeta {
   margin-top: 23px;
   padding-bottom: 14px;
