@@ -1,4 +1,4 @@
-import { MapPin, Users, Globe, SquarePen, Mail, Lock, Camera, Trash2, Phone, Cake, X, Plus, BookOpen, CheckCircle2, TrendingUp } from 'lucide-react';
+import { MapPin, Users, Globe, SquarePen, Mail, Lock, Camera, Trash2, Phone, Cake, X, Plus, BookOpen, CheckCircle2, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
@@ -37,6 +37,10 @@ function ProfileHeader({
   const isPublic = privacidad === 'publico';
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [emailVisible, setEmailVisible] = useState(() => {
+    const stored = localStorage.getItem('emailVisible');
+    return stored !== null ? stored === 'true' : true;
+  });
   const fotoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
 
@@ -56,6 +60,7 @@ function ProfileHeader({
           !formCareers.includes(opt)
       )
     : CAREER_OPTIONS.filter((opt) => !formCareers.includes(opt));
+
   const [formAutoPublish, setFormAutoPublish] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('autoPublishPrefs') || '{"enrollment":true,"regular":true,"approved":true}');
@@ -65,6 +70,14 @@ function ProfileHeader({
   useEffect(() => {
     localStorage.setItem('autoPublishPrefs', JSON.stringify(formAutoPublish));
   }, [formAutoPublish]);
+
+  const toggleEmailVisibility = () => {
+    setEmailVisible((prev) => {
+      const next = !prev;
+      localStorage.setItem('emailVisible', next);
+      return next;
+    });
+  };
 
   const openModal = () => {
     setFormName(name || '');
@@ -232,7 +245,17 @@ function ProfileHeader({
           <Mail className={styles.detailIcon} />
           <div>
             <span className={styles.detailLabel}>Email</span>
-            <span className={styles.detailValue}>{email}</span>
+            <span className={styles.detailValue}>
+              {emailVisible ? email : 'Oculto'}
+              <button
+                type="button"
+                className={styles.eyeButton}
+                onClick={toggleEmailVisibility}
+                title={emailVisible ? 'Ocultar email' : 'Mostrar email'}
+              >
+                {emailVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </span>
           </div>
         </div>
 
