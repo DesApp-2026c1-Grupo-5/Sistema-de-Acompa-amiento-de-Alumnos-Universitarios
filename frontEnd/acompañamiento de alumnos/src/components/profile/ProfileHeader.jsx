@@ -1,4 +1,4 @@
-import { MapPin, Users, Globe, SquarePen, Mail, Lock, Camera, Trash2 } from 'lucide-react';
+import { MapPin, Users, Globe, SquarePen, Mail, Lock, Camera, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useState, useRef } from 'react';
 import FormModal from '../common/FormModal';
 import Avatar from '../common/Avatar';
@@ -17,8 +17,20 @@ function ProfileHeader({
   const isPublic = privacidad === 'publico';
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [emailVisible, setEmailVisible] = useState(() => {
+    const stored = localStorage.getItem('emailVisible');
+    return stored !== null ? stored === 'true' : true;
+  });
   const fotoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
+
+  const toggleEmailVisibility = () => {
+    setEmailVisible((prev) => {
+      const next = !prev;
+      localStorage.setItem('emailVisible', next);
+      return next;
+    });
+  };
 
   const handleFotoChange = (e) => {
     const file = e.target.files?.[0];
@@ -187,7 +199,17 @@ function ProfileHeader({
           <Mail className={styles.detailIcon} />
           <div>
             <span className={styles.detailLabel}>Email</span>
-            <span className={styles.detailValue}>{email}</span>
+            <span className={styles.detailValue}>
+              {emailVisible ? email : 'Oculto'}
+              <button
+                type="button"
+                className={styles.eyeButton}
+                onClick={toggleEmailVisibility}
+                title={emailVisible ? 'Ocultar email' : 'Mostrar email'}
+              >
+                {emailVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </span>
           </div>
         </div>
 
