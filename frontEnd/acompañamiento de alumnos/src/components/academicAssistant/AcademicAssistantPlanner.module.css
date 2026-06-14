@@ -68,6 +68,12 @@
   flex-wrap: wrap;
 }
 
+.planActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .dragHint {
   margin: 0;
   font-size: 14px;
@@ -576,4 +582,43 @@
   .subjectName {
     flex: 0 0 100%;
   }
+}
+
+.toggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.toggleCheckbox {
+  display: none;
+}
+
+.toggleVisual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  transition: all 0.18s ease;
+}
+
+.toggleCheckbox:checked + .toggleVisual {
+  background: #08b7c8;
+  border-color: #08b7c8;
+  color: #ffffff;
+}
+
+.toggleLabel:hover .toggleVisual {
+  border-color: var(--accent);
 }
