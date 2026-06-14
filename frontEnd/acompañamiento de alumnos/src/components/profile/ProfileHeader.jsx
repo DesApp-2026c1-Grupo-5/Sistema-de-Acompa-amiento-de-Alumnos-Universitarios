@@ -93,7 +93,7 @@ function ProfileHeader({
   };
 
   const handleSubmit = () => {
-    const careers = formCareers.length > 0 ? formCareers : (career ? [career] : []);
+    const careers = formCareers;
     localStorage.setItem('profileCareers', JSON.stringify(careers));
     localStorage.setItem('profileExtraData', JSON.stringify({ phone: formPhone, birthDate: formBirthDate }));
 
