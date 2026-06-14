@@ -61,7 +61,9 @@ function AcademicAssistant() {
         inProgressIds={academicData.studentStatus.inProgressIds}
       />
 
-      <AcademicAssistantPlanner />
+      <AcademicAssistantPlanner
+        approvedIds={academicData.studentStatus?.approvedIds ?? []}
+      />
 
       <AcademicAssistantRecommendations />
     </div>
