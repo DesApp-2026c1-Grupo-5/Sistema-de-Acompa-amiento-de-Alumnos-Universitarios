@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Eye, EyeOff, Trash2 } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import ModalConfirmation from '../../components/common/ModalConfirmation';
+import Pagination from '../../components/common/Pagination';
 import { getAdmins, createAdmin } from '../../services/adminService';
 import styles from './Admins.module.css';
+
+const PAGE_SIZE = 5;
 
 function Admins() {
   const [admins, setAdmins] = useState([]);
@@ -15,6 +18,8 @@ function Admins() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -23,16 +28,30 @@ function Admins() {
     password: ''
   });
 
-  useEffect(() => {
-    getAdmins()
-      .then((res) => {
-        setAdmins(res.data ?? []);
-      })
-      .catch((err) => {
-        setLoadError(err.message || 'No pudimos cargar los administradores.');
-      })
-      .finally(() => setLoading(false));
+  const fetchPage = useCallback((p) => {
+    return getAdmins({ page: p, limit: PAGE_SIZE }).then((res) => {
+      setAdmins(res.data ?? []);
+      setTotalPages(res.pagination?.totalPages ?? 1);
+    });
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      setLoading(true);
+      try {
+        await fetchPage(page);
+      } catch (err) {
+        if (active) setLoadError(err.message || 'No pudimos cargar los administradores.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      active = false;
+    };
+  }, [page, fetchPage]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -51,14 +70,19 @@ function Admins() {
   const handleConfirmCreate = async () => {
     setFormError('');
     try {
-      const res = await createAdmin(
+      await createAdmin(
         formData.name,
         formData.lastname,
         formData.email,
         formData.password
       );
 
-      setAdmins((prev) => [res.data, ...prev]);
+      // el nuevo admin es el más reciente (orden createdAt DESC) → mostrar página 1
+      if (page === 1) {
+        await fetchPage(1);
+      } else {
+        setPage(1);
+      }
 
       setFormData({
         name: '',
@@ -266,6 +290,12 @@ function Admins() {
                   ))}
                 </tbody>
               </table>
+
+              {totalPages > 1 && (
+                <div className={styles.paginationSection}>
+                  <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+                </div>
+              )}
             </div>
           )}
 </div>

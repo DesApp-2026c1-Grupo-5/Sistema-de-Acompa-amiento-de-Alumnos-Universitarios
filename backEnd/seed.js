@@ -115,6 +115,34 @@ async function seed() {
     { returning: true }
   );
 
+  // Admins extra para probar paginación (15 en total → 2 páginas a 10/pág)
+  const adminsExtraNombres = [
+    ["Carla", "Domínguez"], ["Martín", "Suárez"], ["Paula", "Ibáñez"],
+    ["Nicolás", "Ferreyra"], ["Lucía", "Morales"], ["Ramiro", "Ávila"],
+    ["Florencia", "Quiroga"], ["Gonzalo", "Herrera"], ["Camila", "Navarro"],
+    ["Federico", "Ojeda"], ["Agustina", "Ponce"], ["Hernán", "Rivas"],
+    ["Mariana", "Cabrera"], ["Iván", "Luna"],
+  ];
+  const adminUsuarios = await db.usuario.bulkCreate(
+    adminsExtraNombres.map((_, i) => ({
+      email: `admin${i + 2}@demo.com`,
+      password_hash: devPasswordHash,
+      tipo: "administrador",
+      activo: true,
+    })),
+    { returning: true }
+  );
+  await db.administrador.bulkCreate(
+    adminUsuarios.map((u, i) => ({
+      usuario_id: u.id,
+      nombre: adminsExtraNombres[i][0],
+      apellido: adminsExtraNombres[i][1],
+      creado_por: admin1.id,
+      createdAt: monthsAgo(i % 6, ((i * 3) % 27) + 1),
+      updatedAt: new Date(),
+    }))
+  );
+
   const estudiantes = await db.estudiante.bulkCreate(
     [
       { usuario_id: uFacu.id,  nombre: "Facundo",  apellido: "Torres",   privacidad: "publico",   pub_inscripciones: true,  pub_regularizaciones: true,  pub_aprobaciones: true,  bio: "Estudiante de TPI. Me interesa el desarrollo web." },
@@ -484,6 +512,21 @@ async function seed() {
       { creador_id: estSofia.id, materia_id: matWeb.id,  tema: "Componentes en React",        tipo: "virtual",    link_ubicacion: "https://meet.x/web",   fecha_hora: monthsAhead(1, 12), duracion_minutos: 90, cupos_max: 8, descripcion: "Hooks y estado",           requiere_aprobacion: false, cancelada: false },
       { creador_id: estJulia.id, materia_id: matIA.id,   tema: "Intro a redes neuronales",    tipo: "virtual",    link_ubicacion: "https://meet.x/ia",    fecha_hora: monthsAhead(1, 20), duracion_minutos: 120, cupos_max: 6, descripcion: "Backprop básico",         requiere_aprobacion: false, cancelada: false },
       { creador_id: estDiego.id, materia_id: matRedes.id,tema: "Práctica subnetting",         tipo: "presencial", link_ubicacion: "Aula D01",             fecha_hora: monthsAhead(2, 3),  duracion_minutos: 90, cupos_max: 5, descripcion: "Ejercicios IPv4",          requiere_aprobacion: true,  cancelada: false },
+      // Sesiones futuras extra para probar paginación de "disponibles" (creadores ≠ Facu, con cupo)
+      { creador_id: estSofia.id, materia_id: matAlgo.id,  tema: "Repaso recursión",            tipo: "virtual",    link_ubicacion: "https://meet.x/algo2",  fecha_hora: monthsAhead(1, 3),  duracion_minutos: 90,  cupos_max: 6, descripcion: "Ejercicios de recursión",  requiere_aprobacion: false, cancelada: false },
+      { creador_id: estMateo.id, materia_id: matMat1.id,  tema: "Integrales paso a paso",      tipo: "presencial", link_ubicacion: "Aula A05",              fecha_hora: monthsAhead(1, 7),  duracion_minutos: 60,  cupos_max: 5, descripcion: "Práctica de integrales",   requiere_aprobacion: false, cancelada: false },
+      { creador_id: estLara.id,  materia_id: matProg1.id, tema: "Intro a punteros",            tipo: "virtual",    link_ubicacion: "https://meet.x/prog1",  fecha_hora: monthsAhead(1, 9),  duracion_minutos: 90,  cupos_max: 8, descripcion: "Memoria y punteros",       requiere_aprobacion: false, cancelada: false },
+      { creador_id: estJulia.id, materia_id: matBD.id,    tema: "Modelado entidad-relación",   tipo: "virtual",    link_ubicacion: "https://meet.x/bd2",    fecha_hora: monthsAhead(1, 14), duracion_minutos: 120, cupos_max: 6, descripcion: "DER y pasaje a tablas",    requiere_aprobacion: false, cancelada: false },
+      { creador_id: estValen.id, materia_id: matPOO.id,   tema: "Polimorfismo en Java",        tipo: "virtual",    link_ubicacion: "https://meet.x/poo3",   fecha_hora: monthsAhead(1, 18), duracion_minutos: 90,  cupos_max: 7, descripcion: "Interfaces y abstractas",  requiere_aprobacion: false, cancelada: false },
+      { creador_id: estTomas.id, materia_id: matAlgo2.id, tema: "Grafos básicos",              tipo: "presencial", link_ubicacion: "Aula B12",              fecha_hora: monthsAhead(1, 22), duracion_minutos: 90,  cupos_max: 5, descripcion: "BFS y DFS",                requiere_aprobacion: true,  cancelada: false },
+      { creador_id: estAna.id,   materia_id: matSO.id,    tema: "Sincronización de procesos",  tipo: "virtual",    link_ubicacion: "https://meet.x/so2",    fecha_hora: monthsAhead(2, 1),  duracion_minutos: 90,  cupos_max: 6, descripcion: "Semáforos y deadlocks",    requiere_aprobacion: false, cancelada: false },
+      { creador_id: estDiego.id, materia_id: matArq.id,   tema: "Ensamblador intro",           tipo: "virtual",    link_ubicacion: "https://meet.x/arq",    fecha_hora: monthsAhead(2, 6),  duracion_minutos: 120, cupos_max: 8, descripcion: "Registros e instrucciones",requiere_aprobacion: false, cancelada: false },
+      { creador_id: estSofia.id, materia_id: matWeb.id,   tema: "Routing en React",            tipo: "virtual",    link_ubicacion: "https://meet.x/web2",   fecha_hora: monthsAhead(2, 10), duracion_minutos: 90,  cupos_max: 8, descripcion: "React Router v7",          requiere_aprobacion: false, cancelada: false },
+      { creador_id: estJulia.id, materia_id: matIA.id,    tema: "Árboles de decisión",         tipo: "virtual",    link_ubicacion: "https://meet.x/ia2",    fecha_hora: monthsAhead(2, 15), duracion_minutos: 120, cupos_max: 6, descripcion: "Entropía y ganancia",      requiere_aprobacion: false, cancelada: false },
+      { creador_id: estMateo.id, materia_id: matIng.id,   tema: "Reading técnico",             tipo: "presencial", link_ubicacion: "Aula A02",              fecha_hora: monthsAhead(2, 19), duracion_minutos: 60,  cupos_max: 10,descripcion: "Comprensión de papers",    requiere_aprobacion: false, cancelada: false },
+      { creador_id: estValen.id, materia_id: matRedes.id, tema: "Modelo OSI repaso",           tipo: "virtual",    link_ubicacion: "https://meet.x/red2",   fecha_hora: monthsAhead(2, 24), duracion_minutos: 90,  cupos_max: 7, descripcion: "Capas y protocolos",       requiere_aprobacion: false, cancelada: false },
+      { creador_id: estLara.id,  materia_id: matBD.id,    tema: "Optimización de consultas",   tipo: "virtual",    link_ubicacion: "https://meet.x/bd3",    fecha_hora: monthsAhead(3, 2),  duracion_minutos: 90,  cupos_max: 6, descripcion: "Índices y EXPLAIN",        requiere_aprobacion: false, cancelada: false },
+      { creador_id: estAna.id,   materia_id: matAlgo.id,  tema: "Complejidad algorítmica",     tipo: "presencial", link_ubicacion: "Aula C08",              fecha_hora: monthsAhead(3, 8),  duracion_minutos: 90,  cupos_max: 5, descripcion: "Notación Big-O",           requiere_aprobacion: true,  cancelada: false },
     ],
     { returning: true }
   );
