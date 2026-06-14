@@ -51,6 +51,36 @@ const inscribirse = async (sesionId, usuarioId) => {
     throw buildError("Ya tiene una inscripcion activa en esta sesion", 409);
   }
 
+  // No permitir solaparse con otra inscripcion activa/pendiente en el mismo rango horario
+  const inicioNueva = new Date(sesion.fecha_hora).getTime();
+  const otrasInscripciones = await inscripcion_sesion.findAll({
+    where: {
+      estudiante_id: estudianteData.id,
+      estado: ["pendiente", ...ESTADOS_ACTIVOS],
+    },
+    include: [
+      {
+        model: sesion_estudio,
+        attributes: ["id", "tema", "fecha_hora", "duracion_minutos", "cancelada"],
+      },
+    ],
+  });
+
+  const haySolapamiento = otrasInscripciones.some((i) => {
+    const s = i.sesion_estudio;
+    if (!s || s.id === sesion.id || s.cancelada || !s.fecha_hora) return false;
+    const inicio = new Date(s.fecha_hora).getTime();
+    const finOtra = inicio + (s.duracion_minutos || 0) * 60 * 1000;
+    return inicioNueva < finOtra && inicio < fin;
+  });
+
+  if (haySolapamiento) {
+    throw buildError(
+      "Ya tenés una inscripción en otra sesión que se superpone en ese horario",
+      409
+    );
+  }
+
   const activos = await contarParticipantesActivos(sesionId);
   if (sesion.cupos_max && activos >= sesion.cupos_max) {
     throw buildError("No hay cupos disponibles", 400);
