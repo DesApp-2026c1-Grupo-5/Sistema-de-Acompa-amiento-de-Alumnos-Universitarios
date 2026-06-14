@@ -108,8 +108,7 @@ function HomeStudent() {
             const da = new Date(`${a.date}T${a.time || '00:00'}:00`).getTime();
             const db = new Date(`${b.date}T${b.time || '00:00'}:00`).getTime();
             return da - db;
-          })
-          .slice(0, 5);
+          });
         setMySessions(mias);
       })
       .catch((err) => setSessionsError(err.message || 'No pudimos cargar tus sesiones.'))

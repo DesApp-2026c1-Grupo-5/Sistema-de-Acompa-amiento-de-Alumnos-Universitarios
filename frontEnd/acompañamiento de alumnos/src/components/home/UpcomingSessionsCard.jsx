@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import Card from '../common/Card';
 import EmptyState from '../common/EmptyState';
+import Pagination from '../common/Pagination';
 import styles from './UpcomingSessionsCard.module.css';
 
 const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const PAGE_SIZE = 3;
 
 function formatShortDate(isoDate) {
   if (!isoDate) return '';
@@ -46,6 +49,11 @@ function SessionItem({ session, onViewDetails }) {
 
 function UpcomingSessionsCard({ sessions, onViewDetails, loading = false, error = null }) {
   const hasSessions = sessions && sessions.length > 0;
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil((sessions?.length ?? 0) / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = (sessions ?? []).slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const renderBody = () => {
     if (loading) {
@@ -63,15 +71,23 @@ function UpcomingSessionsCard({ sessions, onViewDetails, loading = false, error 
 
     if (hasSessions) {
       return (
-        <ul className={styles.list}>
-          {sessions.map((session) => (
-            <SessionItem
-              key={session.id}
-              session={session}
-              onViewDetails={onViewDetails}
-            />
-          ))}
-        </ul>
+        <>
+          <ul className={styles.list}>
+            {paged.map((session) => (
+              <SessionItem
+                key={session.id}
+                session={session}
+                onViewDetails={onViewDetails}
+              />
+            ))}
+          </ul>
+
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
+            </div>
+          )}
+        </>
       );
     }
 
