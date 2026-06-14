@@ -154,7 +154,45 @@ const crearCarrera = async (req, res, next) => {
   }
 };
 
+const actualizarCarrera = async (req, res, next) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return next(buildError("id de carrera inválido", 400));
+  }
+
+  const { nombre, titulo, instituto, duracion_anios } = req.body;
+
+  try {
+    const existente = await carrera.findByPk(id);
+    if (!existente) {
+      return next(buildError("Carrera no encontrada", 404));
+    }
+
+    await existente.update({
+      nombre: nombre ?? existente.nombre,
+      titulo: titulo ?? existente.titulo,
+      instituto: instituto ?? existente.instituto,
+      duracion_anios: duracion_anios ?? existente.duracion_anios,
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        id: existente.id,
+        nombre: existente.nombre,
+        titulo: existente.titulo,
+        instituto: existente.instituto,
+        duracion_anios: existente.duracion_anios,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   listarCarreras,
   crearCarrera,
+  actualizarCarrera,
 };

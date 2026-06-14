@@ -95,6 +95,78 @@ const obtenerPlan = async (req, res, next) => {
   });
 };
 
+const crearPlan = async (req, res, next) => {
+  const carreraId = Number(req.params.carreraId);
+
+  if (!Number.isInteger(carreraId) || carreraId <= 0) {
+    return next(buildError("id de carrera inválido", 400));
+  }
+
+  const { anio, estado, creditos_requeridos, niveles_ingles_requeridos } = req.body;
+
+  try {
+    const carreraExistente = await carrera.findByPk(carreraId);
+    if (!carreraExistente) {
+      return next(buildError("Carrera no encontrada", 404));
+    }
+
+    const nuevoPlan = await plan_estudio.create({
+      carrera_id: carreraId,
+      nombre: `${carreraExistente.nombre} ${anio}`,
+      anio,
+      estado: estado || "vigente",
+      creditos_requeridos,
+      niveles_ingles_requeridos,
+    });
+
+    return res.status(201).json({
+      ok: true,
+      data: {
+        id: nuevoPlan.id,
+        anio: nuevoPlan.anio,
+        estado: nuevoPlan.estado,
+        creditos_requeridos: nuevoPlan.creditos_requeridos,
+        niveles_ingles_requeridos: nuevoPlan.niveles_ingles_requeridos,
+        carrera_id: nuevoPlan.carrera_id,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+const actualizarPlan = async (req, res, next) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return next(buildError("id de plan inválido", 400));
+  }
+
+  const { estado } = req.body;
+
+  try {
+    const existente = await plan_estudio.findByPk(id);
+    if (!existente) {
+      return next(buildError("Plan de estudio no encontrado", 404));
+    }
+
+    await existente.update({ estado: estado ?? existente.estado });
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        id: existente.id,
+        anio: existente.anio,
+        estado: existente.estado,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   obtenerPlan,
+  crearPlan,
+  actualizarPlan,
 };
