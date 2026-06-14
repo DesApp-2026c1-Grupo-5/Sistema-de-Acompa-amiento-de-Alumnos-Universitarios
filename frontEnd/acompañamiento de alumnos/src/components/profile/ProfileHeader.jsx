@@ -7,7 +7,6 @@ import Avatar from '../common/Avatar';
 import styles from './ProfileHeader.module.css';
 
 const CAREER_OPTIONS = [
-  'Carrera no definida',
   'Ingeniería en Sistemas',
   'Licenciatura en Administración',
   'Medicina',
@@ -191,7 +190,9 @@ function ProfileHeader({
         <div className={styles.topSection}>
           <div className={styles.info}>
             <h1 className={styles.name}>{name}</h1>
-            <p className={styles.career}>{career}</p>
+            {career && career !== 'Carrera no definida' && (
+              <p className={styles.career}>{career}</p>
+            )}
 
             <p className={styles.metaRow}>
               {location && (
