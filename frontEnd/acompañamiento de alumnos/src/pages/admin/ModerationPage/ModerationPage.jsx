@@ -6,7 +6,6 @@ import {
     Link as LinkIcon,
     Video,
     MessageSquare,
-    CheckCircle2,
     XCircle,
     Ban,
     AlertTriangle,
@@ -26,13 +25,11 @@ import styles from './ModerationPage.module.css';
 const SEVERIDAD_LABEL = { alta: 'Alta', media: 'Media', baja: 'Baja' };
 const ESTADO_LABEL = {
     pendiente: 'Pendiente',
-    verificada: 'Verificada',
     rechazada: 'Rechazada',
     suspendido: 'Suspendido',
 };
 const COMPLAINT_ESTADO_LABEL = {
     pendiente: 'Pendiente',
-    verificada: 'Verificada',
     rechazada: 'Rechazada',
 };
 
@@ -202,12 +199,10 @@ function ModerationPage() {
     const getStatusBadgeClass = (estado) => {
         if (estado === 'suspendido') return styles.statusSuspended;
         if (estado === 'rechazada') return styles.statusRejected;
-        if (estado === 'verificada') return styles.statusVerified;
         return styles.statusPending;
     };
 
     const getComplaintStatusClass = (estado) => {
-        if (estado === 'verificada') return styles.complaintVerified;
         if (estado === 'rechazada') return styles.complaintRejected;
         return styles.complaintPending;
     };
@@ -270,7 +265,6 @@ function ModerationPage() {
                 >
                     <option value="todos">Todos los estados</option>
                     <option value="pendiente">Pendiente</option>
-                    <option value="verificada">Verificada</option>
                     <option value="rechazada">Rechazada</option>
                     <option value="suspendido">Suspendido</option>
                 </select>
@@ -405,15 +399,6 @@ function ModerationPage() {
                         </div>
 
                         <div className={styles.actions}>
-                            <button
-                                type="button"
-                                className={styles.confirmButton}
-                                disabled
-                                title="Funcionalidad no disponible aún"
-                            >
-                                <CheckCircle2 size={16} />
-                                Posponer 7 días
-                            </button>
 
                             <button
                                 type="button"

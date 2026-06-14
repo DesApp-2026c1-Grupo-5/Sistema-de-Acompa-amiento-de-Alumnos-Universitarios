@@ -28,10 +28,10 @@ const computeSeveridad = (cantidad) => {
 
 const computeEstadoResumen = (suspendido, denuncias) => {
   if (suspendido) return "suspendido";
+
   const pendientes = denuncias.filter((d) => d.estado === "pendiente").length;
   if (pendientes > 0) return "pendiente";
-  const verificadas = denuncias.filter((d) => d.estado === "verificada").length;
-  if (verificadas > 0) return "verificada";
+
   return "rechazada";
 };
 
@@ -108,10 +108,10 @@ const listarDenuncias = async (req, res) => {
       },
       uploader: plain.estudiante
         ? {
-            id: plain.estudiante.id,
-            nombre: plain.estudiante.nombre,
-            apellido: plain.estudiante.apellido,
-          }
+          id: plain.estudiante.id,
+          nombre: plain.estudiante.nombre,
+          apellido: plain.estudiante.apellido,
+        }
         : null,
       cantidad_denuncias: cantidad,
       severidad: computeSeveridad(cantidad),
@@ -196,10 +196,10 @@ const obtenerDetalle = async (req, res, next) => {
       },
       uploader: plain.estudiante
         ? {
-            id: plain.estudiante.id,
-            nombre: plain.estudiante.nombre,
-            apellido: plain.estudiante.apellido,
-          }
+          id: plain.estudiante.id,
+          nombre: plain.estudiante.nombre,
+          apellido: plain.estudiante.apellido,
+        }
         : null,
       cantidad_denuncias: denuncias.length,
       estado_resumen: computeEstadoResumen(plain.suspendido, denuncias),
@@ -214,10 +214,10 @@ const obtenerDetalle = async (req, res, next) => {
         fecha_resolucion: d.fecha_resolucion,
         denunciante: d.denunciante
           ? {
-              id: d.denunciante.id,
-              nombre: d.denunciante.nombre,
-              apellido: d.denunciante.apellido,
-            }
+            id: d.denunciante.id,
+            nombre: d.denunciante.nombre,
+            apellido: d.denunciante.apellido,
+          }
           : null,
       })),
     },
@@ -431,7 +431,24 @@ const restaurarMaterial = async (req, res, next) => {
     return next(buildError("El material no esta suspendido", 400));
   }
 
-  await mat.update({ suspendido: false });
+  await sequelize.transaction(async (t) => {
+    await mat.update(
+      { suspendido: false },
+      { transaction: t }
+    );
+
+    await denuncia.update(
+      {
+        estado: "pendiente",
+        fecha_resolucion: null,
+        admin_revisor_id: null,
+      },
+      {
+        where: { material_id: materialId },
+        transaction: t,
+      }
+    );
+  });
 
   const uploaderEmail = mat.estudiante?.usuario?.email;
 
