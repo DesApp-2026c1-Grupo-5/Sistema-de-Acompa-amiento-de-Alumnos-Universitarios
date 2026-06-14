@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import Card from '../common/Card';
 import ErrorState from '../common/ErrorState';
 import { getCareerSubjects } from '../../services/plannerService';
 import styles from './AcademicAssistantPlanner.module.css';
 
-function AcademicAssistantPlanner() {
+function AcademicAssistantPlanner({ approvedIds = [] }) {
   const [classHours, setClassHours] = useState(20);
   const [extraCap, setExtraCap] = useState(10);
   const [plan, setPlan] = useState([]);
@@ -15,14 +15,22 @@ function AcademicAssistantPlanner() {
   const [editingLabel, setEditingLabel] = useState(null);
   const [labelDraft, setLabelDraft] = useState('');
   const [expandedCorr, setExpandedCorr] = useState({});
+  const [hideApproved, setHideApproved] = useState(false);
   const dragSource = useRef(null);
   const labelInputRef = useRef(null);
+
+  const approvedSet = useMemo(() => new Set(approvedIds), [approvedIds]);
 
   const subjectNameMap = useMemo(() => {
     const map = {};
     for (const s of allSubjects) map[s.id] = s.name;
     return map;
   }, [allSubjects]);
+
+  function filterSubjects(subjects) {
+    if (!hideApproved || approvedSet.size === 0) return subjects;
+    return subjects.filter((s) => !approvedSet.has(s.id));
+  }
 
   function buildDefaultPlan(subjects) {
     const groups = {};
@@ -59,8 +67,17 @@ function AcademicAssistantPlanner() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleToggleHide = (checked) => {
+    setHideApproved(checked);
+    if (allSubjects.length === 0) return;
+    const filtered = checked && approvedSet.size > 0
+      ? allSubjects.filter((s) => !approvedSet.has(s.id))
+      : allSubjects;
+    setPlan(buildDefaultPlan(filtered));
+  };
+
   const handleGenerate = () => {
-    const remaining = [...allSubjects];
+    const remaining = filterSubjects([...allSubjects]);
 
     const newPlan = [];
     let yearCursor = 1;
@@ -96,7 +113,9 @@ function AcademicAssistantPlanner() {
 
       for (let i = 0; i < remaining.length; i++) {
         const s = remaining[i];
-        const met = s.correlatives.length === 0 || s.correlatives.every((cId) => earlierIds.has(cId));
+        const met = s.correlatives.length === 0 || s.correlatives.every(
+          (cId) => earlierIds.has(cId) || approvedSet.has(cId)
+        );
 
         if (!met) continue;
 
@@ -307,10 +326,26 @@ function AcademicAssistantPlanner() {
 
         <div className={styles.planHeader}>
           <p className={styles.dragHint}>Arrastrá las materias para reorganizar tu plan</p>
-          <button className={styles.saveButton} onClick={() => console.log('Plan guardado:', plan)}>
-            <Save size={16} />
-            Guardar plan
-          </button>
+          <div className={styles.planActions}>
+            {approvedIds.length > 0 && (
+              <label className={styles.toggleLabel}>
+                <input
+                  type="checkbox"
+                  className={styles.toggleCheckbox}
+                  checked={hideApproved}
+                  onChange={(e) => handleToggleHide(e.target.checked)}
+                />
+                <span className={styles.toggleVisual}>
+                  {hideApproved ? <EyeOff size={14} /> : <Eye size={14} />}
+                </span>
+                Ocultar aprobadas
+              </label>
+            )}
+            <button className={styles.saveButton} onClick={() => console.log('Plan guardado:', plan)}>
+              <Save size={16} />
+              Guardar plan
+            </button>
+          </div>
         </div>
 
         <div className={styles.summary}>
@@ -383,7 +418,9 @@ function AcademicAssistantPlanner() {
                       for (let g = 0; g < groupIndex; g++) {
                         for (const s of plan[g].subjects) earlierIds.add(s.id);
                       }
-                      const corrUnmet = hasCorr && !subject.correlatives.every((cId) => earlierIds.has(cId));
+                      const corrUnmet = hasCorr && !subject.correlatives.every(
+                        (cId) => earlierIds.has(cId) || approvedSet.has(cId)
+                      );
 
                       return (
                         <div key={subject.id}>
