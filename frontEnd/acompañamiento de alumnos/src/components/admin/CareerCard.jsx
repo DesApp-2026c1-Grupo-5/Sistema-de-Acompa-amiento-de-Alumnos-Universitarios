@@ -19,15 +19,7 @@ function CareerCard({ career }) {
   };
 
   const handleEdit = () => {
-    const activePlan = career.plans.find(p => p.status === 'Vigente') || career.plans[0];
-    if (!activePlan) return;
-    navigate('/admin/study-plan', {
-      state: {
-        careerId: career.id,
-        planId: activePlan.id,
-        planYear: activePlan.year,
-      },
-    });
+    navigate(`/admin/careers/${career.id}/edit`);
   };
 
   return (
