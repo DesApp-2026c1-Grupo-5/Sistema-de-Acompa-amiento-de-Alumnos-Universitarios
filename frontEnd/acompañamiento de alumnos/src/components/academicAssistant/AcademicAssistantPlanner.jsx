@@ -113,7 +113,9 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
 
       for (let i = 0; i < remaining.length; i++) {
         const s = remaining[i];
-        const met = s.correlatives.length === 0 || s.correlatives.every((cId) => earlierIds.has(cId));
+        const met = s.correlatives.length === 0 || s.correlatives.every(
+          (cId) => earlierIds.has(cId) || approvedSet.has(cId)
+        );
 
         if (!met) continue;
 
@@ -416,7 +418,9 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
                       for (let g = 0; g < groupIndex; g++) {
                         for (const s of plan[g].subjects) earlierIds.add(s.id);
                       }
-                      const corrUnmet = hasCorr && !subject.correlatives.every((cId) => earlierIds.has(cId));
+                      const corrUnmet = hasCorr && !subject.correlatives.every(
+                        (cId) => earlierIds.has(cId) || approvedSet.has(cId)
+                      );
 
                       return (
                         <div key={subject.id}>
