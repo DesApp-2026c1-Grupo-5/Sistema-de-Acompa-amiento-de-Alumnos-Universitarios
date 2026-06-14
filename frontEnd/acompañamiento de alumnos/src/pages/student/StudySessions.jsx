@@ -40,6 +40,7 @@ import { mapSessionFromApi } from "./sessions/mapSession";
 import styles from "./StudySessions.module.css";
 
 const PAGE_SIZE = 12;
+const MY_PAGE_SIZE = 3;
 
 function StudySessions() {
   const [mine, setMine] = useState([]);
@@ -61,6 +62,7 @@ function StudySessions() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [activeMyTab, setActiveMyTab] = useState("created");
+  const [myPage, setMyPage] = useState(1);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -209,6 +211,13 @@ function StudySessions() {
       .filter((s) => s.userStatus === activeMyTab)
       .sort(sortByDateDesc);
   }, [mine, activeMyTab]);
+
+  const myTotalPages = Math.max(1, Math.ceil(mySessions.length / MY_PAGE_SIZE));
+  const safeMyPage = Math.min(myPage, myTotalPages);
+  const pagedMySessions = mySessions.slice(
+    (safeMyPage - 1) * MY_PAGE_SIZE,
+    safeMyPage * MY_PAGE_SIZE
+  );
 
   const openCreateForm = () => {
     setEditSession(null);
@@ -456,21 +465,21 @@ function StudySessions() {
           <div className={styles.tabs}>
             <button
               className={activeMyTab === "created" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("created")}
+              onClick={() => { setActiveMyTab("created"); setMyPage(1); }}
             >
               Creadas por mí
             </button>
 
             <button
               className={activeMyTab === "joined" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("joined")}
+              onClick={() => { setActiveMyTab("joined"); setMyPage(1); }}
             >
               Inscripto
             </button>
 
             <button
               className={activeMyTab === "pending" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("pending")}
+              onClick={() => { setActiveMyTab("pending"); setMyPage(1); }}
             >
               Pendientes
             </button>
@@ -482,7 +491,7 @@ function StudySessions() {
               description="Cuando tengas sesiones en esta categoría, aparecerán acá."
             />
           ) : (
-            mySessions.map((session) => (
+            pagedMySessions.map((session) => (
               <article className={styles.mySessionItem} key={session.id}>
                 <div>
                   <h3>
@@ -531,6 +540,12 @@ function StudySessions() {
                 </div>
               </article>
             ))
+          )}
+
+          {myTotalPages > 1 && (
+            <div className={styles.paginationSection}>
+              <Pagination page={safeMyPage} totalPages={myTotalPages} onChange={setMyPage} />
+            </div>
           )}
         </section>
 
