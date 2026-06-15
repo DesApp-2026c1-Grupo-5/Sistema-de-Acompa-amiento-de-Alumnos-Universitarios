@@ -4,6 +4,7 @@ import ProfileHeader from '../../components/profile/ProfileHeader';
 import ContactList from '../../components/profile/ContactList';
 import PendingRequests from '../../components/profile/PendingRequests';
 import PublicationsList from '../../components/profile/PublicationsList';
+import UserSearchModal from '../../components/profile/UserSearchModal';
 import ErrorState from '../../components/common/ErrorState';
 import {
   getMyProfile,
@@ -25,6 +26,7 @@ function Profile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
 
   const ownId = user?.estudiante?.id;
   const isOwnProfile = !userId || String(userId) === String(ownId);
@@ -176,7 +178,10 @@ function Profile() {
         onDeleteBanner={isOwnProfile ? handleDeleteBanner : null}
       />
 
-      <ContactList contacts={profile.contacts} />
+      <ContactList
+        contacts={profile.contacts}
+        onAddContact={isOwnProfile ? () => setSearchModalOpen(true) : null}
+      />
 
       {isOwnProfile && <PendingRequests requests={profile.pendingRequests} />}
 
@@ -193,6 +198,13 @@ function Profile() {
         onLike={(id) => handleVote(id, 'like')}
         onDislike={(id) => handleVote(id, 'dislike')}
       />
+
+      {isOwnProfile && (
+        <UserSearchModal
+          open={searchModalOpen}
+          onClose={() => setSearchModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

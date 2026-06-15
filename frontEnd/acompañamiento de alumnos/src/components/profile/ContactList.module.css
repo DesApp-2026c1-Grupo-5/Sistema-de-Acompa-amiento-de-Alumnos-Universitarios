@@ -78,3 +78,44 @@
 :global(html.dark) .empty {
   color: #94a3b8;
 }
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.addButton {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: #00a8ad;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.addButton:hover {
+  background: #00949a;
+  transform: translateY(-1px);
+}
+
+.addButton svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+:global(html.dark) .addButton {
+  background: #00a8ad;
+  color: #ffffff;
+}
+
+:global(html.dark) .addButton:hover {
+  background: #00949a;
+}

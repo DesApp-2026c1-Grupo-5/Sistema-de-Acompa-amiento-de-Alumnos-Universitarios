@@ -1,0 +1,255 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(2, 6, 23, 0.55);
+}
+
+.modal {
+  position: fixed;
+  z-index: 100;
+  top: 50%;
+  left: 50%;
+  width: calc(100% - 32px);
+  max-width: 560px;
+  max-height: 80vh;
+  transform: translate(-50%, -50%);
+  padding: 24px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.28);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalIn 0.2s ease both;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.header h2 {
+  margin: 0;
+  color: #020617;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.header p {
+  margin: 6px 0 0;
+  color: #526987;
+  font-size: 14px;
+}
+
+.closeButton {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #020617;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.searchBox {
+  min-height: 56px;
+  height: 56px;
+  margin-bottom: 20px;
+  padding: 0 18px;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.searchBox svg {
+  width: 20px;
+  height: 20px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.searchBox input {
+  width: 100%;
+  height: 100%;
+  min-height: 56px;
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent !important;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 56px;
+  padding: 0;
+}
+
+.searchBox input::placeholder {
+  color: #94a3b8;
+}
+
+.results {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.userItem {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.userInfo strong {
+  display: block;
+  color: #020617;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.userInfo span {
+  display: block;
+  margin-top: 2px;
+  color: #526987;
+  font-size: 13px;
+}
+
+.followButton {
+  min-width: 92px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #00a8ad;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.followButton:hover:not(:disabled) {
+  background: #00949a;
+}
+
+.followButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.empty {
+  margin: 0;
+  padding: 18px 0;
+  color: #526987;
+  font-size: 14px;
+  text-align: center;
+}
+
+.error {
+  margin: 0 0 12px;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+:global(html.dark) .modal {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(html.dark) .header h2,
+:global(html.dark) .userInfo strong {
+  color: #ffffff;
+}
+
+:global(html.dark) .header p,
+:global(html.dark) .userInfo span,
+:global(html.dark) .empty {
+  color: #94a3b8;
+}
+
+:global(html.dark) .closeButton {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(html.dark) .searchBox {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(html.dark) .searchBox input {
+  background: transparent !important;
+  color: #ffffff;
+}
+
+:global(html.dark) .userItem {
+  border-color: #334155;
+}
+
+@media (max-width: 520px) {
+  .modal {
+    padding: 18px;
+  }
+
+  .userItem {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .followButton {
+    width: 100%;
+  }
+}
+
+/* MODO CLARO */
+.searchBox {
+  background: #ffffff;
+  border: 1px solid #dbe3ee;
+}
+
+.searchBox input {
+  background: #ffffff;
+  color: #111827;
+}
+
+.searchBox input::placeholder {
+  color: #6b7280;
+}
+
+.searchBox svg {
+  color: #64748b;
+}

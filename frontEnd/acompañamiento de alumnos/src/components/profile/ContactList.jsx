@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import styles from './ContactList.module.css';
 
@@ -10,13 +11,25 @@ function ContactItem({ contact }) {
   );
 }
 
-function ContactList({ contacts, onViewAll }) {
+function ContactList({ contacts, onViewAll, onAddContact }) {
   const hasContacts = contacts && contacts.length > 0;
 
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Contactos</h2>
+        <div className={styles.titleGroup}>
+          <h2 className={styles.title}>Contactos</h2>
+
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={onAddContact}
+            aria-label="Buscar usuarios"
+            title="Buscar usuarios"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
 
         <button type="button" className={styles.linkBtn} onClick={onViewAll}>
           Ver todos

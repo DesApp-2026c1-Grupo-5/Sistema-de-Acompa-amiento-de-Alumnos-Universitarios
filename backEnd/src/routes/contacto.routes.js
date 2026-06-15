@@ -10,6 +10,20 @@ const { contacto, estudiante } = require("../db/models");
 
 const router = express.Router();
 
+router.get(
+  "/contactos/buscar",
+  authMiddleware,
+  genericMiddleware.existModelBy(estudiante, "usuario_id", "user.sub"),
+  contactoController.buscarUsuarios
+);
+
+router.post(
+  "/contactos/invitar/:estudianteId",
+  authMiddleware,
+  genericMiddleware.existModelBy(estudiante, "usuario_id", "user.sub"),
+  contactoController.enviarInvitacion
+);
+
 router.patch(
   "/contactos/:id/aceptar",
   authMiddleware,
