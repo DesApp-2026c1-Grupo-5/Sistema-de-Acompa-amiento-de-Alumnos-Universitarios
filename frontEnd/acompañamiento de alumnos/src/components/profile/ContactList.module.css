@@ -119,3 +119,106 @@
 :global(html.dark) .addButton:hover {
   background: #00949a;
 }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(2, 6, 23, 0.55);
+}
+
+.modal {
+  position: fixed;
+  z-index: 100;
+  top: 50%;
+  left: 50%;
+  width: calc(100% - 32px);
+  max-width: 520px;
+  max-height: 80vh;
+  transform: translate(-50%, -50%);
+  padding: 24px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.28);
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  color: #020617;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.modalHeader p {
+  margin: 6px 0 0;
+  color: #526987;
+  font-size: 14px;
+}
+
+.closeButton {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #020617;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.contactList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contactRow {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contactRow span {
+  color: #020617;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+:global(html.dark) .modal {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(html.dark) .modalHeader h2,
+:global(html.dark) .contactRow span {
+  color: #ffffff;
+}
+
+:global(html.dark) .modalHeader p {
+  color: #94a3b8;
+}
+
+:global(html.dark) .closeButton {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:global(html.dark) .contactRow {
+  border-color: #334155;
+}
