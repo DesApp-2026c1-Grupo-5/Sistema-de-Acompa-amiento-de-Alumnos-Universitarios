@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   ThumbsUp,
   ThumbsDown,
-  MoreHorizontal,
+  Flag,
   BookOpen,
   CheckCircle2,
   TrendingUp,
@@ -33,7 +33,7 @@ function EventBadge({ eventType, eventSubject }) {
   );
 }
 
-function FeedPost({ post, userReaction, onLike, onDislike }) {
+function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUserId }) {
   const {
     id,
     authorId,
@@ -50,6 +50,14 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
 
   const isLikeActive = userReaction === 'like';
   const isDislikeActive = userReaction === 'dislike';
+  const isOwnPost = currentUserId && authorId === currentUserId;
+  const canReport = !isOwnPost && !post.miDenunciaPendiente;
+  const reportLabel = isOwnPost ? 'Tu publicación' : post.miDenunciaPendiente ? 'Ya denunciado' : 'Denunciar';
+  const reportTitle = isOwnPost
+    ? 'No podés denunciar tu propia publicación'
+    : post.miDenunciaPendiente
+      ? 'Ya denunciaste esta publicación'
+      : 'Denunciar publicación';
 
   return (
     <article className={styles.card}>
@@ -70,9 +78,6 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
           </time>
         </div>
 
-        <button type="button" className={styles.moreBtn} aria-label="Más opciones">
-          <MoreHorizontal size={20} aria-hidden="true" />
-        </button>
       </header>
 
       <p className={styles.content}>{content}</p>
@@ -96,6 +101,18 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
         >
           <ThumbsDown size={16} aria-hidden="true" />
           <span>{dislikes}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.actionBtn} ${styles.reportBtn}`}
+          onClick={() => onReport?.(id)}
+          disabled={!canReport}
+          aria-label={reportTitle}
+          title={reportTitle}
+        >
+          <Flag size={16} aria-hidden="true" />
+          <span>{reportLabel}</span>
         </button>
       </footer>
     </article>

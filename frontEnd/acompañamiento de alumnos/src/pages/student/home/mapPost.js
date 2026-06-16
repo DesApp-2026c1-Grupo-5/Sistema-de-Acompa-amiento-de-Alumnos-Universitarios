@@ -18,5 +18,6 @@ export const mapPostFromApi = (apiPost) => {
     likes: apiPost.likes ?? 0,
     dislikes: apiPost.dislikes ?? 0,
     miVoto: apiPost.mi_voto ?? null,
+    miDenunciaPendiente: apiPost.mi_denuncia_pendiente ?? false,
   };
 };

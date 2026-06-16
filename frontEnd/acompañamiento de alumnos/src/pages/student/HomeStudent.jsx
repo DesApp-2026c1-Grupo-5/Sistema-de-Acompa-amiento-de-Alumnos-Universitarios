@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import PageTitle from '../../components/common/PageTitle';
 import SearchBar from '../../components/common/SearchBar';
 import EmptyState from '../../components/common/EmptyState';
@@ -18,6 +19,7 @@ import styles from './HomeStudent.module.css';
 const PAGE_SIZE = 10;
 
 function HomeStudent() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const est = user?.estudiante ?? {};
 
@@ -172,6 +174,7 @@ function HomeStudent() {
 
   const handleLike = (postId) => handleReaction(postId, 'like');
   const handleDislike = (postId) => handleReaction(postId, 'dislike');
+  const handleReport = (postId) => navigate(`/student/report-publication/${postId}`);
   const handleViewSessionDetails = async (sessionId) => {
     const target = mySessions.find((s) => s.id === sessionId);
     if (!target) return;
@@ -216,8 +219,10 @@ function HomeStudent() {
         key={post.id}
         post={post}
         userReaction={post.miVoto}
+        currentUserId={est.id}
         onLike={handleLike}
         onDislike={handleDislike}
+        onReport={handleReport}
       />
     ));
   };

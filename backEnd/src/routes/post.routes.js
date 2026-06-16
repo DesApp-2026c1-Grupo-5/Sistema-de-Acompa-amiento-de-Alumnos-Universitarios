@@ -8,6 +8,8 @@ const votoPostController = require("../controllers/votoPost.controller");
 
 router.get("/posts", authMiddleware, postController.obtenerPosts);
 
+router.get("/posts/:id", authMiddleware, postController.obtenerPostPorId);
+
 router.post("/posts", authMiddleware, postController.crearPost);
 
 router.post("/posts/:id/voto", authMiddleware, votoPostController.votarPost);
