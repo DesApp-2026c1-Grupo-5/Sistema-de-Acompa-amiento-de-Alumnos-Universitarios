@@ -21,6 +21,7 @@ import StudyPlan from '../pages/admin/StudyPlan';
 import Admins from '../pages/admin/Admins';
 import Statistics from '../pages/admin/Statistics';
 import ReportMaterial from '../pages/student/ReportMaterial';
+import ReportPublication from '../pages/student/ReportPublication';
 import Notifications from '../pages/student/Notifications';
 import ModerationPage from '../pages/admin/ModerationPage/ModerationPage';
 import ComplaintConfigPage from '../pages/admin/ComplaintConfigPage/ComplaintConfigPage';
@@ -82,11 +83,15 @@ const router = createBrowserRouter([
           },
           {
             path: '/student/report-material/:id',
-            element: <ReportMaterial />,
+            element: <ReportMaterial />, 
+          },
+          {
+            path: '/student/report-publication/:id',
+            element: <ReportPublication />,
           },
           {
             path: '/student/notifications',
-            element: <Notifications />,
+            element: <Notifications />, 
           },
         ],
       },
