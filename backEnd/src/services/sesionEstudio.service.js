@@ -4,6 +4,7 @@ const {
   estudiante,
   materia,
   inscripcion_sesion,
+  usuario,
 } = require("../db/models");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
@@ -15,7 +16,10 @@ const buildError = (message, statusCode) => {
 };
 
 const getEstudianteByUsuarioId = async (usuarioId) => {
-  const estudianteData = await estudiante.findOne({ where: { usuario_id: usuarioId } });
+  const estudianteData = await estudiante.findOne({
+    where: { usuario_id: usuarioId },
+    include: [{ model: usuario, attributes: ["email"] }],
+  });
 
   if (!estudianteData) {
     throw buildError("Estudiante no encontrado", 404);

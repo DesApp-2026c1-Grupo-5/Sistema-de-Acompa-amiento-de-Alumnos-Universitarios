@@ -26,7 +26,6 @@ function Header({
 
   useEffect(() => {
     if (user?.tipo !== 'estudiante') {
-      setNotifications(0);
       return;
     }
 
@@ -43,9 +42,13 @@ function Header({
     loadUnreadCount();
 
     window.addEventListener('notifications-updated', loadUnreadCount);
+    window.addEventListener('focus', loadUnreadCount);
+    document.addEventListener('visibilitychange', loadUnreadCount);
 
     return () => {
       window.removeEventListener('notifications-updated', loadUnreadCount);
+      window.removeEventListener('focus', loadUnreadCount);
+      document.removeEventListener('visibilitychange', loadUnreadCount);
     };
   }, [user?.tipo]);
 

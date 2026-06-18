@@ -19,6 +19,7 @@ const buildError = (message, statusCode) => {
 const getEstudianteActual = async (req) => {
   return estudiante.findOne({
     where: { usuario_id: req.user.sub },
+    include: [{ model: usuario, attributes: ["email"] }],
   });
 };
 
@@ -27,8 +28,8 @@ const crearDenunciaParaRecurso = ({
   foreignKey,
   recursoNombre,
   articulo,
-  notificacionTitulo,
-  emailSubject,
+  tipoNotificacion,
+  actionUrl,
   resumenKey,
   ownMessage,
   duplicateMessage,
@@ -42,7 +43,14 @@ const crearDenunciaParaRecurso = ({
 
   const { motivo_id, detalle } = req.body;
 
-  const recurso = await modelo.findByPk(recursoId);
+  const recurso = await modelo.findByPk(recursoId, {
+    include: [
+      {
+        model: estudiante,
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
+  });
   if (!recurso) {
     return next(buildError(notFoundMessage, 404));
   }
@@ -84,29 +92,50 @@ const crearDenunciaParaRecurso = ({
     fecha_resolucion: null,
   });
 
-  const admins = await usuario.findAll({ where: { tipo: "administrador" } });
   const resumen = String(recurso[resumenKey] ?? recursoNombre).trim() || recursoNombre;
 
-  for (const admin of admins) {
+  const recursoAutor = recurso.estudiante;
+  if (recursoAutor?.usuario_id) {
     await crearNotificacion({
-      usuario_id: admin.id,
-      titulo: notificacionTitulo,
-      tipo: "general",
-      mensaje: `Se denunció ${articulo} ${recursoNombre.toLowerCase()} "${resumen}". Revisa las denuncias pendientes.`,
+      usuario_id: recursoAutor.usuario_id,
+      titulo: `${recursoNombre} denunciado`,
+      tipo: tipoNotificacion,
+      mensaje: `Tu ${recursoNombre.toLowerCase()} "${resumen}" recibió una denuncia.`,
       referencia_tipo: "denuncia",
       referencia_id: nueva.id,
-      action_url: "/admin/moderation",
+      action_url: actionUrl,
     });
 
-    if (admin.email) {
+    const emailAutor = recursoAutor.usuario?.email;
+    if (emailAutor) {
       await sendMail({
-        to: admin.email,
-        subject: emailSubject,
-        html: `<p>Se denunció ${articulo} ${recursoNombre.toLowerCase()} <strong>"${resumen}"</strong>.</p>
-               <p>Ingresa al panel de moderación para revisarlo.</p>
+        to: emailAutor,
+        subject: `${recursoNombre} denunciado`,
+        html: `<p>Tu ${recursoNombre.toLowerCase()} <strong>"${resumen}"</strong> recibió una denuncia.</p>
+               <p>El equipo de SIVA la revisará.</p>
                <p>Saludos,<br/>El equipo de SIVA</p>`,
       });
     }
+  }
+
+  await crearNotificacion({
+    usuario_id: estudianteData.usuario_id,
+    titulo: "Denuncia realizada",
+    tipo: tipoNotificacion,
+    mensaje: `Registramos tu denuncia sobre ${articulo} ${recursoNombre.toLowerCase()} "${resumen}".`,
+    referencia_tipo: "denuncia",
+    referencia_id: nueva.id,
+    action_url: actionUrl,
+  });
+
+  if (estudianteData.usuario?.email) {
+    await sendMail({
+      to: estudianteData.usuario.email,
+      subject: "Denuncia realizada",
+      html: `<p>Registramos tu denuncia sobre ${articulo} ${recursoNombre.toLowerCase()} <strong>"${resumen}"</strong>.</p>
+             <p>El equipo de SIVA la revisará.</p>
+             <p>Saludos,<br/>El equipo de SIVA</p>`,
+    });
   }
 
   return res.status(201).json({ ok: true, data: nueva });
@@ -131,8 +160,8 @@ const crearDenunciaMaterial = crearDenunciaParaRecurso({
   foreignKey: "material_id",
   recursoNombre: "Material",
   articulo: "el",
-  notificacionTitulo: "Nueva denuncia de material",
-  emailSubject: "Nueva denuncia de material",
+  tipoNotificacion: "material",
+  actionUrl: "/student/materials",
   resumenKey: "titulo",
   ownMessage: "No podes denunciar tu propio material",
   duplicateMessage: "Ya existe una denuncia pendiente de este material",
@@ -144,8 +173,8 @@ const crearDenunciaPost = crearDenunciaParaRecurso({
   foreignKey: "post_id",
   recursoNombre: "Publicación",
   articulo: "la",
-  notificacionTitulo: "Nueva denuncia de publicación",
-  emailSubject: "Nueva denuncia de publicación",
+  tipoNotificacion: "general",
+  actionUrl: "/student/home",
   resumenKey: "contenido",
   ownMessage: "No podes denunciar tu propia publicación",
   duplicateMessage: "Ya existe una denuncia pendiente de esta publicación",

@@ -1,4 +1,5 @@
 const { post, voto_post, estudiante } = require('../db/models');
+const { crearNotificacion } = require('../services/notificacion.service');
 
 const votarPost = async (req, res, next) => {
   const postId = Number(req.params.id);
@@ -10,7 +11,9 @@ const votarPost = async (req, res, next) => {
     return next(error);
   }
 
-  const postData = await post.findByPk(postId);
+  const postData = await post.findByPk(postId, {
+    include: [{ model: estudiante, attributes: ['id', 'usuario_id', 'nombre', 'apellido'] }],
+  });
   if (!postData) {
     const error = new Error('Post no encontrado');
     error.statusCode = 404;
@@ -45,6 +48,18 @@ const votarPost = async (req, res, next) => {
     existente.tipo = tipo;
     await existente.save();
     miVoto = tipo;
+  }
+
+  if (miVoto === 'like' && postData.estudiante?.usuario_id !== estudianteData.id) {
+    await crearNotificacion({
+      usuario_id: postData.estudiante.usuario_id,
+      titulo: 'Te dieron like',
+      tipo: 'general',
+      mensaje: 'Recibiste un like en una publicación tuya.',
+      referencia_tipo: 'post',
+      referencia_id: postData.id,
+      action_url: '/student/home',
+    });
   }
 
   const todos = await voto_post.findAll({ where: { post_id: postId } });
