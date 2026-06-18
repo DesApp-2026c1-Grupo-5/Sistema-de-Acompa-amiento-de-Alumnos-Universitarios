@@ -33,7 +33,8 @@ module.exports = (sequelize, DataTypes) => {
     condiciones_creditos: DataTypes.STRING,
     condiciones_unahur: DataTypes.STRING,
     creditos_requeridos: DataTypes.INTEGER,
-    niveles_ingles_requeridos: DataTypes.INTEGER
+    niveles_ingles_requeridos: DataTypes.INTEGER,
+    materias_unahur: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'plan_estudio',
