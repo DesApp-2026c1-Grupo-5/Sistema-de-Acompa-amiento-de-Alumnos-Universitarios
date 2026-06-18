@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload, Trash2, Globe, Lock } from 'lucide-react';
 import Modal from '../common/Modal';
 import Avatar from '../common/Avatar';
@@ -186,21 +187,25 @@ function SessionDetailModal({
 
           <div className={styles.detailSection}>
             <h4 className={styles.detailSectionTitle}>Creador</h4>
-            <div className={styles.participantRow}>
-              <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
-              <span className={styles.participantName}>{session.creatorName}</span>
-            </div>
+            <Link to={`/student/profile/${session.creatorId}`} className={styles.participantLink}>
+              <div className={styles.participantRow}>
+                <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
+                <span className={styles.participantName}>{session.creatorName}</span>
+              </div>
+            </Link>
           </div>
 
           {session.participants?.length > 0 && (
             <div className={styles.detailSection}>
               <h4 className={styles.detailSectionTitle}>Participantes</h4>
               {session.participants.map((p) => (
-                <div key={p.inscripcionId} className={styles.participantRow}>
-                  <Avatar initials={p.initials} src={p.image} size="sm" />
-                  <span className={styles.participantName}>{p.name}</span>
-                  <span className={styles.confirmedBadge}>Confirmado</span>
-                </div>
+                <Link key={p.inscripcionId} to={`/student/profile/${p.estudianteId}`} className={styles.participantLink}>
+                  <div className={styles.participantRow}>
+                    <Avatar initials={p.initials} src={p.image} size="sm" />
+                    <span className={styles.participantName}>{p.name}</span>
+                    <span className={styles.confirmedBadge}>Confirmado</span>
+                  </div>
+                </Link>
               ))}
             </div>
           )}

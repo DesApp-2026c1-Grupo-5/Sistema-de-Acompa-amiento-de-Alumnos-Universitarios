@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Plus, X } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import styles from './ContactList.module.css';
@@ -6,8 +7,10 @@ import styles from './ContactList.module.css';
 function ContactItem({ contact }) {
   return (
     <li className={styles.item}>
-      <Avatar initials={contact.initials} src={contact.foto_url} size="md" />
-      <span className={styles.name}>{contact.name}</span>
+      <Link to={`/student/profile/${contact.id}`} className={styles.contactLink}>
+        <Avatar initials={contact.initials} src={contact.foto_url} size="md" />
+        <span className={styles.name}>{contact.name}</span>
+      </Link>
     </li>
   );
 }
@@ -23,14 +26,16 @@ function ContactList({ contacts, onAddContact }) {
           <div className={styles.titleGroup}>
             <h2 className={styles.title}>Contactos</h2>
 
-            <button
-              type="button"
-              className={styles.addButton}
-              onClick={onAddContact}
-              aria-label="Buscar usuarios"
-            >
-              <Plus size={20} />
-            </button>
+            {onAddContact && (
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={onAddContact}
+                aria-label="Buscar usuarios"
+              >
+                <Plus size={20} />
+              </button>
+            )}
           </div>
 
           <button
@@ -80,13 +85,14 @@ function ContactList({ contacts, onAddContact }) {
               <ul className={styles.contactList}>
                 {contacts.map((contact) => (
                   <li key={contact.id} className={styles.contactRow}>
-                    <Avatar
-                      initials={contact.initials}
-                      src={contact.foto_url}
-                      size="md"
-                    />
-
-                    <span>{contact.name}</span>
+                    <Link to={`/student/profile/${contact.id}`} className={styles.contactLink}>
+                      <Avatar
+                        initials={contact.initials}
+                        src={contact.foto_url}
+                        size="md"
+                      />
+                      <span>{contact.name}</span>
+                    </Link>
                   </li>
                 ))}
               </ul>

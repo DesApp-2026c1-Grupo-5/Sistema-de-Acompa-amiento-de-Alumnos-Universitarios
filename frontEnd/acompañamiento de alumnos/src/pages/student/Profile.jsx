@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import ContactList from '../../components/profile/ContactList';
 import PendingRequests from '../../components/profile/PendingRequests';
 import PublicationsList from '../../components/profile/PublicationsList';
 import UserSearchModal from '../../components/profile/UserSearchModal';
+import Avatar from '../../components/common/Avatar';
 import ErrorState from '../../components/common/ErrorState';
 import {
   getMyProfile,
@@ -86,13 +88,27 @@ function Profile() {
     const actual = profile?.user?.privacidad;
     const nuevo = actual === 'publico' ? 'privado' : 'publico';
     try {
-      const res = await updateMyPrivacy(nuevo);
+      const res = await updateMyPrivacy({ privacidad: nuevo });
       setProfile((prev) => ({
         ...prev,
         user: { ...prev.user, privacidad: res.data?.privacidad ?? nuevo },
       }));
     } catch {
       // si falla, la privacidad queda sin cambios
+    }
+  };
+
+  const handleToggleEmail = async () => {
+    const actual = profile?.user?.email_visible;
+    const nuevo = actual === false;
+    try {
+      const res = await updateMyPrivacy({ email_visible: nuevo });
+      setProfile((prev) => ({
+        ...prev,
+        user: { ...prev.user, email_visible: res.data?.email_visible ?? nuevo },
+      }));
+    } catch {
+      // si falla, la visibilidad del email queda sin cambios
     }
   };
 
@@ -166,12 +182,32 @@ function Profile() {
     );
   }
 
+  if (!isOwnProfile && profile.privado) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.privateProfile}>
+          <Avatar
+            initials={profile.user.initials}
+            src={profile.user.foto_url}
+            size="xl"
+          />
+          <h1 className={styles.privateName}>{profile.user.name}</h1>
+          <p className={styles.privateMessage}>
+            <Lock size={16} />
+            Este perfil es privado
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <ProfileHeader
         user={profile.user}
         onEditProfile={isOwnProfile ? handleEditProfile : null}
         onToggleVisibility={isOwnProfile ? handleToggleVisibility : null}
+        onToggleEmail={isOwnProfile ? handleToggleEmail : null}
         onUploadAvatar={isOwnProfile ? handleUploadAvatar : null}
         onDeleteAvatar={isOwnProfile ? handleDeleteAvatar : null}
         onUploadBanner={isOwnProfile ? handleUploadBanner : null}

@@ -25,6 +25,25 @@ const buscarUsuarios = async (req, res) => {
 
   const texto = q.trim().toLowerCase();
 
+  const contactosExistentes = await contacto.findAll({
+    where: {
+      [Op.or]: [
+        { estudiante_solicitante_id: estudianteActual.id },
+        { estudiante_receptor_id: estudianteActual.id },
+      ],
+    },
+    attributes: ["estudiante_solicitante_id", "estudiante_receptor_id", "estado"],
+  });
+
+  const idsContactados = new Set();
+  contactosExistentes.forEach((c) => {
+    const otroId =
+      c.estudiante_solicitante_id === estudianteActual.id
+        ? c.estudiante_receptor_id
+        : c.estudiante_solicitante_id;
+    idsContactados.add(otroId);
+  });
+
   const estudiantes = await estudiante.findAll({
     include: [
       {
@@ -60,7 +79,7 @@ const buscarUsuarios = async (req, res) => {
       foto_url: e.foto_url,
       career: "",
       email: e.usuario?.email,
-      solicitudEnviada: false,
+      solicitudEnviada: idsContactados.has(e.id),
     }));
 
   res.json(resultado);
