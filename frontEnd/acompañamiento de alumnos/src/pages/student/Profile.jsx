@@ -88,13 +88,27 @@ function Profile() {
     const actual = profile?.user?.privacidad;
     const nuevo = actual === 'publico' ? 'privado' : 'publico';
     try {
-      const res = await updateMyPrivacy(nuevo);
+      const res = await updateMyPrivacy({ privacidad: nuevo });
       setProfile((prev) => ({
         ...prev,
         user: { ...prev.user, privacidad: res.data?.privacidad ?? nuevo },
       }));
     } catch {
       // si falla, la privacidad queda sin cambios
+    }
+  };
+
+  const handleToggleEmail = async () => {
+    const actual = profile?.user?.email_visible;
+    const nuevo = actual === false;
+    try {
+      const res = await updateMyPrivacy({ email_visible: nuevo });
+      setProfile((prev) => ({
+        ...prev,
+        user: { ...prev.user, email_visible: res.data?.email_visible ?? nuevo },
+      }));
+    } catch {
+      // si falla, la visibilidad del email queda sin cambios
     }
   };
 
@@ -193,6 +207,7 @@ function Profile() {
         user={profile.user}
         onEditProfile={isOwnProfile ? handleEditProfile : null}
         onToggleVisibility={isOwnProfile ? handleToggleVisibility : null}
+        onToggleEmail={isOwnProfile ? handleToggleEmail : null}
         onUploadAvatar={isOwnProfile ? handleUploadAvatar : null}
         onDeleteAvatar={isOwnProfile ? handleDeleteAvatar : null}
         onUploadBanner={isOwnProfile ? handleUploadBanner : null}

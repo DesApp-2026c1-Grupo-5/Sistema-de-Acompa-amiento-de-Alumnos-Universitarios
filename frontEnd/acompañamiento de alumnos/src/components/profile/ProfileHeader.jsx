@@ -28,19 +28,17 @@ function ProfileHeader({
   user,
   onEditProfile,
   onToggleVisibility,
+  onToggleEmail,
   onUploadAvatar,
   onDeleteAvatar,
   onUploadBanner,
   onDeleteBanner,
 }) {
-  const { initials, name, career, location, contactsCount, email, academicStatus, privacidad, foto_url, banner_url } = user;
+  const { initials, name, career, location, contactsCount, email, academicStatus, privacidad, foto_url, banner_url, email_visible } = user;
   const isPublic = privacidad === 'publico';
+  const emailVisible = email_visible !== false;
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [emailVisible, setEmailVisible] = useState(() => {
-    const stored = localStorage.getItem('emailVisible');
-    return stored !== null ? stored === 'true' : true;
-  });
   const fotoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
 
@@ -72,11 +70,7 @@ function ProfileHeader({
   }, [formAutoPublish]);
 
   const toggleEmailVisibility = () => {
-    setEmailVisible((prev) => {
-      const next = !prev;
-      localStorage.setItem('emailVisible', next);
-      return next;
-    });
+    onToggleEmail?.();
   };
 
   const openModal = () => {
@@ -247,14 +241,16 @@ function ProfileHeader({
             <span className={styles.detailLabel}>Email</span>
             <span className={styles.detailValue}>
               {emailVisible ? email : 'Oculto'}
-              <button
-                type="button"
-                className={styles.eyeButton}
-                onClick={toggleEmailVisibility}
-                title={emailVisible ? 'Ocultar email' : 'Mostrar email'}
-              >
-                {emailVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
+              {onToggleEmail && (
+                <button
+                  type="button"
+                  className={styles.eyeButton}
+                  onClick={toggleEmailVisibility}
+                  title={emailVisible ? 'Ocultar email' : 'Mostrar email'}
+                >
+                  {emailVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              )}
             </span>
           </div>
         </div>
