@@ -218,6 +218,7 @@ const obtenerMiPerfil = async (req, res, next) => {
         pub_inscripciones: estudianteData.pub_inscripciones,
         pub_regularizaciones: estudianteData.pub_regularizaciones,
         pub_aprobaciones: estudianteData.pub_aprobaciones,
+        email_visible: estudianteData.email_visible,
       },
       contacts: contacts.slice(0, 6),
       pendingRequests,
@@ -297,7 +298,7 @@ const obtenerPerfilPorId = async (req, res, next) => {
         name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
         career,
         location: null,
-        email: estudianteData.usuario.email,
+        email: !esDueno && estudianteData.email_visible === false ? null : estudianteData.usuario.email,
         academicStatus,
         bio: estudianteData.bio,
         contactsCount: contacts.length,
@@ -307,6 +308,7 @@ const obtenerPerfilPorId = async (req, res, next) => {
         pub_inscripciones: estudianteData.pub_inscripciones,
         pub_regularizaciones: estudianteData.pub_regularizaciones,
         pub_aprobaciones: estudianteData.pub_aprobaciones,
+        email_visible: estudianteData.email_visible,
       },
       contacts: contacts.slice(0, 6),
       publications,
@@ -356,7 +358,7 @@ const actualizarMiPerfil = async (req, res, next) => {
 };
 
 const actualizarPrivacidadMiPerfil = async (req, res) => {
-  const { privacidad, pub_inscripciones, pub_regularizaciones, pub_aprobaciones } = req.body;
+  const { privacidad, pub_inscripciones, pub_regularizaciones, pub_aprobaciones, email_visible } = req.body;
 
   const estudianteData = await estudiante.findOne({
     where: { usuario_id: req.user.sub },
@@ -374,6 +376,7 @@ const actualizarPrivacidadMiPerfil = async (req, res) => {
     pub_regularizaciones:
       pub_regularizaciones ?? estudianteData.pub_regularizaciones,
     pub_aprobaciones: pub_aprobaciones ?? estudianteData.pub_aprobaciones,
+    email_visible: email_visible ?? estudianteData.email_visible,
   });
 
   return res.status(200).json({

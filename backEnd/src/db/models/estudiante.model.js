@@ -75,7 +75,8 @@ module.exports = (sequelize, DataTypes) => {
     privacidad: DataTypes.STRING,
     pub_inscripciones: DataTypes.BOOLEAN,
     pub_regularizaciones: DataTypes.BOOLEAN,
-    pub_aprobaciones: DataTypes.BOOLEAN
+    pub_aprobaciones: DataTypes.BOOLEAN,
+    email_visible: DataTypes.BOOLEAN
   }, {
     sequelize,
     modelName: 'estudiante',
