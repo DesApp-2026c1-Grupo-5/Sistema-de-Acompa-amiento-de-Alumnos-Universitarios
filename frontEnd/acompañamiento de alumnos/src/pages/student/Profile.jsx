@@ -216,6 +216,8 @@ function Profile() {
 
       <ContactList
         contacts={profile.contacts}
+        contactsCount={profile.user.contactsCount}
+        estudianteId={isOwnProfile ? ownId : userId}
         onAddContact={isOwnProfile ? () => setSearchModalOpen(true) : null}
       />
 

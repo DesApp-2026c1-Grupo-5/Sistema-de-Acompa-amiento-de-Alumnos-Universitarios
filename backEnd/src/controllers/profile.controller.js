@@ -317,6 +317,85 @@ const obtenerPerfilPorId = async (req, res, next) => {
   });
 };
 
+const obtenerContactos = async (req, res) => {
+  const targetId = Number(req.params.id);
+  if (!Number.isInteger(targetId) || targetId <= 0) {
+    const error = new Error("id de estudiante invalido");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const target = await estudiante.findByPk(targetId);
+  if (!target) {
+    const error = new Error("Perfil de estudiante no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const requester = await estudiante.findOne({
+    where: { usuario_id: req.user.sub },
+  });
+  const esDueno = requester && requester.id === targetId;
+  const esAdmin = req.user.tipo === "administrador";
+  const esPublico = (target.privacidad || "publico") === "publico";
+
+  let puedeVer = esDueno || esAdmin || esPublico;
+  if (!puedeVer && requester) {
+    puedeVer = await sonContactos(requester.id, targetId);
+  }
+  if (!puedeVer) {
+    const error = new Error("No tiene permisos para ver estos contactos");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 5));
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await contacto.findAndCountAll({
+    where: {
+      estado: { [Op.in]: ["aceptado", "aceptada"] },
+      [Op.or]: [
+        { estudiante_solicitante_id: targetId },
+        { estudiante_receptor_id: targetId },
+      ],
+    },
+    include: [
+      { model: estudiante, as: "solicitante", attributes: ["id", "nombre", "apellido", "foto_url"] },
+      { model: estudiante, as: "receptor", attributes: ["id", "nombre", "apellido", "foto_url"] },
+    ],
+    order: [["fecha_respuesta", "DESC"]],
+    limit,
+    offset,
+  });
+
+  const data = rows
+    .map((row) => {
+      const persona =
+        row.estudiante_solicitante_id === targetId ? row.receptor : row.solicitante;
+      if (!persona) return null;
+      return {
+        id: persona.id,
+        initials: getInitials(persona.nombre, persona.apellido),
+        name: `${persona.nombre} ${persona.apellido}`.trim(),
+        foto_url: persona.foto_url ?? null,
+      };
+    })
+    .filter(Boolean);
+
+  return res.status(200).json({
+    ok: true,
+    data,
+    pagination: {
+      page,
+      limit,
+      total: count,
+      totalPages: Math.ceil(count / limit),
+    },
+  });
+};
+
 const actualizarMiPerfil = async (req, res, next) => {
   const {
     nombre,
@@ -449,6 +528,7 @@ const eliminarBannerMiPerfil = async (req, res) => {
 module.exports = {
   obtenerMiPerfil,
   obtenerPerfilPorId,
+  obtenerContactos,
   actualizarMiPerfil,
   actualizarPrivacidadMiPerfil,
   actualizarAvatarMiPerfil,
