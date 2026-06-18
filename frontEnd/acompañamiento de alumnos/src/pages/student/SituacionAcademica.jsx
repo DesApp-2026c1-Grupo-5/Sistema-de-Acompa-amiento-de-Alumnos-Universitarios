@@ -18,7 +18,6 @@ const ESTADOS = ['pendiente', 'cursando', 'regular', 'aprobada'];
 function WizardPlan({ onCreated }) {
   const [carreras, setCarreras] = useState([]);
   const [carreraId, setCarreraId] = useState('');
-  const [planes, setPlanes] = useState([]);
   const [planId, setPlanId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -97,7 +96,6 @@ export default function SituacionAcademica() {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [sinSituacion, setSinSituacion] = useState(false);
-  const [nuevasActividades, setNuevasActividades] = useState([]);
   const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '' });
 
   const cargarDatos = useCallback(async () => {
@@ -119,7 +117,30 @@ export default function SituacionAcademica() {
     }
   }, []);
 
-  useEffect(() => { cargarDatos(); }, [cargarDatos]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getSituacion();
+        if (cancelled) return;
+        if (!res?.data) {
+          setSinSituacion(true);
+          setData(null);
+        } else {
+          setSinSituacion(false);
+          setData(res.data);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setError(err.message || 'Error al cargar situación académica');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const actualizarMateriaLocal = (materiaId, campo, valor) => {
     if (!data) return;
@@ -383,7 +404,6 @@ export default function SituacionAcademica() {
                 </thead>
                 <tbody>
                   {subjects.map((materia) => {
-                    const estadoMateriaId = materia.finals?.[0]?.estado_materia_id;
                     return (
                       <tr key={materia.materia_id}>
                         <td>
