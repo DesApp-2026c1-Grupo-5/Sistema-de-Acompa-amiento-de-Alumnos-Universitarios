@@ -22,8 +22,8 @@ import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X, Check } from 'lu
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
-import { getPlanEstudio } from '../../services/planEstudioService';
-import { mapPlanEstudioFromApi } from './careers/mapPlanEstudio';
+import { getPlanEstudio, savePlanEstudio } from '../../services/planEstudioService';
+import { mapPlanEstudioFromApi, mapPlanEstudioToApi } from './careers/mapPlanEstudio';
 import styles from './StudyPlan.module.css';
 
 function StudyPlan() {
@@ -42,6 +42,8 @@ function StudyPlan() {
   const [editedStatus, setEditedStatus] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const [newSubject, setNewSubject] = useState({
     code: '',
     name: '',
@@ -88,13 +90,30 @@ function StudyPlan() {
     setShowSaveModal(true);
   };
 
-  const confirmSave = () => {
-    setStudyPlan({ ...studyPlan, subjects: editedSubjects, conditions: editedConditions, status: editedStatus });
-    setEditedSubjects(null);
-    setEditedConditions(null);
-    setEditedStatus('');
-    setIsEditing(false);
-    setShowSaveModal(false);
+  const confirmSave = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const payload = mapPlanEstudioToApi({
+        ...studyPlan,
+        conditions: editedConditions,
+        status: editedStatus,
+        subjects: editedSubjects,
+      });
+      await savePlanEstudio(studyPlan.id, payload);
+      const res = await getPlanEstudio(studyPlan.id);
+      const mapped = mapPlanEstudioFromApi(res.data);
+      setStudyPlan({ ...mapped, subjects: [...mapped.subjects] });
+      setEditedSubjects(null);
+      setEditedConditions(null);
+      setEditedStatus('');
+      setIsEditing(false);
+      setShowSaveModal(false);
+    } catch (err) {
+      setSaveError(err.message || 'No pudimos guardar los cambios.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDiscardAll = () => {
@@ -309,22 +328,13 @@ function StudyPlan() {
           <div className={styles.conditionItem}>
             <p className={styles.conditionLabel}>Inglés requerido</p>
             {isEditing ? (
-              <>
-                <input
-                  type="text"
-                  className={styles.editInput}
-                  value={editedConditions?.englishRequired || ''}
-                  onChange={(e) => handleConditionChange('englishRequired', e.target.value)}
-                />
-                <input
-                  type="text"
-                  className={styles.editInput}
-                  placeholder="Certificación"
-                  value={editedConditions?.englishCertification || ''}
-                  onChange={(e) => handleConditionChange('englishCertification', e.target.value)}
-                  style={{ marginTop: '0.5rem' }}
-                />
-              </>
+              <input
+                type="number"
+                min="0"
+                className={styles.editInput}
+                value={editedConditions?.englishLevel ?? 0}
+                onChange={(e) => handleConditionChange('englishLevel', parseInt(e.target.value) || 0)}
+              />
             ) : (
               <>
                 <p className={styles.conditionValue}>{studyPlan.conditions.englishRequired}</p>
@@ -335,22 +345,12 @@ function StudyPlan() {
           <div className={styles.conditionItem}>
             <p className={styles.conditionLabel}>Créditos optativos</p>
             {isEditing ? (
-              <>
-                <input
-                  type="number"
-                  className={styles.editInput}
-                  value={editedConditions?.electiveCredits || 0}
-                  onChange={(e) => handleConditionChange('electiveCredits', parseInt(e.target.value) || 0)}
-                />
-                <input
-                  type="text"
-                  className={styles.editInput}
-                  placeholder="Label"
-                  value={editedConditions?.electiveLabel || ''}
-                  onChange={(e) => handleConditionChange('electiveLabel', e.target.value)}
-                  style={{ marginTop: '0.5rem' }}
-                />
-              </>
+              <input
+                type="number"
+                className={styles.editInput}
+                value={editedConditions?.electiveCredits || 0}
+                onChange={(e) => handleConditionChange('electiveCredits', parseInt(e.target.value) || 0)}
+              />
             ) : (
               <>
                 <p className={styles.conditionValue}>{studyPlan.conditions.electiveCredits} créditos</p>
@@ -361,22 +361,12 @@ function StudyPlan() {
           <div className={styles.conditionItem}>
             <p className={styles.conditionLabel}>Materias UNAHUR</p>
             {isEditing ? (
-              <>
-                <input
-                  type="number"
-                  className={styles.editInput}
-                  value={editedConditions?.unahurSubjects || 0}
-                  onChange={(e) => handleConditionChange('unahurSubjects', parseInt(e.target.value) || 0)}
-                />
-                <input
-                  type="text"
-                  className={styles.editInput}
-                  placeholder="Label"
-                  value={editedConditions?.unahurLabel || ''}
-                  onChange={(e) => handleConditionChange('unahurLabel', e.target.value)}
-                  style={{ marginTop: '0.5rem' }}
-                />
-              </>
+              <input
+                type="number"
+                className={styles.editInput}
+                value={editedConditions?.unahurSubjects || 0}
+                onChange={(e) => handleConditionChange('unahurSubjects', parseInt(e.target.value) || 0)}
+              />
             ) : (
               <>
                 <p className={styles.conditionValue}>{studyPlan.conditions.unahurSubjects} materias</p>
@@ -673,20 +663,21 @@ function StudyPlan() {
       <Modal
         open={showSaveModal}
         title="Guardar cambios"
-        onClose={() => setShowSaveModal(false)}
+        onClose={() => !saving && setShowSaveModal(false)}
         size="sm"
         footer={
           <div className={styles.modalFooter}>
-            <Button variant="outline" onClick={() => setShowSaveModal(false)}>
+            <Button variant="outline" onClick={() => setShowSaveModal(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button variant="gradient" onClick={confirmSave}>
-              Guardar
+            <Button variant="gradient" onClick={confirmSave} disabled={saving}>
+              {saving ? 'Guardando…' : 'Guardar'}
             </Button>
           </div>
         }
       >
         <p>¿Estás seguro de que deseas guardar los cambios realizados en el plan de estudios?</p>
+        {saveError && <p className={styles.deleteWarning}>{saveError}</p>}
       </Modal>
 
       <Modal

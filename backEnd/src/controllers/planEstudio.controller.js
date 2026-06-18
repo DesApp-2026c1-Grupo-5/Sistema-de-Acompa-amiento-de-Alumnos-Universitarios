@@ -3,7 +3,11 @@ const {
   carrera,
   materia,
   correlatividad,
+  sequelize,
+  Sequelize,
 } = require("../db/models");
+
+const { Op } = Sequelize;
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -11,13 +15,7 @@ const buildError = (message, statusCode) => {
   return error;
 };
 
-const obtenerPlan = async (req, res, next) => {
-  const id = Number(req.params.id);
-
-  if (!Number.isInteger(id) || id <= 0) {
-    return next(buildError("id de plan invalido", 400));
-  }
-
+const obtenerPlanFormateado = async (id) => {
   const plan = await plan_estudio.findByPk(id, {
     include: [
       { model: carrera, attributes: ["id", "nombre"] },
@@ -52,9 +50,7 @@ const obtenerPlan = async (req, res, next) => {
     ],
   });
 
-  if (!plan) {
-    return next(buildError("Plan de estudio no encontrado", 404));
-  }
+  if (!plan) return null;
 
   const plain = plan.get({ plain: true });
   const materias = plain.materias || [];
@@ -76,23 +72,34 @@ const obtenerPlan = async (req, res, next) => {
     };
   });
 
-  const materias_unahur = materias.filter((m) => m.es_unahur).length;
+  return {
+    id: plain.id,
+    carrera_id: plain.carrera_id,
+    carrera_nombre: plain.carrera?.nombre ?? null,
+    nombre: plain.nombre,
+    anio: plain.anio,
+    estado: plain.estado,
+    creditos_requeridos: plain.creditos_requeridos,
+    niveles_ingles_requeridos: plain.niveles_ingles_requeridos,
+    materias_unahur: plain.materias_unahur ?? 0,
+    materias: materiasFormatted,
+  };
+};
 
-  return res.status(200).json({
-    ok: true,
-    data: {
-      id: plain.id,
-      carrera_id: plain.carrera_id,
-      carrera_nombre: plain.carrera?.nombre ?? null,
-      nombre: plain.nombre,
-      anio: plain.anio,
-      estado: plain.estado,
-      creditos_requeridos: plain.creditos_requeridos,
-      niveles_ingles_requeridos: plain.niveles_ingles_requeridos,
-      materias_unahur,
-      materias: materiasFormatted,
-    },
-  });
+const obtenerPlan = async (req, res, next) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return next(buildError("id de plan invalido", 400));
+  }
+
+  const data = await obtenerPlanFormateado(id);
+
+  if (!data) {
+    return next(buildError("Plan de estudio no encontrado", 404));
+  }
+
+  return res.status(200).json({ ok: true, data });
 };
 
 const crearPlan = async (req, res, next) => {
@@ -165,8 +172,139 @@ const actualizarPlan = async (req, res, next) => {
   }
 };
 
+const actualizarPlanCompleto = async (req, res, next) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return next(buildError("id de plan inválido", 400));
+  }
+
+  const {
+    estado,
+    creditos_requeridos,
+    niveles_ingles_requeridos,
+    materias_unahur,
+    materias = [],
+  } = req.body;
+
+  // Validaciones cruzadas sobre materias y correlativas
+  const codigos = materias.map((m) => m.codigo);
+  const setCodigos = new Set(codigos);
+  if (setCodigos.size !== codigos.length) {
+    return next(buildError("Hay códigos de materia duplicados en el payload", 400));
+  }
+  for (const m of materias) {
+    for (const corr of m.correlativas || []) {
+      if (!setCodigos.has(corr)) {
+        return next(
+          buildError(
+            `La correlativa "${corr}" de la materia "${m.codigo}" no coincide con ninguna materia del plan`,
+            400
+          )
+        );
+      }
+    }
+  }
+
+  try {
+    const plan = await plan_estudio.findByPk(id, {
+      include: [{ model: materia, as: "materias", attributes: ["id", "codigo"] }],
+    });
+    if (!plan) {
+      return next(buildError("Plan de estudio no encontrado", 404));
+    }
+
+    await sequelize.transaction(async (t) => {
+      await plan.update(
+        {
+          estado: estado ?? plan.estado,
+          creditos_requeridos,
+          niveles_ingles_requeridos,
+          materias_unahur,
+        },
+        { transaction: t }
+      );
+
+      const existentes = plan.materias || [];
+      const existentesByCodigo = new Map(existentes.map((m) => [m.codigo, m]));
+      const oldIds = existentes.map((m) => m.id);
+
+      // Upsert por código: actualizar las existentes, crear las nuevas
+      const codigoToId = {};
+      for (const m of materias) {
+        const datos = {
+          nombre: m.nombre,
+          anio_cursada: m.anio_cursada,
+          tipo: m.es_optativa ? "optativa" : "obligatoria",
+          modalidad: m.modalidad,
+          es_optativa: m.es_optativa,
+          es_unahur: m.es_unahur,
+          creditos_otorga: m.creditos_otorga,
+        };
+        const existente = existentesByCodigo.get(m.codigo);
+        if (existente) {
+          await existente.update(datos, { transaction: t });
+          codigoToId[m.codigo] = existente.id;
+        } else {
+          const creada = await materia.create(
+            { plan_id: id, codigo: m.codigo, ...datos },
+            { transaction: t }
+          );
+          codigoToId[m.codigo] = creada.id;
+        }
+      }
+
+      // Bajas: materias del plan cuyo código ya no está en el payload
+      const removedIds = existentes
+        .filter((m) => !setCodigos.has(m.codigo))
+        .map((m) => m.id);
+
+      // Limpiar correlatividades de todas las materias del plan (viejas ∪ nuevas)
+      const allIds = [...new Set([...oldIds, ...Object.values(codigoToId)])];
+      if (allIds.length > 0) {
+        await correlatividad.destroy({
+          where: {
+            [Op.or]: [
+              { materia_id: { [Op.in]: allIds } },
+              { materia_requisito_id: { [Op.in]: allIds } },
+            ],
+          },
+          transaction: t,
+        });
+      }
+
+      if (removedIds.length > 0) {
+        await materia.destroy({
+          where: { id: { [Op.in]: removedIds } },
+          transaction: t,
+        });
+      }
+
+      // Recrear correlatividades desde el payload
+      for (const m of materias) {
+        for (const corrCodigo of m.correlativas || []) {
+          await correlatividad.create(
+            {
+              materia_id: codigoToId[m.codigo],
+              materia_requisito_id: codigoToId[corrCodigo],
+              tipo: "cursar",
+            },
+            { transaction: t }
+          );
+        }
+      }
+    });
+
+    const data = await obtenerPlanFormateado(id);
+    return res.status(200).json({ ok: true, data });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   obtenerPlan,
   crearPlan,
   actualizarPlan,
+  actualizarPlanCompleto,
 };

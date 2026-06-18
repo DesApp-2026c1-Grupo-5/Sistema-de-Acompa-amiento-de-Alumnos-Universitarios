@@ -7,3 +7,6 @@ export const addPlanEstudio = (carreraId, payload) =>
 
 export const updatePlanEstudio = (id, payload) =>
   api.patch(`/planes-estudio/${id}`, payload);
+
+export const savePlanEstudio = (id, payload) =>
+  api.put(`/planes-estudio/${id}`, payload);
