@@ -5,7 +5,7 @@ const notificacionIdParamSchema = Joi.object({
 });
 
 const listarNotificacionesQuerySchema = Joi.object({
-  tipo: Joi.string().valid("academic", "session", "material").optional(),
+  tipo: Joi.string().valid("academic", "session", "material", "general").optional(),
   leida: Joi.boolean().optional(),
 });
 
