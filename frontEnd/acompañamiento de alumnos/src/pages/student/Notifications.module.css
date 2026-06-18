@@ -150,6 +150,11 @@
   color: #a855f7 !important;
 }
 
+.general {
+  background: #e0f2fe !important;
+  color: #0284c7 !important;
+}
+
 .notificationContent {
   min-width: 0;
 }

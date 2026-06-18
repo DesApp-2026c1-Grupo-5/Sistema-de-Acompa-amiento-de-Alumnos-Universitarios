@@ -6,6 +6,7 @@ const {
   inscripcion_sesion,
   archivo_sesion_estudio,
 } = require("../db/models");
+const { crearNotificacion } = require("../services/notificacion.service");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
 
@@ -13,6 +14,35 @@ const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
+};
+
+const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje }) => {
+  const inscripciones = await inscripcion_sesion.findAll({
+    where: {
+      sesion_id: sesionId,
+      estado: ["pendiente", ...ESTADOS_ACTIVOS],
+    },
+    include: [
+      {
+        model: estudiante,
+      },
+    ],
+  });
+
+  for (const inscripcion of inscripciones) {
+    const participante = inscripcion.estudiante;
+    if (!participante?.usuario_id) continue;
+
+    await crearNotificacion({
+      usuario_id: participante.usuario_id,
+      titulo,
+      tipo: "session",
+      mensaje,
+      referencia_tipo: "sesion_estudio",
+      referencia_id: sesionId,
+      action_url: "/student/study-sessions",
+    });
+  }
 };
 
 const normalizarSesion = (plain, miEstudianteId) => {
@@ -73,6 +103,16 @@ const crearSesion = async (req, res, next) => {
     ...req.body,
     creador_id: estudianteData.id,
     cancelada: false,
+  });
+
+  await crearNotificacion({
+    usuario_id: req.user.sub,
+    titulo: "Sesión creada",
+    tipo: "session",
+    mensaje: `Creaste la sesión "${sesion.tema}".`,
+    referencia_tipo: "sesion_estudio",
+    referencia_id: sesion.id,
+    action_url: "/student/study-sessions",
   });
 
   return res.status(201).json({
@@ -266,6 +306,22 @@ const editarSesion = async (req, res, next) => {
 
   await sesion.update(req.body);
 
+  await crearNotificacion({
+    usuario_id: req.user.sub,
+    titulo: "Sesión modificada",
+    tipo: "session",
+    mensaje: `Actualizaste la sesión "${sesion.tema}".`,
+    referencia_tipo: "sesion_estudio",
+    referencia_id: sesion.id,
+    action_url: "/student/study-sessions",
+  });
+
+  await notificarParticipantesSesion({
+    sesionId: sesion.id,
+    titulo: "Sesión modificada",
+    mensaje: `La sesión "${sesion.tema}" fue modificada por su creador.`,
+  });
+
   return res.status(200).json({
     ok: true,
     data: sesion,
@@ -290,6 +346,22 @@ const cancelarSesion = async (req, res, next) => {
   if (!sesion.cancelada) {
     await sesion.update({ cancelada: true });
   }
+
+  await crearNotificacion({
+    usuario_id: req.user.sub,
+    titulo: "Sesión cancelada",
+    tipo: "session",
+    mensaje: `Cancelaste la sesión "${sesion.tema}".`,
+    referencia_tipo: "sesion_estudio",
+    referencia_id: sesion.id,
+    action_url: "/student/study-sessions",
+  });
+
+  await notificarParticipantesSesion({
+    sesionId: sesion.id,
+    titulo: "Sesión cancelada",
+    mensaje: `La sesión "${sesion.tema}" fue cancelada por su creador.`,
+  });
 
   return res.status(200).json({
     ok: true,

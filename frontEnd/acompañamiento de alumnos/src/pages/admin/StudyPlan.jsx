@@ -42,7 +42,6 @@ function StudyPlan() {
   const [editedStatus, setEditedStatus] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
-  const [pendingDeleteCode, setPendingDeleteCode] = useState(null);
   const [newSubject, setNewSubject] = useState({
     code: '',
     name: '',

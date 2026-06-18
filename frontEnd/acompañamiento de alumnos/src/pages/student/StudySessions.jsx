@@ -243,6 +243,7 @@ function StudySessions() {
     }
     await reloadSessions();
     closeForm();
+    window.dispatchEvent(new Event('notifications-updated'));
   };
 
   const handleJoinSession = async (session) => {
@@ -250,6 +251,7 @@ function StudySessions() {
     try {
       await joinSession(session.id);
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos completar la inscripción.");
     }
@@ -260,6 +262,7 @@ function StudySessions() {
     try {
       await cancelSession(sessionToCancel.id);
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos cancelar la sesión.");
     } finally {
@@ -285,6 +288,7 @@ function StudySessions() {
     const res = await getSession(detailSession.id);
     setDetailSession(mapSessionFromApi(res.data));
     await reloadSessions();
+    window.dispatchEvent(new Event('notifications-updated'));
   };
 
   const handleDeleteFile = async (archivoId) => {
@@ -294,6 +298,7 @@ function StudySessions() {
     const res = await getSession(detailSession.id);
     setDetailSession(mapSessionFromApi(res.data));
     await reloadSessions();
+    window.dispatchEvent(new Event('notifications-updated'));
   };
 
   const handleApprove = async (inscripcionId) => {
@@ -303,6 +308,7 @@ function StudySessions() {
       const res = await getSession(detailSession.id);
       setDetailSession(mapSessionFromApi(res.data));
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos aprobar la solicitud.");
     }
@@ -315,6 +321,7 @@ function StudySessions() {
       const res = await getSession(detailSession.id);
       setDetailSession(mapSessionFromApi(res.data));
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos rechazar la solicitud.");
     }

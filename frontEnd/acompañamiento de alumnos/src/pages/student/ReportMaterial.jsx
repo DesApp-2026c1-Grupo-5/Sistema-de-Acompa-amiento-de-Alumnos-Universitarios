@@ -70,6 +70,7 @@ export default function ReportMaterial() {
                 ...(detalle ? { detalle } : {}),
             });
 
+            window.dispatchEvent(new Event('notifications-updated'));
             setSubmitSuccess(true);
         } catch (err) {
             setSubmitError(err.message || 'No pudimos enviar la denuncia.');
