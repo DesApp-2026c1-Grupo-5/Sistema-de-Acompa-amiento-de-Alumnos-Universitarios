@@ -10,6 +10,8 @@ export const crearFinal = (payload) => api.post("/student/academic-situation/fin
 
 export const eliminarFinal = (id) => api.delete(`/student/academic-situation/finals/${id}`);
 
+export const actualizarFinal = (id, payload) => api.patch(`/student/academic-situation/finals/${id}`, payload);
+
 export const crearActividad = (payload) => api.post("/student/academic-situation/credits", payload);
 
 export const eliminarActividad = (id) => api.delete(`/student/academic-situation/credits/${id}`);

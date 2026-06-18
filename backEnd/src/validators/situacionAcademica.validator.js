@@ -33,11 +33,18 @@ const crearActividadSchema = Joi.object({
   descripcion: Joi.string().max(255).required(),
   creditos: Joi.number().integer().min(1).required(),
   fecha: Joi.date().required(),
+  estado: Joi.string().valid("pendiente", "aprobada").optional(),
 });
+
+const actualizarFinalSchema = Joi.object({
+  fecha: Joi.date().optional(),
+  nota: Joi.number().min(0).max(10).optional(),
+}).min(1);
 
 module.exports = {
   crearSituacionSchema,
   actualizarMateriasSchema,
   crearFinalSchema,
   crearActividadSchema,
+  actualizarFinalSchema,
 };

@@ -6,6 +6,7 @@ import {
   actualizarMaterias,
   crearFinal,
   eliminarFinal,
+  actualizarFinal,
   crearActividad,
   eliminarActividad,
   importarExcel,
@@ -87,6 +88,7 @@ function WizardPlan({ onCreated }) {
 export default function SituacionAcademica() {
   const [data, setData] = useState(null);
   const [editando, setEditando] = useState(false);
+  const [backupSubjects, setBackupSubjects] = useState(null);
   const [mostrarCargaExcel, setMostrarCargaExcel] = useState(false);
   const [archivoExcel, setArchivoExcel] = useState(null);
   const [previewExcel, setPreviewExcel] = useState(null);
@@ -196,21 +198,23 @@ export default function SituacionAcademica() {
     }
   };
 
-  const handleAgregarFinal = async (estadoMateriaId) => {
-    const nota = prompt('Nota del final (0-10):');
-    if (nota === null) return;
-    const notaNum = Number(nota);
-    if (Number.isNaN(notaNum) || notaNum < 0 || notaNum > 10) {
-      setError('La nota debe ser un número entre 0 y 10');
+  const handleAgregarFinal = async (materiaId) => {
+    const fechaInput = document.getElementById(`fecha-${materiaId}`);
+    const notaInput = document.getElementById(`nota-${materiaId}`);
+    if (!fechaInput || !notaInput) return;
+    const fecha = fechaInput.value;
+    const nota = Number(notaInput.value);
+    if (!fecha || Number.isNaN(nota) || nota < 0 || nota > 10) {
+      setError('Completá la fecha y la nota (0-10)');
       return;
     }
-    const aprobado = notaNum >= 4;
+    const estado_materia_id = data.subjects.find((s) => s.materia_id === materiaId)?.finals?.[0]?.estado_materia_id;
     try {
       await crearFinal({
-        estado_materia_id: estadoMateriaId,
-        fecha: new Date().toISOString().split('T')[0],
-        nota: notaNum,
-        aprobado,
+        estado_materia_id: estado_materia_id || materiaId,
+        fecha,
+        nota,
+        aprobado: nota >= 4,
       });
       await cargarDatos();
     } catch (err) {
@@ -337,7 +341,16 @@ export default function SituacionAcademica() {
                 {saving ? 'Guardando...' : '💾 Guardar cambios'}
               </button>
             )}
-            <button type="button" className={styles.updateButton} onClick={() => setEditando(!editando)}>
+            <button type="button" className={styles.updateButton} onClick={() => {
+              if (editando) {
+                setData((prev) => ({ ...prev, subjects: backupSubjects }));
+                setBackupSubjects(null);
+                setEditando(false);
+              } else {
+                setBackupSubjects(JSON.parse(JSON.stringify(data.subjects)));
+                setEditando(true);
+              }
+            }}>
               ✎ {editando ? 'Cancelar' : 'Editar'}
             </button>
           </div>
@@ -433,11 +446,7 @@ export default function SituacionAcademica() {
                           )}
                         </td>
                         <td>
-                          {editando ? (
-                            <input type="number" value={materia.academic_year || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_year', e.target.value ? Number(e.target.value) : null)} />
-                          ) : (
-                            materia.academic_year ? `${materia.academic_year}°` : '-'
-                          )}
+                          {materia.year_in_career ? `${materia.year_in_career}°` : '-'}
                         </td>
                         <td>
                           {editando ? (
@@ -458,16 +467,29 @@ export default function SituacionAcademica() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             {materia.finals?.map((f) => (
                               <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
-                                <span>{new Date(f.fecha).toLocaleDateString()}: {f.nota} {f.aprobado ? '✅' : '❌'}</span>
-                                {editando && (
-                                  <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
+                                {editando ? (
+                                  <>
+                                    <input type="date" defaultValue={f.fecha?.split('T')[0]} style={{ width: 120, fontSize: 11 }}
+                                      onChange={(e) => { f._fecha = e.target.value; }} />
+                                    <input type="number" min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
+                                      onChange={(e) => { f._nota = Number(e.target.value); }} />
+                                    <button type="button" className={styles.smallBtn} onClick={async () => {
+                                      await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: f._nota ?? f.nota });
+                                      await cargarDatos();
+                                    }}>💾</button>
+                                    <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
+                                  </>
+                                ) : (
+                                  <span>{new Date(f.fecha).toLocaleDateString()}: {f.nota}</span>
                                 )}
                               </div>
                             ))}
                             {editando && (
-                              <button type="button" className={styles.smallBtn} onClick={() => handleAgregarFinal(materia.finals?.[0]?.estado_materia_id || materia.materia_id)}>
-                                + Final
-                              </button>
+                              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11 }} />
+                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11 }} placeholder="Nota" />
+                                <button type="button" className={styles.smallBtn} onClick={() => handleAgregarFinal(materia.materia_id)}>+</button>
+                              </div>
                             )}
                           </div>
                         </td>
@@ -489,11 +511,12 @@ export default function SituacionAcademica() {
         <div className={styles.tableHeader}>
           <h2>Actividades con créditos</h2>
         </div>
-        {credit_activities?.length > 0 ? (
+          {credit_activities?.length > 0 ? (
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>Descripción</th>
+                <th>Estado</th>
                 <th>Créditos</th>
                 <th>Fecha</th>
                 {editando && <th></th>}
@@ -503,6 +526,11 @@ export default function SituacionAcademica() {
               {credit_activities.map((act) => (
                 <tr key={act.id}>
                   <td>{act.description}</td>
+                  <td>
+                    <span className={`${styles.badge} ${styles[`badge${act.estado === 'aprobada' ? 'Aprobada' : 'Pendiente'}`] || ''}`}>
+                      {act.estado || 'pendiente'}
+                    </span>
+                  </td>
                   <td>{act.credits}</td>
                   <td>{act.date ? new Date(act.date).toLocaleDateString() : '-'}</td>
                   {editando && (
@@ -518,6 +546,10 @@ export default function SituacionAcademica() {
         {editando && (
           <div className={styles.actividadForm}>
             <input type="text" placeholder="Descripción" value={formActividad.descripcion} onChange={(e) => setFormActividad((p) => ({ ...p, descripcion: e.target.value }))} />
+            <select value={formActividad.estado || 'pendiente'} onChange={(e) => setFormActividad((p) => ({ ...p, estado: e.target.value }))}>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobada">Aprobada</option>
+            </select>
             <input type="number" placeholder="Créditos" value={formActividad.creditos} onChange={(e) => setFormActividad((p) => ({ ...p, creditos: e.target.value }))} />
             <input type="date" value={formActividad.fecha} onChange={(e) => setFormActividad((p) => ({ ...p, fecha: e.target.value }))} />
             <button type="button" className={styles.primaryButton} onClick={handleAgregarActividad}>Agregar</button>

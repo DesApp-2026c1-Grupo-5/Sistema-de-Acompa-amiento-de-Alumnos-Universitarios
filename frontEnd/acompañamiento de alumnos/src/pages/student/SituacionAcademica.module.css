@@ -251,6 +251,12 @@
   border: 1px solid #fda4af;
 }
 
+.badgeAprobada {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
 .badgeCursando {
   background: #dbeafe;
   color: #2563eb;

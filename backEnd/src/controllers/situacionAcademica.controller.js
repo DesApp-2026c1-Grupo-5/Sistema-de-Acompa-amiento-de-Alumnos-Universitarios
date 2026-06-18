@@ -55,7 +55,7 @@ const buildStats = async (situacionId, plan) => {
   });
 
   const actividades = await actividad_credito.findAll({
-    where: { situacion_id: situacionId },
+    where: { situacion_id: situacionId, estado: "aprobada" },
     attributes: ["creditos"],
     raw: true,
   });
@@ -256,6 +256,7 @@ const obtenerSituacion = async (req, res, next) => {
         description: a.descripcion,
         credits: a.creditos,
         date: a.fecha,
+        estado: a.estado,
       })),
     },
   });
@@ -357,12 +358,13 @@ const crearActividad = async (req, res, next) => {
   const situacion = await getSituacionActiva(estudianteData.id);
   if (!situacion) return next(buildError("Situación académica no encontrada", 404));
 
-  const { descripcion, creditos, fecha } = req.body;
+  const { descripcion, creditos, fecha, estado } = req.body;
   const actividad = await actividad_credito.create({
     situacion_id: situacion.id,
     descripcion,
     creditos,
     fecha: new Date(fecha),
+    estado: estado || "pendiente",
   });
 
   return res.status(201).json({ ok: true, data: actividad });
@@ -460,6 +462,7 @@ const confirmarImportacion = async (req, res, next) => {
           descripcion: act.descripcion,
           creditos: act.creditos,
           fecha: new Date(),
+          estado: "aprobada",
         });
         results.push({ id: actividad.id, tipo: "credito", descripcion: act.descripcion, creditos: act.creditos });
       } catch (err) {
@@ -471,12 +474,37 @@ const confirmarImportacion = async (req, res, next) => {
   return res.status(200).json({ ok: true, data: results });
 };
 
+const actualizarFinal = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const f = await final.findByPk(req.params.id);
+  if (!f) return next(buildError("Final no encontrado", 404));
+
+  const estudianteId = await getEstudianteIdFromEstadoMateria(f.estado_materia_id);
+  if (!estudianteId || estudianteId !== estudianteData.id) {
+    return next(buildError("No tenés permisos para modificar este final", 403));
+  }
+
+  const { fecha, nota } = req.body;
+  const aprobado = nota !== undefined ? Number(nota) >= 4 : f.aprobado;
+
+  await f.update({
+    fecha: fecha ? new Date(fecha) : f.fecha,
+    nota: nota !== undefined ? nota : f.nota,
+    aprobado,
+  });
+
+  return res.status(200).json({ ok: true, data: f });
+};
+
 module.exports = {
   crearSituacion,
   obtenerSituacion,
   actualizarMaterias,
   crearFinal,
   eliminarFinal,
+  actualizarFinal,
   crearActividad,
   eliminarActividad,
   importarExcel,

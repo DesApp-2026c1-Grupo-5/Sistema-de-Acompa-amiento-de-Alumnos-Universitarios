@@ -7,6 +7,7 @@ const {
   actualizarMateriasSchema,
   crearFinalSchema,
   crearActividadSchema,
+  actualizarFinalSchema,
 } = require("../validators/situacionAcademica.validator");
 const controller = require("../controllers/situacionAcademica.controller");
 
@@ -17,6 +18,7 @@ router.get("/student/academic-situation", authMiddleware, controller.obtenerSitu
 router.patch("/student/academic-situation/subjects", authMiddleware, validate(actualizarMateriasSchema), controller.actualizarMaterias);
 router.post("/student/academic-situation/finals", authMiddleware, validate(crearFinalSchema), controller.crearFinal);
 router.delete("/student/academic-situation/finals/:id", authMiddleware, controller.eliminarFinal);
+router.patch("/student/academic-situation/finals/:id", authMiddleware, validate(actualizarFinalSchema), controller.actualizarFinal);
 router.post("/student/academic-situation/credits", authMiddleware, validate(crearActividadSchema), controller.crearActividad);
 router.delete("/student/academic-situation/credits/:id", authMiddleware, controller.eliminarActividad);
 router.post("/student/academic-situation/import-excel", authMiddleware, validarCargaExcel, controller.importarExcel);

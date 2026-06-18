@@ -21,7 +21,11 @@ module.exports = (sequelize, DataTypes) => {
     descripcion: DataTypes.STRING,
     creditos: DataTypes.INTEGER,
     fecha: DataTypes.DATE,
-    comprobante_url: DataTypes.STRING
+    comprobante_url: DataTypes.STRING,
+    estado: {
+      type: DataTypes.ENUM('pendiente', 'aprobada'),
+      defaultValue: 'pendiente',
+    },
   }, {
     sequelize,
     modelName: 'actividad_credito',
