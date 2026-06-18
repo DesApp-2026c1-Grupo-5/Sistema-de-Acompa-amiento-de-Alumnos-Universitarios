@@ -1,6 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/auth.middleware");
 const validate = require("../middlewares/validate.middleware");
+const { validarCargaExcel } = require("../middlewares/excelUpload.middleware");
 const {
   crearSituacionSchema,
   actualizarMateriasSchema,
@@ -18,5 +19,7 @@ router.post("/student/academic-situation/finals", authMiddleware, validate(crear
 router.delete("/student/academic-situation/finals/:id", authMiddleware, controller.eliminarFinal);
 router.post("/student/academic-situation/credits", authMiddleware, validate(crearActividadSchema), controller.crearActividad);
 router.delete("/student/academic-situation/credits/:id", authMiddleware, controller.eliminarActividad);
+router.post("/student/academic-situation/import-excel", authMiddleware, validarCargaExcel, controller.importarExcel);
+router.post("/student/academic-situation/confirm-excel", authMiddleware, controller.confirmarImportacion);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const db = require("../db/models");
 const { registrarAccionAcademica } = require("../services/publicacionAcademica.service");
+const { parseExcel, validarFilas, limpiarArchivo } = require("../services/excelImport.service");
 
 const {
   estudiante,
@@ -378,6 +379,59 @@ const eliminarActividad = async (req, res, next) => {
   return res.status(200).json({ ok: true, data: { id: req.params.id } });
 };
 
+const importarExcel = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActiva(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada. Creá una primero.", 400));
+
+  let rows;
+  try {
+    rows = parseExcel(req.file.path);
+  } catch (err) {
+    limpiarArchivo(req.file.path);
+    return next(buildError(err.message, 400));
+  }
+
+  const planMaterias = await materia.findAll({
+    where: { plan_id: situacion.plan_id },
+    attributes: ["id", "nombre"],
+    raw: true,
+  });
+
+  const { errors, validRows } = validarFilas(rows, planMaterias);
+
+  limpiarArchivo(req.file.path);
+
+  return res.status(200).json({
+    ok: true,
+    data: {
+      total: rows.length,
+      validos: validRows.length,
+      errores: errors.length,
+      errors,
+      preview: validRows,
+    },
+  });
+};
+
+const confirmarImportacion = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActiva(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada", 404));
+
+  const { materias } = req.body;
+  if (!materias || !Array.isArray(materias) || materias.length === 0) {
+    return next(buildError("Debe enviar un listado de materias", 400));
+  }
+
+  req.body = { materias };
+  return actualizarMaterias(req, res, next);
+};
+
 module.exports = {
   crearSituacion,
   obtenerSituacion,
@@ -386,4 +440,6 @@ module.exports = {
   eliminarFinal,
   crearActividad,
   eliminarActividad,
+  importarExcel,
+  confirmarImportacion,
 };
