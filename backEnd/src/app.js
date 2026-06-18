@@ -20,6 +20,7 @@ const planEstudioRoutes = require("./routes/planEstudio.routes");
 const motivoDenunciaRoutes = require("./routes/motivoDenuncia.routes");
 const statsRoutes = require("./routes/stats.routes");
 const academicAssistantRoutes = require("./routes/academicAssistant.routes");
+const situacionAcademicaRoutes = require("./routes/situacionAcademica.routes");
 
 const errorHandler = require("./middlewares/errorHandler");
 
@@ -47,6 +48,7 @@ app.use("/api", planEstudioRoutes);
 app.use("/api", motivoDenunciaRoutes);
 app.use("/api", statsRoutes);
 app.use("/api", academicAssistantRoutes);
+app.use("/api", situacionAcademicaRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
