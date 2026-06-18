@@ -251,6 +251,24 @@
   border: 1px solid #fda4af;
 }
 
+.badgeAprobada {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.badgeCursando {
+  background: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #93c5fd;
+}
+
+.badgeRegular {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+}
+
 .formRow input,
 .formRow select {
   width: 100%;
@@ -497,5 +515,149 @@
 :global(.dark-mode) .excelFileName,
 :global([data-theme='dark']) .excelFileName {
   color: #b7c8e6;
+}
+
+.wizardCard {
+  max-width: 480px;
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.wizardField {
+  margin-bottom: 20px;
+}
+
+.wizardField label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #020617;
+}
+
+.wizardField select {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 13px;
+  outline: none;
+}
+
+.errorText {
+  color: #ef4444;
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.hintText {
+  margin-top: 12px;
+  color: #405a7a;
+  font-size: 12px;
+}
+
+.smallBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  min-width: 22px;
+  padding: 0 6px;
+  border: 1px solid #dbe2ea;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.smallBtn:hover {
+  background: #f8fafc;
+}
+
+.actividadForm {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0 0;
+  align-items: flex-end;
+}
+
+.actividadForm input {
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 12px;
+  outline: none;
+}
+
+.actividadForm input:first-child {
+  flex: 1;
+}
+
+.actividadForm input[type="number"] {
+  width: 80px;
+}
+
+.actividadForm input[type="date"] {
+  width: 130px;
+}
+
+:global(.dark) .wizardCard {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .wizardField label {
+  color: #ffffff;
+}
+
+:global(.dark) .wizardField select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(.dark) .hintText {
+  color: #b7c8e6;
+}
+
+:global(.dark) .smallBtn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(.dark) .smallBtn:hover {
+  background: #334155;
+}
+
+:global(.dark) .actividadForm input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(.dark) .excelErrors {
+  color: #fca5a5;
+}
+
+.excelErrors {
+  margin-top: 12px;
+  text-align: left;
+  width: 100%;
+  color: #ef4444;
+}
+
+.excelErrors h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
 }
 

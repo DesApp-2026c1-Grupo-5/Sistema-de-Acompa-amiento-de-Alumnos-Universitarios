@@ -75,3 +75,8 @@
   background: rgba(34, 197, 94, 0.2);
   color: #4ade80;
 }
+
+:global(html.dark) .variant_danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
