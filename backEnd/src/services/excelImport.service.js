@@ -74,7 +74,7 @@ const parseReporteExcel = (filePath) => {
     const estado = inferirEstado(notaRaw);
     const notaNumerica = extraerNotaNumerica(notaRaw);
 
-    const esActividadCredito = creditos !== null && creditos > 0 && !anio;
+    const esActividadCredito = creditos !== null && creditos > 0 && !anio && notaRaw.toLowerCase().includes("c (aprobado)");
 
     rows.push({
       rowNumber: i + 1,
