@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
 const db = require("../db/models");
 const { registrarAccionAcademica } = require("../services/publicacionAcademica.service");
-const { parseExcel, validarFilas, limpiarArchivo } = require("../services/excelImport.service");
+const { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo } = require("../services/excelImport.service");
 
 const {
   estudiante,
@@ -261,21 +261,14 @@ const obtenerSituacion = async (req, res, next) => {
   });
 };
 
-const actualizarMaterias = async (req, res, next) => {
-  const estudianteData = await getEstudiante(req.user.sub);
-  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
-
-  const situacion = await getSituacionActiva(estudianteData.id);
-  if (!situacion) return next(buildError("Situación académica no encontrada", 404));
-
-  const { materias } = req.body;
+const processMateriasBatch = async (situacionId, usuarioSub, items) => {
   const results = [];
 
-  for (const item of materias) {
+  for (const item of items) {
     try {
       if (item.estado === "pendiente") {
         const [em] = await estado_materia.findOrCreate({
-          where: { situacion_id: situacion.id, materia_id: item.materia_id },
+          where: { situacion_id: situacionId, materia_id: item.materia_id },
           defaults: { estado: "pendiente" },
         });
         await em.update({
@@ -285,24 +278,36 @@ const actualizarMaterias = async (req, res, next) => {
           nota: item.nota ?? em.nota,
           fecha: item.fecha ? new Date(item.fecha) : em.fecha,
         });
-        results.push({ materia_id: item.materia_id, success: true });
+        results.push({ materia_id: item.materia_id, success: true, tipo: "materia" });
         continue;
       }
 
       if (item.estado === "cursando" || item.estado === "regular" || item.estado === "aprobada") {
         const accionMap = { cursando: "inscripcion", regular: "regularizacion", aprobada: "aprobacion" };
         const result = await registrarAccionAcademica(
-          req.user.sub,
+          usuarioSub,
           item.materia_id,
           accionMap[item.estado],
           { anio: item.anio, cuatrimestre: item.cuatrimestre, nota: item.nota, fecha: item.fecha }
         );
-        results.push({ materia_id: item.materia_id, success: true, data: result });
+        results.push({ materia_id: item.materia_id, success: true, tipo: "materia", data: result });
       }
     } catch (err) {
-      results.push({ materia_id: item.materia_id, success: false, error: err.message });
+      results.push({ materia_id: item.materia_id, success: false, tipo: "materia", error: err.message });
     }
   }
+
+  return results;
+};
+
+const actualizarMaterias = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActiva(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada", 404));
+
+  const results = await processMateriasBatch(situacion.id, req.user.sub, req.body.materias || []);
 
   return res.status(200).json({ ok: true, data: results });
 };
@@ -394,13 +399,27 @@ const importarExcel = async (req, res, next) => {
     return next(buildError(err.message, 400));
   }
 
+  const esReporte = rows.length > 0 && "esActividadCredito" in rows[0];
+
   const planMaterias = await materia.findAll({
     where: { plan_id: situacion.plan_id },
     attributes: ["id", "nombre"],
     raw: true,
   });
 
-  const { errors, validRows } = validarFilas(rows, planMaterias);
+  let errors, validRows, creditActivities;
+
+  if (esReporte) {
+    const result = validarFilasReporte(rows, planMaterias);
+    errors = result.errors;
+    validRows = result.validRows;
+    creditActivities = result.creditActivities;
+  } else {
+    const result = validarFilas(rows, planMaterias);
+    errors = result.errors;
+    validRows = result.validRows;
+    creditActivities = [];
+  }
 
   limpiarArchivo(req.file.path);
 
@@ -409,9 +428,11 @@ const importarExcel = async (req, res, next) => {
     data: {
       total: rows.length,
       validos: validRows.length,
+      creditos: creditActivities.length,
       errores: errors.length,
       errors,
       preview: validRows,
+      creditActivities,
     },
   });
 };
@@ -423,13 +444,31 @@ const confirmarImportacion = async (req, res, next) => {
   const situacion = await getSituacionActiva(estudianteData.id);
   if (!situacion) return next(buildError("Situación académica no encontrada", 404));
 
-  const { materias } = req.body;
-  if (!materias || !Array.isArray(materias) || materias.length === 0) {
-    return next(buildError("Debe enviar un listado de materias", 400));
+  const { materias, credit_activities } = req.body;
+  const results = [];
+
+  if (materias && Array.isArray(materias) && materias.length > 0) {
+    const materiaResults = await processMateriasBatch(situacion.id, req.user.sub, materias);
+    results.push(...materiaResults);
   }
 
-  req.body = { materias };
-  return actualizarMaterias(req, res, next);
+  if (credit_activities && Array.isArray(credit_activities) && credit_activities.length > 0) {
+    for (const act of credit_activities) {
+      try {
+        const actividad = await actividad_credito.create({
+          situacion_id: situacion.id,
+          descripcion: act.descripcion,
+          creditos: act.creditos,
+          fecha: new Date(),
+        });
+        results.push({ id: actividad.id, tipo: "credito", descripcion: act.descripcion, creditos: act.creditos });
+      } catch (err) {
+        results.push({ descripcion: act.descripcion, tipo: "credito", success: false, error: err.message });
+      }
+    }
+  }
+
+  return res.status(200).json({ ok: true, data: results });
 };
 
 module.exports = {

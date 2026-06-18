@@ -12,11 +12,100 @@ const COLUMNAS_ESPERADAS = [
 
 const ESTADOS_VALIDOS = ["pendiente", "cursando", "regular", "aprobada"];
 
+const esFormatoReporte = (workbook) => {
+  const sheetName = workbook.SheetNames[0];
+  return sheetName && sheetName.toLowerCase() === "reporte";
+};
+
+const extraerNombreMateria = (nombreCompleto) => {
+  const match = nombreCompleto.match(/^(.+?)\s*\([\w_]+\)\s*$/);
+  return match ? match[1].trim() : nombreCompleto.trim();
+};
+
+const inferirEstado = (nota) => {
+  const n = (nota || "").trim();
+  if (n.includes("Promocionado")) return "aprobada";
+  if (n.includes("Aprobado")) return "aprobada";
+  if (n.includes("Cursando")) return "cursando";
+  if (n.includes("Regular")) return "regular";
+  return "pendiente";
+};
+
+const extraerNotaNumerica = (nota) => {
+  const match = (nota || "").trim().match(/^(\d+(?:\.\d+)?)/);
+  return match ? Number(match[1]) : null;
+};
+
+const parseReporteExcel = (filePath) => {
+  const workbook = XLSX.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null, header: 1 });
+
+  if (!data || data.length === 0) {
+    throw new Error("El archivo Excel está vacío");
+  }
+
+  let inDataSection = false;
+  const rows = [];
+
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const col0 = String(row[0] || "").trim();
+
+    if (col0 === "Actividad" && String(row[1] || "").trim() === "Tipo") {
+      inDataSection = true;
+      continue;
+    }
+
+    if (!inDataSection) continue;
+
+    if (!col0) continue;
+
+    const tipo = String(row[1] || "").trim();
+    if (tipo !== "Materia") continue;
+
+    const nombreCompleto = col0;
+    const notaRaw = String(row[4] || "").trim();
+    const origen = String(row[5] || "").trim();
+    const creditos = row[6] !== null && row[6] !== undefined && row[6] !== "" ? Number(row[6]) : null;
+    const anio = row[2] !== null && row[2] !== undefined && row[2] !== "" ? Number(row[2]) : null;
+
+    const materiaName = extraerNombreMateria(nombreCompleto);
+    const estado = inferirEstado(notaRaw);
+    const notaNumerica = extraerNotaNumerica(notaRaw);
+
+    const esActividadCredito = creditos !== null && creditos > 0 && !anio;
+
+    rows.push({
+      rowNumber: i + 1,
+      materia: materiaName,
+      nombreCompleto,
+      estado,
+      anio,
+      nota: notaNumerica,
+      notaRaw,
+      origen,
+      creditos,
+      esActividadCredito,
+    });
+  }
+
+  if (rows.length === 0) {
+    throw new Error("No se encontraron datos de materias en el archivo");
+  }
+
+  return rows;
+};
+
 const parseExcel = (filePath) => {
   const workbook = XLSX.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
   if (!sheetName) {
     throw new Error("El archivo Excel no contiene hojas");
+  }
+
+  if (esFormatoReporte(workbook)) {
+    return parseReporteExcel(filePath);
   }
 
   const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
@@ -101,6 +190,47 @@ const validarFilas = (rows, materiasDelPlan) => {
   return { errors, validRows };
 };
 
+const validarFilasReporte = (rows, materiasDelPlan) => {
+  const mapaMaterias = new Map();
+  for (const m of materiasDelPlan) {
+    mapaMaterias.set(m.nombre.toLowerCase().trim(), m);
+  }
+
+  const errors = [];
+  const validRows = [];
+  const creditActivities = [];
+
+  for (const row of rows) {
+    if (row.esActividadCredito) {
+      creditActivities.push({
+        descripcion: row.materia,
+        creditos: row.creditos,
+      });
+      continue;
+    }
+
+    const rowErrors = [];
+    const materiaMatch = row.materia ? mapaMaterias.get(row.materia.toLowerCase()) : null;
+
+    if (!materiaMatch) {
+      rowErrors.push(`La materia "${row.nombreCompleto || row.materia}" no existe en el plan de estudios`);
+    }
+
+    if (rowErrors.length > 0) {
+      errors.push({ row: row.rowNumber, materia: row.materia, errors: rowErrors });
+    } else {
+      validRows.push({
+        materia_id: materiaMatch.id,
+        estado: row.estado,
+        anio: row.anio || null,
+        nota: row.nota || null,
+      });
+    }
+  }
+
+  return { errors, validRows, creditActivities };
+};
+
 const limpiarArchivo = (filePath) => {
   try {
     if (filePath && fs.existsSync(filePath)) {
@@ -111,4 +241,4 @@ const limpiarArchivo = (filePath) => {
   }
 };
 
-module.exports = { parseExcel, validarFilas, limpiarArchivo };
+module.exports = { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo };

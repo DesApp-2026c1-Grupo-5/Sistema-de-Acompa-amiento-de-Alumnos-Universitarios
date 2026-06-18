@@ -90,6 +90,7 @@ export default function SituacionAcademica() {
   const [mostrarCargaExcel, setMostrarCargaExcel] = useState(false);
   const [archivoExcel, setArchivoExcel] = useState(null);
   const [previewExcel, setPreviewExcel] = useState(null);
+  const [creditActivitiesPreview, setCreditActivitiesPreview] = useState([]);
   const [excelErrors, setExcelErrors] = useState([]);
   const inputExcelRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -241,13 +242,14 @@ export default function SituacionAcademica() {
       const fd = new FormData();
       fd.append('archivo', archivoExcel);
       const res = await importarExcel(fd);
-      const { preview, errors } = res?.data ?? {};
+      const { preview, errors, creditActivities } = res?.data ?? {};
       if (errors?.length > 0) {
         setExcelErrors(errors);
       }
       setPreviewExcel(preview ?? []);
+      setCreditActivitiesPreview(creditActivities ?? []);
       if (!errors || errors.length === 0) {
-        await confirmarImportacion(preview ?? []);
+        await confirmarImportacion(preview ?? [], creditActivities ?? []);
         setArchivoExcel(null);
         setMostrarCargaExcel(false);
         await cargarDatos();
@@ -264,8 +266,9 @@ export default function SituacionAcademica() {
     setSaving(true);
     setError(null);
     try {
-      await confirmarImportacion(previewExcel);
+      await confirmarImportacion(previewExcel, creditActivitiesPreview);
       setPreviewExcel(null);
+      setCreditActivitiesPreview([]);
       setExcelErrors([]);
       setArchivoExcel(null);
       setMostrarCargaExcel(false);
@@ -378,7 +381,12 @@ export default function SituacionAcademica() {
 
             {previewExcel && previewExcel.length > 0 && (
               <div style={{ marginTop: 12 }}>
-                <p>{previewExcel.length} materias válidas para importar</p>
+                <p>
+                  {previewExcel.length} materias válidas para importar
+                  {creditActivitiesPreview.length > 0 && (
+                    <> + {creditActivitiesPreview.length} actividades con crédito</>
+                  )}
+                </p>
                 <button type="button" className={styles.primaryButton} onClick={handleConfirmarExcel} disabled={saving}>
                   {saving ? 'Importando...' : '✅ Confirmar importación'}
                 </button>

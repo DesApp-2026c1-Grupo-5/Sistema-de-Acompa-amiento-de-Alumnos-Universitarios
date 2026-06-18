@@ -16,4 +16,5 @@ export const eliminarActividad = (id) => api.delete(`/student/academic-situation
 
 export const importarExcel = (formData) => api.postFormData("/student/academic-situation/import-excel", formData);
 
-export const confirmarImportacion = (materias) => api.post("/student/academic-situation/confirm-excel", { materias });
+export const confirmarImportacion = (materias, creditActivities = []) =>
+  api.post("/student/academic-situation/confirm-excel", { materias, credit_activities: creditActivities });
