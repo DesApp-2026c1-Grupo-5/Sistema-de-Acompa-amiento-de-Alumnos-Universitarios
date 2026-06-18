@@ -10,8 +10,6 @@ import AcademicAssistantPlanner from '../../components/academicAssistant/Academi
 import AcademicAssistantRecommendations from '../../components/academicAssistant/AcademicAssistantRecommendations';
 import { getAcademicAssistant } from '../../services/academicAssistantService';
 import styles from './AcademicAssistant.module.css';
-import academicData from './academicAssistant/academicAssistantData.json';
-
 function AcademicAssistant() {
   const [academic, setAcademic] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,17 +50,17 @@ function AcademicAssistant() {
 
       <AcademicAssistantSubjects subjects={academic?.subjects ?? []} />
 
-      <AcademicAssistantFinals finals={academicData.finals} />
+      <AcademicAssistantFinals finals={academic?.finals ?? []} />
 
-      <AcademicAssistantYears years={academicData.years} />
+      <AcademicAssistantYears years={academic?.years ?? []} />
 
       <AcademicAssistantSimulator
-        approvedIds={academicData.studentStatus.approvedIds}
-        inProgressIds={academicData.studentStatus.inProgressIds}
+        approvedIds={academic?.studentStatus?.approvedIds ?? []}
+        inProgressIds={academic?.studentStatus?.inProgressIds ?? []}
       />
 
       <AcademicAssistantPlanner
-        approvedIds={academicData.studentStatus?.approvedIds ?? []}
+        approvedIds={academic?.studentStatus?.approvedIds ?? []}
       />
 
       <AcademicAssistantRecommendations />
