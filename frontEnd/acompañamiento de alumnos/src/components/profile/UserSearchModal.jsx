@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { X, Search } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import { buscarUsuarios, enviarInvitacion } from '../../services/contactoService';
@@ -122,21 +123,26 @@ function UserSearchModal({ open, onClose }) {
                 key={user.id}
                 className={styles.userItem}
               >
-                <div className={styles.userInfo}>
-                  <Avatar
-                    initials={user.initials}
-                    src={user.foto_url}
-                    size="md"
-                  />
+                <Link
+                  to={`/student/profile/${user.id}`}
+                  className={styles.userInfoLink}
+                >
+                  <div className={styles.userInfo}>
+                    <Avatar
+                      initials={user.initials}
+                      src={user.foto_url}
+                      size="md"
+                    />
 
-                  <div>
-                    <strong>{user.name}</strong>
+                    <div>
+                      <strong>{user.name}</strong>
 
-                    {user.career && (
-                      <span>{user.career}</span>
-                    )}
+                      {user.career && (
+                        <span>{user.career}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Link>
 
                 <button
                   type="button"

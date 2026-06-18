@@ -148,6 +148,15 @@
   flex-shrink: 0;
 }
 
+.authorLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
 .authorName {
   font-size: 13.5px;
   color: #1f2a37;

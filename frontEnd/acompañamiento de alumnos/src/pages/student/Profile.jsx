@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import ContactList from '../../components/profile/ContactList';
 import PendingRequests from '../../components/profile/PendingRequests';
 import PublicationsList from '../../components/profile/PublicationsList';
 import UserSearchModal from '../../components/profile/UserSearchModal';
+import Avatar from '../../components/common/Avatar';
 import ErrorState from '../../components/common/ErrorState';
 import {
   getMyProfile,
@@ -162,6 +164,25 @@ function Profile() {
           title="No pudimos cargar el perfil"
           description={error}
         />
+      </div>
+    );
+  }
+
+  if (!isOwnProfile && profile.privado) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.privateProfile}>
+          <Avatar
+            initials={profile.user.initials}
+            src={profile.user.foto_url}
+            size="xl"
+          />
+          <h1 className={styles.privateName}>{profile.user.name}</h1>
+          <p className={styles.privateMessage}>
+            <Lock size={16} />
+            Este perfil es privado
+          </p>
+        </div>
       </div>
     );
   }

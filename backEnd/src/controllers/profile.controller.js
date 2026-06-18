@@ -163,6 +163,20 @@ const buildPublications = async (estudianteId) => {
   return { publications, userReactions };
 };
 
+const sonContactos = async (estudianteIdA, estudianteIdB) => {
+  if (!estudianteIdA || !estudianteIdB) return false;
+  const existe = await contacto.findOne({
+    where: {
+      estado: "aceptado",
+      [Op.or]: [
+        { estudiante_solicitante_id: estudianteIdA, estudiante_receptor_id: estudianteIdB },
+        { estudiante_solicitante_id: estudianteIdB, estudiante_receptor_id: estudianteIdA },
+      ],
+    },
+  });
+  return !!existe;
+};
+
 const obtenerMiPerfil = async (req, res, next) => {
   const estudianteData = await estudiante.findOne({
     where: { usuario_id: req.user.sub },
@@ -232,6 +246,43 @@ const obtenerPerfilPorId = async (req, res, next) => {
     throw error;
   }
 
+  // Si el que pide es el dueño del perfil → acceso completo
+  const requesterEstudiante = await estudiante.findOne({
+    where: { usuario_id: req.user.sub },
+  });
+  const esDueno = requesterEstudiante && requesterEstudiante.id === estudianteData.id;
+
+  // Si el que pide es admin → acceso completo
+  const esAdmin = req.user.tipo === "administrador";
+
+  // Evaluar privacidad
+  const privacidad = estudianteData.privacidad || "publico";
+  const esPublico = privacidad === "publico";
+
+  let puedeVer = esDueno || esAdmin || esPublico;
+
+  if (!puedeVer && requesterEstudiante) {
+    puedeVer = await sonContactos(requesterEstudiante.id, estudianteData.id);
+  }
+
+  if (!puedeVer) {
+    return res.status(200).json({
+      ok: true,
+      data: {
+        privado: true,
+        user: {
+          initials: getInitials(estudianteData.nombre, estudianteData.apellido),
+          name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+          foto_url: estudianteData.foto_url,
+          privacidad,
+        },
+        contacts: [],
+        publications: [],
+        userReactions: {},
+      },
+    });
+  }
+
   const contacts = await buildContacts(estudianteData.id);
   const { publications, userReactions } = await buildPublications(estudianteData.id);
   const career = await buildCareerLabel(estudianteData.id);
@@ -240,6 +291,7 @@ const obtenerPerfilPorId = async (req, res, next) => {
   return res.status(200).json({
     ok: true,
     data: {
+      privado: false,
       user: {
         initials: getInitials(estudianteData.nombre, estudianteData.apellido),
         name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
@@ -251,7 +303,10 @@ const obtenerPerfilPorId = async (req, res, next) => {
         contactsCount: contacts.length,
         foto_url: estudianteData.foto_url,
         banner_url: estudianteData.banner_url,
-        privacidad: estudianteData.privacidad,
+        privacidad,
+        pub_inscripciones: estudianteData.pub_inscripciones,
+        pub_regularizaciones: estudianteData.pub_regularizaciones,
+        pub_aprobaciones: estudianteData.pub_aprobaciones,
       },
       contacts: contacts.slice(0, 6),
       publications,

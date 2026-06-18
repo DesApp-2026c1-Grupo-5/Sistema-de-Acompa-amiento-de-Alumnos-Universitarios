@@ -122,6 +122,13 @@
   min-width: 0;
 }
 
+.userInfoLink {
+  text-decoration: none;
+  color: inherit;
+  flex: 1;
+  min-width: 0;
+}
+
 .userInfo strong {
   display: block;
   color: #020617;

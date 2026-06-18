@@ -578,6 +578,19 @@
   font-size: 14px;
 }
 
+.creatorLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #526987;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.creatorLink:hover {
+  color: #00a8ad;
+}
+
 .creatorAvatar {
   width: 34px;
   height: 34px;
@@ -1577,6 +1590,21 @@
   padding: 10px 12px;
   background: #f6f8fb;
   border-radius: 10px;
+}
+
+.participantLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.participantLink:hover .participantRow {
+  background: #eef2f6;
+}
+
+:global(html.dark) .participantLink:hover .participantRow,
+:global(.dark) .participantLink:hover .participantRow {
+  background: #1e293b;
 }
 
 .participantAvatar {

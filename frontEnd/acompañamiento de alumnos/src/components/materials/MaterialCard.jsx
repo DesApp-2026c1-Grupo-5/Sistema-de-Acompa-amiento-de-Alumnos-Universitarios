@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   FileText,
   Video,
@@ -73,8 +74,10 @@ function MaterialCard({ material, onView, onDownload, onJoinDiscord }) {
 
       <div className={styles.meta}>
         <div className={styles.author}>
-          <Avatar initials={material.author?.initials} src={material.author?.image} size="sm" />
-          <span className={styles.authorName}>{material.author?.name}</span>
+          <Link to={`/student/profile/${material.author?.id}`} className={styles.authorLink}>
+            <Avatar initials={material.author?.initials} src={material.author?.image} size="sm" />
+            <span className={styles.authorName}>{material.author?.name}</span>
+          </Link>
         </div>
         <span className={styles.date}>{formatDate(material.publishedAt)}</span>
       </div>

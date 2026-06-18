@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -615,10 +616,10 @@ function StudySessions() {
                   </div>
 
                   <footer className={styles.cardFooter}>
-                    <div className={styles.creator}>
+                    <Link to={`/student/profile/${session.creatorId}`} className={styles.creatorLink}>
                       <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
                       <span>{session.creatorName}</span>
-                    </div>
+                    </Link>
 
                     {getJoinButton(session)}
                   </footer>
