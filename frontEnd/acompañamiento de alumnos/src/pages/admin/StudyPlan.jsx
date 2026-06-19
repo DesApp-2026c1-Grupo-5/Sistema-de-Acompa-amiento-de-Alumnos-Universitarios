@@ -201,13 +201,15 @@ function StudyPlan() {
 
   const subjectsToFilter = isEditing && editedSubjects ? editedSubjects : studyPlan?.subjects || [];
 
-  const filteredSubjects = subjectsToFilter.filter(subject => {
-    const matchesYear = selectedYear === 0 || subject.year === selectedYear;
-    const matchesSearch = searchTerm === '' || 
-      subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subject.code.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesYear && matchesSearch;
-  });
+  const filteredSubjects = subjectsToFilter
+    .filter(subject => {
+      const matchesYear = selectedYear === 0 || subject.year === selectedYear;
+      const matchesSearch = searchTerm === '' ||
+        subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subject.code.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesYear && matchesSearch;
+    })
+    .sort((a, b) => (a.year - b.year) || a.code.localeCompare(b.code, undefined, { numeric: true }));
 
   const getTypeBadgeClass = (type) => {
     return type === 'Obligatoria' ? styles.typeBadgeMandatory : styles.typeBadgeOptional;
