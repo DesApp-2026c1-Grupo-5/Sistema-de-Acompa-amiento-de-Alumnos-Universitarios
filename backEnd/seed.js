@@ -53,34 +53,87 @@ async function seed() {
     { returning: true }
   );
 
-  // 2. Materias — 8 en TPI, 4 en Lic SI
+  // 2. Materias — TPI: plan oficial UNAHUR (troncales + electivas, 21 materias); Lic SI: 4
+  // Nombres EXACTOS y códigos del plan de estudios oficial (TUP_V1). Cuatrimestre y
+  // correlativas reconstruidos del plan oficial (no figuran en el reporte de origen).
   const materias = await db.materia.bulkCreate(
     [
-      // TPI
-      { plan_id: planTPI2024.id, codigo: "ALG-1", nombre: "Algoritmos I",          anio_cursada: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, codigo: "MAT-1", nombre: "Matemática I",          anio_cursada: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, codigo: "PROG-1",nombre: "Programación I",        anio_cursada: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, codigo: "BD-1",  nombre: "Bases de Datos",        anio_cursada: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, codigo: "POO-1", nombre: "POO",                   anio_cursada: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, codigo: "ALG-2", nombre: "Algoritmos II",         anio_cursada: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, codigo: "WEB-1", nombre: "Programación Web",      anio_cursada: 3, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
-      { plan_id: planTPI2024.id, codigo: "ING-1", nombre: "Inglés Técnico",        anio_cursada: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 3, creditos_otorga: 4, es_optativa: false, es_unahur: true },
-      // Lic SI
-      { plan_id: planLic2023.id, codigo: "RED-1", nombre: "Redes",                 anio_cursada: 3, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
-      { plan_id: planLic2023.id, codigo: "SO-1",  nombre: "Sistemas Operativos",   anio_cursada: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
-      { plan_id: planLic2023.id, codigo: "IA-1",  nombre: "Inteligencia Artificial", anio_cursada: 4, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
-      { plan_id: planLic2023.id, codigo: "ARQ-1", nombre: "Arquitectura de Computadoras", anio_cursada: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      // ── TPI · Primer año · 1º cuatrimestre ──
+      { plan_id: planTPI2024.id, codigo: "788", nombre: "Matemática para informática I",                  anio_cursada: 1, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "790", nombre: "Organización de computadoras I",                 anio_cursada: 1, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "789", nombre: "Introducción a lógica y problemas computacionales", anio_cursada: 1, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "004", nombre: "Nuevos entornos y lenguajes",                    anio_cursada: 1, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      // ── TPI · Primer año · 2º cuatrimestre ──
+      { plan_id: planTPI2024.id, codigo: "791", nombre: "Taller de lenguajes de marcado y tecnologías web", anio_cursada: 1, cuatrimestre: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "792", nombre: "Programación estructurada",                      anio_cursada: 1, cuatrimestre: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "793", nombre: "Matemática para Informática II",                 anio_cursada: 1, cuatrimestre: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "030", nombre: "Inglés I",                                       anio_cursada: 1, cuatrimestre: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 3, creditos_otorga: 4, es_optativa: false, es_unahur: true },
+      // ── TPI · Segundo año · 1º cuatrimestre ──
+      { plan_id: planTPI2024.id, codigo: "754", nombre: "Bases de datos",                                 anio_cursada: 2, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "753", nombre: "Programación con objetos I",                     anio_cursada: 2, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "752", nombre: "Estructuras de datos",                           anio_cursada: 2, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "043", nombre: "Inglés II",                                      anio_cursada: 2, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 3, creditos_otorga: 4, es_optativa: false, es_unahur: true },
+      // ── TPI · Segundo año · 2º cuatrimestre ──
+      { plan_id: planTPI2024.id, codigo: "765", nombre: "Programación con Objetos II",                    anio_cursada: 2, cuatrimestre: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "761", nombre: "Programación funcional",                         anio_cursada: 2, cuatrimestre: 2, tipo: "electiva",     modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: true,  es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "766", nombre: "Programación Concurrente",                       anio_cursada: 2, cuatrimestre: 2, tipo: "electiva",     modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: true,  es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "756", nombre: "Redes de computadoras",                          anio_cursada: 2, cuatrimestre: 2, tipo: "electiva",     modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: true,  es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "795", nombre: "Organización de computadoras II",                anio_cursada: 2, cuatrimestre: 2, tipo: "electiva",     modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: true,  es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "757", nombre: "Sistemas operativos",                            anio_cursada: 2, cuatrimestre: 2, tipo: "electiva",     modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: true,  es_unahur: true },
+      // ── TPI · Tercer año · 1º cuatrimestre ──
+      { plan_id: planTPI2024.id, codigo: "758", nombre: "Construcción de Interfaces de Usuario",          anio_cursada: 3, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      { plan_id: planTPI2024.id, codigo: "759", nombre: "Estrategias de Persistencia",                    anio_cursada: 3, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      // ── TPI · Tercer año · 2º cuatrimestre ──
+      { plan_id: planTPI2024.id, codigo: "760", nombre: "Elementos de ingeniería de software",            anio_cursada: 3, cuatrimestre: 2, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      // ── Lic SI ──
+      { plan_id: planLic2023.id, codigo: "RED-1", nombre: "Redes",                 anio_cursada: 3, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      { plan_id: planLic2023.id, codigo: "SO-1",  nombre: "Sistemas Operativos",   anio_cursada: 2, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 6, creditos_otorga: 8, es_optativa: false, es_unahur: true },
+      { plan_id: planLic2023.id, codigo: "IA-1",  nombre: "Inteligencia Artificial", anio_cursada: 4, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
+      { plan_id: planLic2023.id, codigo: "ARQ-1", nombre: "Arquitectura de Computadoras", anio_cursada: 2, cuatrimestre: 1, tipo: "obligatoria", modalidad: "Cuatrimestral", carga_horaria_semanal: 4, creditos_otorga: 6, es_optativa: false, es_unahur: true },
     ],
     { returning: true }
   );
-  const [matAlgo, matMat1, matProg1, matBD, matPOO, matAlgo2, matWeb, matIng, matRedes, matSO, matIA, matArq] = materias;
+  const [
+    // TPI · Año 1
+    matMatI, matOrgI, matLogica, matNEL, matWebMarcado, matProgEstr, matMatII, matIngI,
+    // TPI · Año 2
+    matBDatos, matPOOI, matEstDatos, matIngII, matPOOII, matProgFunc, matProgConc, matRedesTUP, matOrgII, matSO_TUP,
+    // TPI · Año 3
+    matCIU, matPersist, matIngSoft,
+    // Lic SI
+    matRedes, matSO, matIA, matArq,
+  ] = materias;
 
+  // Alias hacia el dataset de trayectoria/materiales/sesiones existente (no requiere reescribir el resto).
+  const matAlgo = matProgEstr, matMat1 = matMatI, matProg1 = matLogica, matBD = matBDatos,
+        matPOO = matPOOI, matAlgo2 = matEstDatos, matWeb = matWebMarcado, matIng = matIngI;
+
+  // Correlativas del plan oficial TUP UNAHUR
   await db.correlatividad.bulkCreate([
-    { materia_id: matBD.id,    materia_requisito_id: matAlgo.id, tipo: "cursar" },
-    { materia_id: matPOO.id,   materia_requisito_id: matAlgo.id, tipo: "aprobar" },
-    { materia_id: matAlgo2.id, materia_requisito_id: matAlgo.id, tipo: "aprobar" },
-    { materia_id: matWeb.id,   materia_requisito_id: matPOO.id,  tipo: "aprobar" },
-    { materia_id: matIA.id,    materia_requisito_id: matSO.id,   tipo: "aprobar" },
+    // Año 1 · 2º cuatrimestre
+    { materia_id: matMatII.id,      materia_requisito_id: matMatI.id,      tipo: "aprobar" },
+    { materia_id: matProgEstr.id,   materia_requisito_id: matLogica.id,    tipo: "aprobar" },
+    { materia_id: matWebMarcado.id, materia_requisito_id: matNEL.id,       tipo: "cursar"  },
+    // Año 2 · 1º cuatrimestre
+    { materia_id: matIngII.id,      materia_requisito_id: matIngI.id,      tipo: "aprobar" },
+    { materia_id: matBDatos.id,     materia_requisito_id: matProgEstr.id,  tipo: "aprobar" },
+    { materia_id: matPOOI.id,       materia_requisito_id: matProgEstr.id,  tipo: "aprobar" },
+    { materia_id: matEstDatos.id,   materia_requisito_id: matProgEstr.id,  tipo: "aprobar" },
+    // Año 2 · 2º cuatrimestre
+    { materia_id: matPOOII.id,      materia_requisito_id: matPOOI.id,      tipo: "aprobar" },
+    { materia_id: matProgFunc.id,   materia_requisito_id: matPOOI.id,      tipo: "aprobar" },
+    { materia_id: matProgConc.id,   materia_requisito_id: matPOOI.id,      tipo: "aprobar" },
+    { materia_id: matRedesTUP.id,   materia_requisito_id: matOrgI.id,      tipo: "aprobar" },
+    { materia_id: matOrgII.id,      materia_requisito_id: matOrgI.id,      tipo: "aprobar" },
+    { materia_id: matSO_TUP.id,     materia_requisito_id: matOrgI.id,      tipo: "aprobar" },
+    // Año 3 · 1º cuatrimestre
+    { materia_id: matCIU.id,        materia_requisito_id: matPOOII.id,     tipo: "aprobar" },
+    { materia_id: matPersist.id,    materia_requisito_id: matPOOII.id,     tipo: "aprobar" },
+    { materia_id: matPersist.id,    materia_requisito_id: matBDatos.id,    tipo: "aprobar" },
+    // Año 3 · 2º cuatrimestre
+    { materia_id: matIngSoft.id,    materia_requisito_id: matPOOII.id,     tipo: "aprobar" },
+    // Lic SI
+    { materia_id: matIA.id,         materia_requisito_id: matSO.id,        tipo: "aprobar" },
   ]);
 
   await db.oferta_academica.bulkCreate([
