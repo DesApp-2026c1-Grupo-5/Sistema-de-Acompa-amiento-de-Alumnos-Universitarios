@@ -1,14 +1,12 @@
 /**
- * BACKEND TODO:
- * - GET /api/study-plans - Listar todos los planes de estudio
- * - GET /api/study-plans/:id - Obtener plan por ID con sus materias
- * - POST /api/study-plans - Crear nuevo plan (recibe careerId, planYear, conditions, subjects[])
- * - PUT /api/study-plans/:id - Actualizar plan completo (conditions + subjects)
- * - DELETE /api/study-plans/:id - Eliminar plan
- * - POST /api/study-plans/:id/subjects - Agregar materia al plan
- * - PUT /api/study-plans/:id/subjects/:code - Actualizar materia
- * - DELETE /api/study-plans/:id/subjects/:code - Eliminar materia
- * - GET /api/careers - Listar carreras (para mostrar en selector)
+ * Endpoints disponibles:
+ * - GET /api/planes-estudio/:id - Obtener plan por ID con sus materias
+ * - POST /api/carreras/:carreraId/planes - Crear nuevo plan (opcional con materias)
+ * - PATCH /api/planes-estudio/:id - Actualizar estado del plan
+ * - PUT /api/planes-estudio/:id - Actualizar plan completo (conditions + subjects)
+ * - POST /api/planes-estudio/:planId/materias - Agregar materia al plan
+ * - PUT /api/planes-estudio/:planId/materias/:materiaId - Actualizar materia
+ * - DELETE /api/planes-estudio/:planId/materias/:materiaId - Eliminar materia
  * 
  * Estructura de datos esperada:
  * - studyPlan: { id, careerId, careerName, planYear, status, conditions: {...}, subjects: [...] }
@@ -22,7 +20,7 @@ import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X, Check } from 'lu
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
-import { getPlanEstudio, savePlanEstudio } from '../../services/planEstudioService';
+import { getPlanEstudio, savePlanEstudio, addMateriaAlPlan, deleteMateriaDelPlan } from '../../services/planEstudioService';
 import { mapPlanEstudioFromApi, mapPlanEstudioToApi } from './careers/mapPlanEstudio';
 import styles from './StudyPlan.module.css';
 
@@ -36,6 +34,7 @@ function StudyPlan() {
   const [selectedYear, setSelectedYear] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectToDelete, setSubjectToDelete] = useState(null);
+  const [deletingSubject, setDeletingSubject] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedSubjects, setEditedSubjects] = useState(null);
   const [editedConditions, setEditedConditions] = useState(null);
@@ -53,6 +52,19 @@ function StudyPlan() {
     correlatives: [],
     credits: 0
   });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({
+    codigo: '',
+    nombre: '',
+    anio_cursada: 1,
+    modalidad: 'Cuatrimestral',
+    es_optativa: false,
+    es_unahur: false,
+    creditos_otorga: 0,
+    correlativas: [],
+  });
+  const [addingSubject, setAddingSubject] = useState(false);
+  const [addError, setAddError] = useState(null);
 
   const state = location.state || {};
   const { planId } = state;
@@ -166,19 +178,76 @@ function StudyPlan() {
     setNewSubject({ ...newSubject, [field]: value });
   };
 
-  const handleDeleteSubject = (code) => {
-    setSubjectToDelete(code);
+  const handleAddFieldChange = (field, value) => {
+    setAddForm((s) => ({ ...s, [field]: value }));
   };
 
-  const confirmDeleteSubject = () => {
-    if (subjectToDelete) {
-      if (isEditing && editedSubjects) {
-        const updated = editedSubjects.filter(s => s.code !== subjectToDelete);
-        setEditedSubjects(updated);
-      } else if (studyPlan) {
-        const updatedSubjects = studyPlan.subjects.filter(s => s.code !== subjectToDelete);
-        setStudyPlan({ ...studyPlan, subjects: updatedSubjects });
-      }
+  const handleToggleCorrelativa = (codigo) => {
+    setAddForm((s) => {
+      const has = (s.correlativas || []).includes(codigo);
+      return {
+        ...s,
+        correlativas: has
+          ? s.correlativas.filter((c) => c !== codigo)
+          : [...(s.correlativas || []), codigo],
+      };
+    });
+  };
+
+  const handleAddSubject = async () => {
+    setAddError(null);
+    if (!addForm.codigo.trim() || !addForm.nombre.trim()) {
+      setAddError('La materia necesita código y nombre.');
+      return;
+    }
+    setAddingSubject(true);
+    try {
+      await addMateriaAlPlan(studyPlan.id, addForm);
+      setShowAddModal(false);
+      setAddForm({
+        codigo: '',
+        nombre: '',
+        anio_cursada: 1,
+        modalidad: 'Cuatrimestral',
+        es_optativa: false,
+        es_unahur: false,
+        creditos_otorga: 0,
+        correlativas: [],
+      });
+      const res = await getPlanEstudio(studyPlan.id);
+      const mapped = mapPlanEstudioFromApi(res.data);
+      setStudyPlan({ ...mapped, subjects: [...mapped.subjects] });
+    } catch (err) {
+      setAddError(err.message || 'No pudimos agregar la materia.');
+    } finally {
+      setAddingSubject(false);
+    }
+  };
+
+  const handleDeleteSubject = (code) => {
+    const subject = (studyPlan?.subjects ?? []).find((s) => s.code === code);
+    setSubjectToDelete(subject || { code });
+  };
+
+  const confirmDeleteSubject = async () => {
+    if (!subjectToDelete) return;
+    if (isEditing && editedSubjects) {
+      const updated = editedSubjects.filter((s) => s.code !== subjectToDelete.code);
+      setEditedSubjects(updated);
+      setSubjectToDelete(null);
+      return;
+    }
+    if (!studyPlan) { setSubjectToDelete(null); return; }
+    setDeletingSubject(true);
+    try {
+      await deleteMateriaDelPlan(studyPlan.id, subjectToDelete.id);
+      const res = await getPlanEstudio(studyPlan.id);
+      const mapped = mapPlanEstudioFromApi(res.data);
+      setStudyPlan({ ...mapped, subjects: [...mapped.subjects] });
+    } catch {
+      // error silently ignored, modal closes
+    } finally {
+      setDeletingSubject(false);
       setSubjectToDelete(null);
     }
   };
@@ -298,11 +367,13 @@ function StudyPlan() {
             </span>
           )}
         </div>
-        <div className={styles.headerActions}>
-          <Button variant="outlineSoft" iconLeft={<Plus size={16} />}>
-            Nuevo plan
-          </Button>
-        </div>
+        {studyPlan && !isEditing && (
+          <div className={styles.headerActions}>
+            <Button variant="outlineSoft" iconLeft={<Plus size={16} />} onClick={() => setShowAddModal(true)}>
+              Agregar materia
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className={styles.editActions}>
@@ -650,11 +721,11 @@ function StudyPlan() {
         size="sm"
         footer={
           <div className={styles.modalFooter}>
-            <Button variant="outline" onClick={cancelDeleteSubject}>
+            <Button variant="outline" onClick={cancelDeleteSubject} disabled={deletingSubject}>
               Cancelar
             </Button>
-            <Button variant="dangerSolid" onClick={confirmDeleteSubject}>
-              Eliminar
+            <Button variant="dangerSolid" onClick={confirmDeleteSubject} disabled={deletingSubject}>
+              {deletingSubject ? 'Eliminando…' : 'Eliminar'}
             </Button>
           </div>
         }
@@ -702,6 +773,117 @@ function StudyPlan() {
         <p className={styles.deleteWarning}>
           Esta acción no se puede deshacer.
         </p>
+      </Modal>
+
+      <Modal
+        open={showAddModal}
+        title="Agregar materia al plan"
+        onClose={() => { setShowAddModal(false); setAddError(null); }}
+        size="md"
+        footer={
+          <div className={styles.modalFooter}>
+            <Button variant="outline" onClick={() => { setShowAddModal(false); setAddError(null); }}>
+              Cancelar
+            </Button>
+            <Button variant="gradient" onClick={handleAddSubject} disabled={addingSubject}>
+              {addingSubject ? 'Agregando…' : 'Agregar'}
+            </Button>
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              <span>Código *</span>
+              <input
+                className={styles.editInput}
+                value={addForm.codigo}
+                onChange={(e) => handleAddFieldChange('codigo', e.target.value)}
+                placeholder="INF101"
+              />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              <span>Nombre *</span>
+              <input
+                className={styles.editInput}
+                value={addForm.nombre}
+                onChange={(e) => handleAddFieldChange('nombre', e.target.value)}
+                placeholder="Matemática I"
+              />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              <span>Año de cursada</span>
+              <select
+                className={styles.editSelect}
+                value={addForm.anio_cursada}
+                onChange={(e) => handleAddFieldChange('anio_cursada', Number(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>{n}°</option>
+                ))}
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              <span>Modalidad</span>
+              <select
+                className={styles.editSelect}
+                value={addForm.modalidad}
+                onChange={(e) => handleAddFieldChange('modalidad', e.target.value)}
+              >
+                <option value="Cuatrimestral">Cuatrimestral</option>
+                <option value="Anual">Anual</option>
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              <span>Créditos que otorga</span>
+              <input
+                type="number"
+                min={0}
+                className={styles.editInput}
+                value={addForm.creditos_otorga}
+                onChange={(e) => handleAddFieldChange('creditos_otorga', Number(e.target.value))}
+              />
+            </label>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem', paddingBottom: '0.25rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={addForm.es_optativa}
+                  onChange={(e) => handleAddFieldChange('es_optativa', e.target.checked)}
+                />
+                Optativa
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={addForm.es_unahur}
+                  onChange={(e) => handleAddFieldChange('es_unahur', e.target.checked)}
+                />
+                UNAHUR
+              </label>
+            </div>
+          </div>
+
+          {studyPlan?.subjects?.length > 0 && (
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              <span>Correlativas (materias ya existentes en el plan)</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
+                {studyPlan.subjects.map((s) => (
+                  <label key={s.code} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8125rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={(addForm.correlativas || []).includes(s.code)}
+                      onChange={() => handleToggleCorrelativa(s.code)}
+                    />
+                    {s.code}
+                  </label>
+                ))}
+              </div>
+            </label>
+          )}
+
+          {addError && <p style={{ color: '#ef4444', fontSize: '0.875rem', margin: 0 }}>{addError}</p>}
+        </div>
       </Modal>
     </div>
   );

@@ -22,3 +22,18 @@ export const suspenderMaterialAdmin = (materialId) =>
 
 export const restaurarMaterialAdmin = (materialId) =>
   api.patch(`/admin/materiales/${materialId}/restaurar`);
+
+export const getDenunciaPostDetail = (postId) =>
+  api.get(`/admin/denuncias/post/${postId}`);
+
+export const verificarDenunciasPost = (postId) =>
+  api.patch(`/admin/posts/${postId}/denuncias/verificar`);
+
+export const rechazarDenunciasPost = (postId) =>
+  api.patch(`/admin/posts/${postId}/denuncias/rechazar`);
+
+export const ocultarPostAdmin = (postId) =>
+  api.patch(`/admin/posts/${postId}/ocultar`);
+
+export const mostrarPostAdmin = (postId) =>
+  api.patch(`/admin/posts/${postId}/mostrar`);

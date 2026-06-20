@@ -10,11 +10,16 @@ const {
   crearPlan,
   actualizarPlan,
   actualizarPlanCompleto,
+  agregarMateriaAlPlan,
+  actualizarMateriaDelPlan,
+  eliminarMateriaDelPlan,
 } = require("../controllers/planEstudio.controller");
 const {
   crearPlanSchema,
   actualizarPlanSchema,
   actualizarPlanCompletoSchema,
+  agregarMateriaSchema,
+  actualizarMateriaSchema,
 } = require("../validators/planEstudio.validator");
 
 router.get("/planes-estudio/:id", authMiddleware, requireAdmin, obtenerPlan);
@@ -41,6 +46,29 @@ router.put(
   requireAdmin,
   validate(actualizarPlanCompletoSchema),
   actualizarPlanCompleto
+);
+
+router.post(
+  "/planes-estudio/:planId/materias",
+  authMiddleware,
+  requireAdmin,
+  validate(agregarMateriaSchema),
+  agregarMateriaAlPlan
+);
+
+router.put(
+  "/planes-estudio/:planId/materias/:materiaId",
+  authMiddleware,
+  requireAdmin,
+  validate(actualizarMateriaSchema),
+  actualizarMateriaDelPlan
+);
+
+router.delete(
+  "/planes-estudio/:planId/materias/:materiaId",
+  authMiddleware,
+  requireAdmin,
+  eliminarMateriaDelPlan
 );
 
 module.exports = router;

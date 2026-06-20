@@ -98,6 +98,7 @@ const crearDenunciaParaRecurso = ({
   if (recursoAutor?.usuario_id) {
     await crearNotificacion({
       usuario_id: recursoAutor.usuario_id,
+      emisor_usuario_id: null,
       titulo: `${recursoNombre} denunciado`,
       tipo: tipoNotificacion,
       mensaje: `Tu ${recursoNombre.toLowerCase()} "${resumen}" recibió una denuncia.`,
@@ -117,16 +118,6 @@ const crearDenunciaParaRecurso = ({
       });
     }
   }
-
-  await crearNotificacion({
-    usuario_id: estudianteData.usuario_id,
-    titulo: "Denuncia realizada",
-    tipo: tipoNotificacion,
-    mensaje: `Registramos tu denuncia sobre ${articulo} ${recursoNombre.toLowerCase()} "${resumen}".`,
-    referencia_tipo: "denuncia",
-    referencia_id: nueva.id,
-    action_url: actionUrl,
-  });
 
   if (estudianteData.usuario?.email) {
     await sendMail({

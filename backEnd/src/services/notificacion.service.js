@@ -2,6 +2,7 @@ const { notificacion } = require("../db/models");
 
 const crearNotificacion = async ({
   usuario_id,
+  emisor_usuario_id,
   titulo,
   tipo,
   mensaje,
@@ -11,6 +12,7 @@ const crearNotificacion = async ({
 }) => {
   return notificacion.create({
     usuario_id,
+    emisor_usuario_id: emisor_usuario_id ?? null,
     titulo,
     tipo,
     mensaje,

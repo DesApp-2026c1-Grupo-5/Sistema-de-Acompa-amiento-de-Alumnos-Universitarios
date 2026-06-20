@@ -9,6 +9,8 @@ const {
 
 const { Op } = Sequelize;
 
+const planEstudioService = require("../services/planEstudio.service");
+
 const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -93,12 +95,7 @@ const obtenerPlan = async (req, res, next) => {
     return next(buildError("id de plan invalido", 400));
   }
 
-  const data = await obtenerPlanFormateado(id);
-
-  if (!data) {
-    return next(buildError("Plan de estudio no encontrado", 404));
-  }
-
+  const data = await planEstudioService.getPlanById(id);
   return res.status(200).json({ ok: true, data });
 };
 
@@ -109,37 +106,100 @@ const crearPlan = async (req, res, next) => {
     return next(buildError("id de carrera inválido", 400));
   }
 
-  const { anio, estado, creditos_requeridos, niveles_ingles_requeridos } = req.body;
+  const { anio, estado, creditos_requeridos, niveles_ingles_requeridos, materias = [] } = req.body;
 
-  try {
-    const carreraExistente = await carrera.findByPk(carreraId);
-    if (!carreraExistente) {
-      return next(buildError("Carrera no encontrada", 404));
+  const carreraExistente = await carrera.findByPk(carreraId);
+  if (!carreraExistente) {
+    return next(buildError("Carrera no encontrada", 404));
+  }
+
+  if (materias.length > 0) {
+    const codigos = materias.map((m) => m.codigo);
+    const set = new Set(codigos);
+    if (set.size !== codigos.length) {
+      return next(buildError("Hay códigos de materia duplicados en el payload", 400));
+    }
+    for (const m of materias) {
+      for (const corr of m.correlativas || []) {
+        if (!set.has(corr)) {
+          return next(
+            buildError(
+              `La correlativa "${corr}" de la materia "${m.codigo}" no coincide con ninguna materia del plan`,
+              400
+            )
+          );
+        }
+      }
+    }
+  }
+
+  const nuevoPlan = await sequelize.transaction(async (t) => {
+    const plan = await plan_estudio.create(
+      {
+        carrera_id: carreraId,
+        nombre: `${carreraExistente.nombre} ${anio}`,
+        anio,
+        estado: estado || "vigente",
+        creditos_requeridos,
+        niveles_ingles_requeridos,
+      },
+      { transaction: t }
+    );
+
+    if (materias.length > 0) {
+      const materiasCreadas = [];
+      for (const m of materias) {
+        const nueva = await materia.create(
+          {
+            plan_id: plan.id,
+            codigo: m.codigo,
+            nombre: m.nombre,
+            anio_cursada: m.anio_cursada,
+            tipo: m.es_optativa ? "optativa" : "obligatoria",
+            modalidad: m.modalidad,
+            es_optativa: m.es_optativa,
+            es_unahur: m.es_unahur,
+            creditos_otorga: m.creditos_otorga,
+          },
+          { transaction: t }
+        );
+        materiasCreadas.push({ codigo: m.codigo, id: nueva.id });
+      }
+
+      const codigoToId = Object.fromEntries(materiasCreadas.map((m) => [m.codigo, m.id]));
+      for (const m of materias) {
+        for (const corrCodigo of m.correlativas || []) {
+          await correlatividad.create(
+            {
+              materia_id: codigoToId[m.codigo],
+              materia_requisito_id: codigoToId[corrCodigo],
+              tipo: "cursar",
+            },
+            { transaction: t }
+          );
+        }
+      }
     }
 
-    const nuevoPlan = await plan_estudio.create({
-      carrera_id: carreraId,
-      nombre: `${carreraExistente.nombre} ${anio}`,
-      anio,
-      estado: estado || "vigente",
-      creditos_requeridos,
-      niveles_ingles_requeridos,
-    });
+    return plan;
+  });
 
-    return res.status(201).json({
-      ok: true,
-      data: {
-        id: nuevoPlan.id,
-        anio: nuevoPlan.anio,
-        estado: nuevoPlan.estado,
-        creditos_requeridos: nuevoPlan.creditos_requeridos,
-        niveles_ingles_requeridos: nuevoPlan.niveles_ingles_requeridos,
-        carrera_id: nuevoPlan.carrera_id,
-      },
-    });
-  } catch (err) {
-    return next(err);
+  if (materias.length > 0) {
+    const data = await obtenerPlanFormateado(nuevoPlan.id);
+    return res.status(201).json({ ok: true, data });
   }
+
+  return res.status(201).json({
+    ok: true,
+    data: {
+      id: nuevoPlan.id,
+      anio: nuevoPlan.anio,
+      estado: nuevoPlan.estado,
+      creditos_requeridos: nuevoPlan.creditos_requeridos,
+      niveles_ingles_requeridos: nuevoPlan.niveles_ingles_requeridos,
+      carrera_id: nuevoPlan.carrera_id,
+    },
+  });
 };
 
 const actualizarPlan = async (req, res, next) => {
@@ -149,27 +209,8 @@ const actualizarPlan = async (req, res, next) => {
     return next(buildError("id de plan inválido", 400));
   }
 
-  const { estado } = req.body;
-
-  try {
-    const existente = await plan_estudio.findByPk(id);
-    if (!existente) {
-      return next(buildError("Plan de estudio no encontrado", 404));
-    }
-
-    await existente.update({ estado: estado ?? existente.estado });
-
-    return res.status(200).json({
-      ok: true,
-      data: {
-        id: existente.id,
-        anio: existente.anio,
-        estado: existente.estado,
-      },
-    });
-  } catch (err) {
-    return next(err);
-  }
+  const data = await planEstudioService.actualizarPlan(id, req.body);
+  return res.status(200).json({ ok: true, data });
 };
 
 const actualizarPlanCompleto = async (req, res, next) => {
@@ -302,9 +343,53 @@ const actualizarPlanCompleto = async (req, res, next) => {
   }
 };
 
+const agregarMateriaAlPlan = async (req, res, next) => {
+  const planId = Number(req.params.planId);
+
+  if (!Number.isInteger(planId) || planId <= 0) {
+    return next(buildError("id de plan inválido", 400));
+  }
+
+  const data = await planEstudioService.agregarMateria(planId, req.body);
+  return res.status(201).json({ ok: true, data });
+};
+
+const actualizarMateriaDelPlan = async (req, res, next) => {
+  const planId = Number(req.params.planId);
+  const materiaId = Number(req.params.materiaId);
+
+  if (!Number.isInteger(planId) || planId <= 0) {
+    return next(buildError("id de plan inválido", 400));
+  }
+  if (!Number.isInteger(materiaId) || materiaId <= 0) {
+    return next(buildError("id de materia inválido", 400));
+  }
+
+  const data = await planEstudioService.actualizarMateria(planId, materiaId, req.body);
+  return res.status(200).json({ ok: true, data });
+};
+
+const eliminarMateriaDelPlan = async (req, res, next) => {
+  const planId = Number(req.params.planId);
+  const materiaId = Number(req.params.materiaId);
+
+  if (!Number.isInteger(planId) || planId <= 0) {
+    return next(buildError("id de plan inválido", 400));
+  }
+  if (!Number.isInteger(materiaId) || materiaId <= 0) {
+    return next(buildError("id de materia inválido", 400));
+  }
+
+  const data = await planEstudioService.eliminarMateria(planId, materiaId);
+  return res.status(200).json({ ok: true, data });
+};
+
 module.exports = {
   obtenerPlan,
   crearPlan,
   actualizarPlan,
   actualizarPlanCompleto,
+  agregarMateriaAlPlan,
+  actualizarMateriaDelPlan,
+  eliminarMateriaDelPlan,
 };

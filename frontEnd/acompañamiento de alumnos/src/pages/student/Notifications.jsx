@@ -291,7 +291,11 @@ export default function Notifications() {
                                         </span>
                                     </div>
 
-                                    <p>{notification.message}</p>
+                                    <p>
+                                        {notification.senderName
+                                            ? <><strong>{notification.senderName}</strong> — {notification.message}</>
+                                            : notification.message}
+                                    </p>
 
                                     <span className={styles.date}>
                                         <Clock size={13} />

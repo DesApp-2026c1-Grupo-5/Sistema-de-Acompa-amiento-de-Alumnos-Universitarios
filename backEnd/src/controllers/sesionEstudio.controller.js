@@ -16,7 +16,7 @@ const buildError = (message, statusCode) => {
   return error;
 };
 
-const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje }) => {
+const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje, emisor_usuario_id }) => {
   const inscripciones = await inscripcion_sesion.findAll({
     where: {
       sesion_id: sesionId,
@@ -35,6 +35,7 @@ const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje }) => {
 
     await crearNotificacion({
       usuario_id: participante.usuario_id,
+      emisor_usuario_id,
       titulo,
       tipo: "session",
       mensaje,
@@ -103,16 +104,6 @@ const crearSesion = async (req, res, next) => {
     ...req.body,
     creador_id: estudianteData.id,
     cancelada: false,
-  });
-
-  await crearNotificacion({
-    usuario_id: req.user.sub,
-    titulo: "Sesión creada",
-    tipo: "session",
-    mensaje: `Creaste la sesión "${sesion.tema}".`,
-    referencia_tipo: "sesion_estudio",
-    referencia_id: sesion.id,
-    action_url: "/student/study-sessions",
   });
 
   return res.status(201).json({
@@ -306,20 +297,11 @@ const editarSesion = async (req, res, next) => {
 
   await sesion.update(req.body);
 
-  await crearNotificacion({
-    usuario_id: req.user.sub,
-    titulo: "Sesión modificada",
-    tipo: "session",
-    mensaje: `Actualizaste la sesión "${sesion.tema}".`,
-    referencia_tipo: "sesion_estudio",
-    referencia_id: sesion.id,
-    action_url: "/student/study-sessions",
-  });
-
   await notificarParticipantesSesion({
     sesionId: sesion.id,
     titulo: "Sesión modificada",
     mensaje: `La sesión "${sesion.tema}" fue modificada por su creador.`,
+    emisor_usuario_id: req.user.sub,
   });
 
   return res.status(200).json({
@@ -347,20 +329,11 @@ const cancelarSesion = async (req, res, next) => {
     await sesion.update({ cancelada: true });
   }
 
-  await crearNotificacion({
-    usuario_id: req.user.sub,
-    titulo: "Sesión cancelada",
-    tipo: "session",
-    mensaje: `Cancelaste la sesión "${sesion.tema}".`,
-    referencia_tipo: "sesion_estudio",
-    referencia_id: sesion.id,
-    action_url: "/student/study-sessions",
-  });
-
   await notificarParticipantesSesion({
     sesionId: sesion.id,
     titulo: "Sesión cancelada",
     mensaje: `La sesión "${sesion.tema}" fue cancelada por su creador.`,
+    emisor_usuario_id: req.user.sub,
   });
 
   return res.status(200).json({
