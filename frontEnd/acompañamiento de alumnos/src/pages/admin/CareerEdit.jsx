@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Check, X, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Check, X, Eye, TriangleAlert } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
@@ -335,6 +335,14 @@ function CareerEdit() {
                   disabled={plan._saving}
                 >
                   {plan._saving ? 'Guardando…' : 'Actualizar'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  iconLeft={<Eye size={14} />}
+                  onClick={() => navigate('/admin/study-plan', { state: { planId: plan.id } })}
+                >
+                  Ver plan
                 </Button>
               </div>
               {plan._error && <p className={styles.planError}>{plan._error}</p>}
