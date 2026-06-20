@@ -1,4 +1,4 @@
-const { notificacion, usuario } = require("../db/models");
+const { notificacion, usuario, estudiante, administrador } = require("../db/models");
 
 const TYPE_CONFIG = {
   academic: {
@@ -24,6 +24,12 @@ const formatNotification = (row) => {
   const config = TYPE_CONFIG[plain.tipo] || {};
 
   const emisor = plain.emisor;
+  let senderName = null;
+  if (emisor?.estudiante) {
+    senderName = `${emisor.estudiante.nombre} ${emisor.estudiante.apellido}`.trim();
+  } else if (emisor?.administrador) {
+    senderName = `${emisor.administrador.nombre} ${emisor.administrador.apellido}`.trim();
+  }
 
   return {
     id: plain.id,
@@ -37,9 +43,7 @@ const formatNotification = (row) => {
     referenceType: plain.referencia_tipo ?? null,
     referenceId: plain.referencia_id ?? null,
     senderId: emisor?.id ?? null,
-    senderName: emisor
-      ? `${emisor.nombre} ${emisor.apellido}`.trim()
-      : null,
+    senderName,
   };
 };
 
@@ -57,7 +61,15 @@ const listarMisNotificaciones = async (req, res) => {
   const rows = await notificacion.findAll({
     where,
     include: [
-      { model: usuario, as: 'emisor', attributes: ['id', 'nombre', 'apellido'] },
+      {
+        model: usuario,
+        as: 'emisor',
+        attributes: ['id'],
+        include: [
+          { model: estudiante, attributes: ['nombre', 'apellido'] },
+          { model: administrador, attributes: ['nombre', 'apellido'] },
+        ],
+      },
     ],
     order: [["createdAt", "DESC"]],
   });

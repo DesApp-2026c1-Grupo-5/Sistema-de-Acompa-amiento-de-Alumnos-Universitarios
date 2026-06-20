@@ -116,6 +116,20 @@ const inscribirse = async (sesionId, usuarioId) => {
     });
   }
 
+  const creadorEstudiante = await Estudiante.findByPk(sesion.creador_id);
+  if (creadorEstudiante?.usuario_id) {
+    await crearNotificacion({
+      usuario_id: creadorEstudiante.usuario_id,
+      emisor_usuario_id: usuarioId,
+      titulo: 'Nuevo participante',
+      tipo: 'session',
+      mensaje: `se inscribió a tu sesión "${sesion.tema}".`,
+      referencia_tipo: 'sesion_estudio',
+      referencia_id: sesion.id,
+      action_url: '/student/study-sessions',
+    });
+  }
+
   return inscripcion;
 };
 
