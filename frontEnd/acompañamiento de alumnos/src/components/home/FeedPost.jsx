@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ThumbsUp,
@@ -6,6 +7,7 @@ import {
   BookOpen,
   CheckCircle2,
   TrendingUp,
+  MoreVertical,
 } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
@@ -22,6 +24,7 @@ function EventBadge({ eventType, eventSubject }) {
   const meta = EVENT_META[eventType];
   if (!meta) return null;
   const { label, variant, Icon } = meta;
+
   return (
     <Badge variant={variant} className={styles.eventBadge}>
       <Icon size={13} aria-hidden="true" />
@@ -34,6 +37,9 @@ function EventBadge({ eventType, eventSubject }) {
 }
 
 function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUserId }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
   const {
     id,
     authorId,
@@ -52,12 +58,39 @@ function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUser
   const isDislikeActive = userReaction === 'dislike';
   const isOwnPost = currentUserId && authorId === currentUserId;
   const canReport = !isOwnPost && !post.miDenunciaPendiente;
-  const reportLabel = isOwnPost ? 'Tu publicación' : post.miDenunciaPendiente ? 'Ya denunciado' : 'Denunciar';
+
+  const reportLabel = isOwnPost
+    ? 'Tu publicación'
+    : post.miDenunciaPendiente
+      ? 'Ya denunciado'
+      : 'Denunciar';
+
   const reportTitle = isOwnPost
     ? 'No podés denunciar tu propia publicación'
     : post.miDenunciaPendiente
       ? 'Ya denunciaste esta publicación'
       : 'Denunciar publicación';
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleReportClick = () => {
+    if (!canReport) return;
+
+    setMenuOpen(false);
+    onReport?.(id);
+  };
 
   return (
     <article className={styles.card}>
@@ -69,15 +102,42 @@ function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUser
             <Link to={`/student/profile/${authorId}`} className={styles.authorLink}>
               <span className={styles.author}>{authorName}</span>
             </Link>
+
             {eventType && (
               <EventBadge eventType={eventType} eventSubject={eventSubject} />
             )}
           </div>
+
           <time className={styles.time} dateTime={createdAt}>
             {formatRelativeTime(createdAt)}
           </time>
         </div>
 
+        <div className={styles.moreMenuWrapper} ref={menuRef}>
+          <button
+            type="button"
+            className={styles.moreBtn}
+            aria-label="Más opciones"
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <MoreVertical size={20} aria-hidden="true" />
+          </button>
+
+          {menuOpen && (
+            <div className={styles.dropdownMenu}>
+              <button
+                type="button"
+                className={styles.dropdownItem}
+                onClick={handleReportClick}
+                disabled={!canReport}
+                title={reportTitle}
+              >
+                <Flag size={16} aria-hidden="true" />
+                <span>{reportLabel}</span>
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       <p className={styles.content}>{content}</p>
@@ -101,18 +161,6 @@ function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUser
         >
           <ThumbsDown size={16} aria-hidden="true" />
           <span>{dislikes}</span>
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.actionBtn} ${styles.reportBtn}`}
-          onClick={() => onReport?.(id)}
-          disabled={!canReport}
-          aria-label={reportTitle}
-          title={reportTitle}
-        >
-          <Flag size={16} aria-hidden="true" />
-          <span>{reportLabel}</span>
         </button>
       </footer>
     </article>
