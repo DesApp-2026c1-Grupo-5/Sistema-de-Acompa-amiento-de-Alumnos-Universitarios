@@ -23,5 +23,6 @@ router.post("/student/academic-situation/credits", authMiddleware, validate(crea
 router.delete("/student/academic-situation/credits/:id", authMiddleware, controller.eliminarActividad);
 router.post("/student/academic-situation/import-excel", authMiddleware, validarCargaExcel, controller.importarExcel);
 router.post("/student/academic-situation/confirm-excel", authMiddleware, controller.confirmarImportacion);
+router.patch("/student/academic-situation/change-career",authMiddleware,validate(crearSituacionSchema),controller.cambiarCarrera);
 
 module.exports = router;

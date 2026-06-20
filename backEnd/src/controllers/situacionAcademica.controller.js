@@ -498,6 +498,75 @@ const actualizarFinal = async (req, res, next) => {
   return res.status(200).json({ ok: true, data: f });
 };
 
+const cambiarCarrera = async (req, res, next) => {
+  const { plan_id } = req.body;
+
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) {
+    return next(buildError("Estudiante no encontrado", 404));
+  }
+
+  const situacion = await getSituacionActiva(estudianteData.id);
+  if (!situacion) {
+    return next(buildError("Situación académica no encontrada", 404));
+  }
+
+  const plan = await plan_estudio.findByPk(plan_id, {
+    include: [{ model: materia, as: "materias", attributes: ["id"] }],
+  });
+
+  if (!plan) {
+    return next(buildError("Plan no encontrado", 404));
+  }
+
+  await db.sequelize.transaction(async (t) => {
+
+    await final.destroy({
+      where: {},
+      transaction: t,
+    });
+
+    await estado_materia.destroy({
+      where: {
+        situacion_id: situacion.id,
+      },
+      transaction: t,
+    });
+
+    await actividad_credito.destroy({
+      where: {
+        situacion_id: situacion.id,
+      },
+      transaction: t,
+    });
+
+    await situacion.update(
+      {
+        plan_id,
+      },
+      {
+        transaction: t,
+      }
+    );
+
+    await estado_materia.bulkCreate(
+      plan.materias.map((m) => ({
+        situacion_id: situacion.id,
+        materia_id: m.id,
+        estado: "pendiente",
+      })),
+      {
+        transaction: t,
+      }
+    );
+  });
+
+  return res.json({
+    ok: true,
+    message: "Carrera actualizada correctamente",
+  });
+};
+
 module.exports = {
   crearSituacion,
   obtenerSituacion,
@@ -509,4 +578,5 @@ module.exports = {
   eliminarActividad,
   importarExcel,
   confirmarImportacion,
+  cambiarCarrera,
 };

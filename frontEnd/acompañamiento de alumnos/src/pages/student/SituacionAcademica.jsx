@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { getMyProfile } from '../../services/profileService';
 import { getCarreras } from '../../services/carreraService';
+import { cambiarCarrera } from "../../services/situacionAcademicaService";
 import {
   crearSituacion,
   getSituacion,
@@ -24,10 +26,65 @@ function WizardPlan({ onCreated }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  const normalizar = (texto = '') =>
+    texto
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+
   useEffect(() => {
-    getCarreras()
-      .then((res) => { setCarreras(res?.data ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
+    const cargarCarrerasDelPerfil = async () => {
+      try {
+        let profileCareers = [];
+
+        try {
+          profileCareers = JSON.parse(localStorage.getItem('profileCareers') || '[]');
+        } catch {
+          profileCareers = [];
+        }
+
+        if (profileCareers.length === 0) {
+          const perfil = await getMyProfile();
+          const carreraPerfil = perfil?.data?.user?.career;
+
+          if (carreraPerfil && carreraPerfil !== 'Carrera no definida') {
+            profileCareers = carreraPerfil
+              .split(',')
+              .map((c) => c.trim())
+              .filter(Boolean);
+          }
+        }
+
+        const resCarreras = await getCarreras();
+        const todasLasCarreras = resCarreras?.data ?? [];
+
+        console.log('Carreras guardadas en perfil:', profileCareers);
+        console.log('Respuesta getCarreras:', resCarreras);
+        console.log('Carreras del backend:', todasLasCarreras);
+
+        const carrerasFiltradas = todasLasCarreras.filter((carrera) =>
+          profileCareers.some((careerName) => {
+            const perfil = normalizar(careerName);
+            const backend = normalizar(carrera.nombre);
+
+            return (
+              perfil === backend ||
+              perfil.includes(backend) ||
+              backend.includes(perfil)
+            );
+          })
+        );
+
+        setCarreras(carrerasFiltradas);
+      } catch {
+        setCarreras([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarCarrerasDelPerfil();
   }, []);
 
   const carreraSel = carreras.find((c) => c.id === Number(carreraId));
@@ -35,10 +92,20 @@ function WizardPlan({ onCreated }) {
 
   const handleCrear = async () => {
     if (!planId) return;
+
     setSaving(true);
     setError(null);
+
     try {
-      await crearSituacion(Number(planId));
+      try {
+        await crearSituacion(Number(planId));
+      } catch (err) {
+        if (err.status === 409) {
+          await cambiarCarrera(Number(planId));
+        } else {
+          throw err;
+        }
+      }
       onCreated();
     } catch (err) {
       setError(err.message || 'Error al crear la situación académica');
@@ -55,31 +122,67 @@ function WizardPlan({ onCreated }) {
         <h1>Mi Situación Académica</h1>
         <p>Primero, seleccioná tu carrera y plan de estudios</p>
       </header>
+
       <div className={styles.wizardCard}>
-        <div className={styles.wizardField}>
-          <label>Carrera</label>
-          <select value={carreraId} onChange={(e) => { setCarreraId(e.target.value); setPlanId(''); }}>
-            <option value="">Seleccioná una carrera</option>
-            {carreras.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
-        </div>
-        {planesList.length > 0 && (
-          <div className={styles.wizardField}>
-            <label>Plan de estudios</label>
-            <select value={planId} onChange={(e) => setPlanId(e.target.value)}>
-              <option value="">Seleccioná un plan</option>
-              {planesList.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre} ({p.estado})
-                </option>
-              ))}
-            </select>
-          </div>
+        {carreras.length === 0 ? (
+          <>
+            <p className={styles.errorText}>
+              No tenés carreras seleccionadas en tu perfil.
+            </p>
+
+            <p className={styles.hintText}>
+              Para comenzar, andá a tu perfil, tocá “Editar perfil” y agregá al menos una carrera.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className={styles.wizardField}>
+              <label>Carrera</label>
+
+              <select
+                value={carreraId}
+                onChange={(e) => {
+                  setCarreraId(e.target.value);
+                  setPlanId('');
+                }}
+              >
+                <option value="">Seleccioná una carrera</option>
+
+                {carreras.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {planesList.length > 0 && (
+              <div className={styles.wizardField}>
+                <label>Plan de estudios</label>
+
+                <select value={planId} onChange={(e) => setPlanId(e.target.value)}>
+                  <option value="">Seleccioná un plan</option>
+
+                  {planesList.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre} ({p.estado})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {error && <p className={styles.errorText}>{error}</p>}
+
+            <button
+              className={styles.primaryButton}
+              disabled={!planId || saving}
+              onClick={handleCrear}
+            >
+              {saving ? 'Creando...' : 'Comenzar'}
+            </button>
+          </>
         )}
-        {error && <p className={styles.errorText}>{error}</p>}
-        <button className={styles.primaryButton} disabled={!planId || saving} onClick={handleCrear}>
-          {saving ? 'Creando...' : 'Comenzar'}
-        </button>
       </div>
     </section>
   );
@@ -99,6 +202,7 @@ export default function SituacionAcademica() {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [sinSituacion, setSinSituacion] = useState(false);
+  const [cambiandoCarrera, setCambiandoCarrera] = useState(false);
   const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '' });
 
   const cargarDatos = useCallback(async () => {
@@ -284,7 +388,16 @@ export default function SituacionAcademica() {
     }
   };
 
-  if (sinSituacion) return <WizardPlan onCreated={cargarDatos} />;
+  if (sinSituacion || cambiandoCarrera) {
+    return (
+      <WizardPlan
+        onCreated={() => {
+          setCambiandoCarrera(false);
+          cargarDatos();
+        }}
+      />
+    );
+  }
 
   if (loading) return <p className={styles.loading}>Cargando situación académica...</p>;
 
@@ -297,8 +410,18 @@ export default function SituacionAcademica() {
   return (
     <section className={styles.page}>
       <header className={styles.pageHeader}>
-        <h1>Mi Situación Académica</h1>
-        <p>Gestiona tu progreso y visualiza tu trayectoria universitaria</p>
+        <div>
+          <h1>Mi Situación Académica</h1>
+          <p>Gestiona tu progreso y visualiza tu trayectoria universitaria</p>
+        </div>
+
+        <button
+          type="button"
+          className={styles.primaryButton}
+          onClick={() => setCambiandoCarrera(true)}
+        >
+          Cambiar carrera
+        </button>
       </header>
 
       <section className={styles.statsGrid}>
@@ -511,7 +634,7 @@ export default function SituacionAcademica() {
         <div className={styles.tableHeader}>
           <h2>Actividades con créditos</h2>
         </div>
-          {credit_activities?.length > 0 ? (
+        {credit_activities?.length > 0 ? (
           <table className={styles.table}>
             <thead>
               <tr>

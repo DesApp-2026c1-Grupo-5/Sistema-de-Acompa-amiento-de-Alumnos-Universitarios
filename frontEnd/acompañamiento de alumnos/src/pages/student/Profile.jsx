@@ -22,6 +22,15 @@ import { votePost } from '../../services/postService';
 import { useAuth } from '../../context/useAuth';
 import styles from './Profile.module.css';
 
+const getStoredCareersText = () => {
+  try {
+    const careers = JSON.parse(localStorage.getItem('profileCareers') || '[]');
+    return careers.length > 0 ? careers.join(', ') : '';
+  } catch {
+    return '';
+  }
+};
+
 function Profile() {
   const { userId } = useParams();
   const { user, updateUser } = useAuth();
@@ -41,7 +50,15 @@ function Profile() {
     const fetch = isOwnProfile ? getMyProfile() : getProfileById(userId);
     fetch
       .then((res) => {
-        setProfile(res.data);
+        const storedCareer = getStoredCareersText();
+
+        setProfile({
+          ...res.data,
+          user: {
+            ...res.data.user,
+            career: storedCareer || res.data.user.career,
+          },
+        });
         if (isOwnProfile && (user?.estudiante?.foto_url ?? null) !== (res.data.user.foto_url ?? null)) {
           syncAuthFoto(res.data.user.foto_url);
         }

@@ -15,7 +15,7 @@ const {
   actualizarCarrera,
 } = require("../controllers/carrera.controller");
 
-router.get("/carreras", authMiddleware, requireAdmin, listarCarreras);
+router.get("/carreras", authMiddleware, listarCarreras);
 
 router.post(
   "/carreras",

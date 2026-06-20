@@ -7,6 +7,8 @@ import Avatar from '../common/Avatar';
 import styles from './ProfileHeader.module.css';
 
 const CAREER_OPTIONS = [
+  'Tecnicatura en Programación Informática',
+  'Licenciatura en Sistemas',
   'Ingeniería en Sistemas',
   'Licenciatura en Administración',
   'Medicina',
@@ -53,10 +55,10 @@ function ProfileHeader({
 
   const filteredCareerOptions = formNewCareer.trim()
     ? CAREER_OPTIONS.filter(
-        (opt) =>
-          opt.toLowerCase().includes(formNewCareer.toLowerCase()) &&
-          !formCareers.includes(opt)
-      )
+      (opt) =>
+        opt.toLowerCase().includes(formNewCareer.toLowerCase()) &&
+        !formCareers.includes(opt)
+    )
     : CAREER_OPTIONS.filter((opt) => !formCareers.includes(opt));
 
   const [formAutoPublish, setFormAutoPublish] = useState(() => {
@@ -100,7 +102,12 @@ function ProfileHeader({
   };
 
   const handleSubmit = () => {
-    const careers = formCareers;
+    const careerToAdd = formNewCareer.trim();
+
+    const careers = careerToAdd && !formCareers.includes(careerToAdd)
+      ? [...formCareers, careerToAdd]
+      : formCareers;
+
     localStorage.setItem('profileCareers', JSON.stringify(careers));
     localStorage.setItem('profileExtraData', JSON.stringify({ phone: formPhone, birthDate: formBirthDate }));
 
@@ -305,7 +312,16 @@ function ProfileHeader({
                         type="button"
                         key={opt}
                         className={styles.autocompleteOption}
-                        onMouseDown={(e) => { e.preventDefault(); setFormNewCareer(opt); setShowCareerSuggestions(false); }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+
+                          if (!formCareers.includes(opt)) {
+                            setFormCareers([...formCareers, opt]);
+                          }
+
+                          setFormNewCareer('');
+                          setShowCareerSuggestions(false);
+                        }}
                       >
                         {opt}
                       </button>
