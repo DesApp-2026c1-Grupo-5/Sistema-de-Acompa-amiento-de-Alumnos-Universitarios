@@ -115,7 +115,7 @@ function ModerationPage() {
     const [items, setItems] = useState([]);
     const [stats, setStats] = useState({ pendientes: 0, verificadas: 0, materiales_suspendidos: 0, posts_ocultos: 0 });
     const [selectedDetail, setSelectedDetail] = useState(null);
-    const [selectedId, setSelectedId] = useState(null);
+    const [selectedKey, setSelectedKey] = useState(null);
 
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('todos');
@@ -173,7 +173,7 @@ function ModerationPage() {
             const mapped = await fetchList({ q: '', estado: 'todos', page: 1 });
             if (cancelled) return;
             if (mapped.length > 0) {
-                setSelectedId(mapped[0].id);
+                setSelectedKey(`${mapped[0].tipo}-${mapped[0].id}`);
                 await fetchDetail(mapped[0]);
             }
             setLoading(false);
@@ -189,8 +189,8 @@ function ModerationPage() {
         const timer = setTimeout(async () => {
             setPage(1);
             const mapped = await fetchList({ q: search, estado: statusFilter, page: 1 });
-            if (selectedId && !mapped.find((it) => it.id === selectedId && it.tipo === (selectedDetail?.tipo ?? ''))) {
-                setSelectedId(mapped[0]?.id ?? null);
+            if (selectedKey && !mapped.find((it) => `${it.tipo}-${it.id}` === selectedKey)) {
+                setSelectedKey(mapped[0] ? `${mapped[0].tipo}-${mapped[0].id}` : null);
                 if (mapped[0]) {
                     fetchDetail(mapped[0]);
                 } else {
@@ -208,7 +208,7 @@ function ModerationPage() {
     };
 
     const handleSelectItem = (item) => {
-        setSelectedId(item.id);
+        setSelectedKey(`${item.tipo}-${item.id}`);
         setActionError('');
         fetchDetail(item);
         if (window.innerWidth <= 768) setDetailModalOpen(true);
@@ -223,7 +223,7 @@ function ModerationPage() {
             await Promise.all([
                 fetchStats(),
                 fetchList({ q: search, estado: statusFilter, page }),
-                fetchDetail(items.find((it) => it.id === selectedId)),
+                fetchDetail(items.find((it) => `${it.tipo}-${it.id}` === selectedKey)),
             ]);
         } catch (err) {
             setActionError(err.message || 'No pudimos completar la acción.');
@@ -367,7 +367,7 @@ function ModerationPage() {
                                 <button
                                     type="button"
                                     key={`${item.tipo}-${item.id}`}
-                                    className={`${styles.tableRow} ${selectedId === item.id ? styles.activeRow : ''}`}
+                                    className={`${styles.tableRow} ${selectedKey === `${item.tipo}-${item.id}` ? styles.activeRow : ''}`}
                                     onClick={() => handleSelectItem(item)}
                                 >
                                     <div className={styles.materialCell}>
