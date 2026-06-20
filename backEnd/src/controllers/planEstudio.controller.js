@@ -9,6 +9,8 @@ const {
 
 const { Op } = Sequelize;
 
+const planEstudioService = require("../services/planEstudio.service");
+
 const buildError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -93,12 +95,7 @@ const obtenerPlan = async (req, res, next) => {
     return next(buildError("id de plan invalido", 400));
   }
 
-  const data = await obtenerPlanFormateado(id);
-
-  if (!data) {
-    return next(buildError("Plan de estudio no encontrado", 404));
-  }
-
+  const data = await planEstudioService.getPlanById(id);
   return res.status(200).json({ ok: true, data });
 };
 
@@ -212,27 +209,8 @@ const actualizarPlan = async (req, res, next) => {
     return next(buildError("id de plan inválido", 400));
   }
 
-  const { estado } = req.body;
-
-  try {
-    const existente = await plan_estudio.findByPk(id);
-    if (!existente) {
-      return next(buildError("Plan de estudio no encontrado", 404));
-    }
-
-    await existente.update({ estado: estado ?? existente.estado });
-
-    return res.status(200).json({
-      ok: true,
-      data: {
-        id: existente.id,
-        anio: existente.anio,
-        estado: existente.estado,
-      },
-    });
-  } catch (err) {
-    return next(err);
-  }
+  const data = await planEstudioService.actualizarPlan(id, req.body);
+  return res.status(200).json({ ok: true, data });
 };
 
 const actualizarPlanCompleto = async (req, res, next) => {
@@ -372,61 +350,7 @@ const agregarMateriaAlPlan = async (req, res, next) => {
     return next(buildError("id de plan inválido", 400));
   }
 
-  const plan = await plan_estudio.findByPk(planId, {
-    include: [{ model: materia, as: "materias", attributes: ["id", "codigo"] }],
-  });
-
-  if (!plan) {
-    return next(buildError("Plan de estudio no encontrado", 404));
-  }
-
-  const { codigo, nombre, anio_cursada, modalidad, es_optativa, es_unahur, creditos_otorga, correlativas } = req.body;
-
-  const existentes = plan.materias || [];
-  if (existentes.some((m) => m.codigo === codigo)) {
-    return next(buildError(`Ya existe una materia con el código "${codigo}" en este plan`, 400));
-  }
-
-  const codigosExistentes = new Set(existentes.map((m) => m.codigo));
-  for (const corr of correlativas || []) {
-    if (!codigosExistentes.has(corr)) {
-      return next(
-        buildError(
-          `La correlativa "${corr}" no coincide con ninguna materia del plan`,
-          400
-        )
-      );
-    }
-  }
-
-  const creada = await materia.create({
-    plan_id: planId,
-    codigo,
-    nombre,
-    anio_cursada,
-    tipo: es_optativa ? "optativa" : "obligatoria",
-    modalidad,
-    es_optativa,
-    es_unahur,
-    creditos_otorga,
-  });
-
-  if (Array.isArray(correlativas) && correlativas.length > 0) {
-    const codigoToId = Object.fromEntries(
-      existentes.map((m) => [m.codigo, m.id])
-    );
-    codigoToId[codigo] = creada.id;
-
-    for (const corrCodigo of correlativas) {
-      await correlatividad.create({
-        materia_id: creada.id,
-        materia_requisito_id: codigoToId[corrCodigo],
-        tipo: "cursar",
-      });
-    }
-  }
-
-  const data = await obtenerPlanFormateado(planId);
+  const data = await planEstudioService.agregarMateria(planId, req.body);
   return res.status(201).json({ ok: true, data });
 };
 
@@ -441,75 +365,7 @@ const actualizarMateriaDelPlan = async (req, res, next) => {
     return next(buildError("id de materia inválido", 400));
   }
 
-  const plan = await plan_estudio.findByPk(planId, {
-    include: [{ model: materia, as: "materias", attributes: ["id", "codigo"] }],
-  });
-  if (!plan) {
-    return next(buildError("Plan de estudio no encontrado", 404));
-  }
-
-  const materiaExistente = await materia.findByPk(materiaId);
-  if (!materiaExistente || materiaExistente.plan_id !== planId) {
-    return next(buildError("Materia no encontrada en el plan", 404));
-  }
-
-  const { codigo, nombre, anio_cursada, modalidad, es_optativa, es_unahur, creditos_otorga, correlativas } = req.body;
-
-  if (codigo !== undefined) {
-    const existentes = plan.materias || [];
-    const duplicado = existentes.find((m) => m.codigo === codigo && m.id !== materiaId);
-    if (duplicado) {
-      return next(buildError(`Ya existe otra materia con el código "${codigo}" en este plan`, 400));
-    }
-  }
-
-  const datos = {};
-  if (codigo !== undefined) datos.codigo = codigo;
-  if (nombre !== undefined) datos.nombre = nombre;
-  if (anio_cursada !== undefined) datos.anio_cursada = anio_cursada;
-  if (modalidad !== undefined) datos.modalidad = modalidad;
-  if (es_optativa !== undefined) {
-    datos.es_optativa = es_optativa;
-    datos.tipo = es_optativa ? "optativa" : "obligatoria";
-  }
-  if (es_unahur !== undefined) datos.es_unahur = es_unahur;
-  if (creditos_otorga !== undefined) datos.creditos_otorga = creditos_otorga;
-
-  await materiaExistente.update(datos);
-
-  if (correlativas !== undefined) {
-    const codigosExistentes = new Set((plan.materias || [])
-      .filter((m) => m.id !== materiaId)
-      .map((m) => m.codigo));
-
-    if (codigo !== undefined) codigosExistentes.add(codigo);
-    else codigosExistentes.add(materiaExistente.codigo);
-
-    for (const corr of correlativas) {
-      if (!codigosExistentes.has(corr)) {
-        return next(
-          buildError(
-            `La correlativa "${corr}" no coincide con ninguna materia del plan`,
-            400
-          )
-        );
-      }
-    }
-
-    await correlatividad.destroy({ where: { materia_id: materiaId } });
-    for (const corrCodigo of correlativas) {
-      const requisito = (plan.materias || []).find((m) => m.codigo === corrCodigo);
-      if (requisito) {
-        await correlatividad.create({
-          materia_id: materiaId,
-          materia_requisito_id: requisito.id,
-          tipo: "cursar",
-        });
-      }
-    }
-  }
-
-  const data = await obtenerPlanFormateado(planId);
+  const data = await planEstudioService.actualizarMateria(planId, materiaId, req.body);
   return res.status(200).json({ ok: true, data });
 };
 
@@ -524,23 +380,7 @@ const eliminarMateriaDelPlan = async (req, res, next) => {
     return next(buildError("id de materia inválido", 400));
   }
 
-  const materiaExistente = await materia.findByPk(materiaId);
-  if (!materiaExistente || materiaExistente.plan_id !== planId) {
-    return next(buildError("Materia no encontrada en el plan", 404));
-  }
-
-  await correlatividad.destroy({
-    where: {
-      [Op.or]: [
-        { materia_id: materiaId },
-        { materia_requisito_id: materiaId },
-      ],
-    },
-  });
-
-  await materiaExistente.destroy();
-
-  const data = await obtenerPlanFormateado(planId);
+  const data = await planEstudioService.eliminarMateria(planId, materiaId);
   return res.status(200).json({ ok: true, data });
 };
 

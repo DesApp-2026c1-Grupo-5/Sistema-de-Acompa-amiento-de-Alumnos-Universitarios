@@ -53,9 +53,10 @@ const votarPost = async (req, res, next) => {
   if (miVoto === 'like' && postData.estudiante?.usuario_id !== estudianteData.id) {
     await crearNotificacion({
       usuario_id: postData.estudiante.usuario_id,
+      emisor_usuario_id: req.user.sub,
       titulo: 'Te dieron like',
       tipo: 'general',
-      mensaje: 'Recibiste un like en una publicación tuya.',
+      mensaje: 'le dio like a tu publicación.',
       referencia_tipo: 'post',
       referencia_id: postData.id,
       action_url: '/student/home',

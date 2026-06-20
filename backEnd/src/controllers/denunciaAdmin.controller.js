@@ -241,7 +241,7 @@ const resolverDenunciasPendientes = async (materialId, nuevoEstado, adminId) => 
   });
 };
 
-const notificarDenunciantes = async (pendientes, materialTitulo, nuevoEstado) => {
+const notificarDenunciantes = async (pendientes, materialTitulo, nuevoEstado, emisor_usuario_id) => {
   for (const d of pendientes) {
     const denuncianteRaw = d.denunciante;
     if (!denuncianteRaw) continue;
@@ -251,6 +251,7 @@ const notificarDenunciantes = async (pendientes, materialTitulo, nuevoEstado) =>
 
     await crearNotificacion({
       usuario_id: denuncianteRaw.usuario_id,
+      emisor_usuario_id,
       titulo: `Denuncia ${texto}`,
       tipo: "general",
       mensaje: `Tu denuncia sobre "${materialTitulo}" fue ${texto}.`,
@@ -308,7 +309,7 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
     adminId
   );
 
-  notificarDenunciantes(pendientes, mat.titulo, nuevoEstado);
+  notificarDenunciantes(pendientes, mat.titulo, nuevoEstado, req.user.sub);
 
   return res.status(200).json({
     ok: true,
@@ -380,6 +381,7 @@ const suspenderMaterial = async (req, res, next) => {
 
   await crearNotificacion({
     usuario_id: mat.estudiante?.usuario_id,
+    emisor_usuario_id: req.user.sub,
     titulo: "Material suspendido",
     tipo: "general",
     mensaje: `Tu material "${mat.titulo}" fue suspendido debido a denuncias verificadas.`,
@@ -398,7 +400,7 @@ const suspenderMaterial = async (req, res, next) => {
     });
   }
 
-  notificarDenunciantes(pendientes, mat.titulo, "verificada");
+  notificarDenunciantes(pendientes, mat.titulo, "verificada", req.user.sub);
 
   return res.status(200).json({
     ok: true,
@@ -454,6 +456,7 @@ const restaurarMaterial = async (req, res, next) => {
 
   await crearNotificacion({
     usuario_id: mat.estudiante?.usuario_id,
+    emisor_usuario_id: req.user.sub,
     titulo: "Material restaurado",
     tipo: "general",
     mensaje: `Tu material "${mat.titulo}" fue restaurado y ya está visible nuevamente.`,

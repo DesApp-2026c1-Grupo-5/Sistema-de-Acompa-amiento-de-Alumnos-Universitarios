@@ -1,4 +1,4 @@
-const { notificacion } = require("../db/models");
+const { notificacion, usuario } = require("../db/models");
 
 const TYPE_CONFIG = {
   academic: {
@@ -23,6 +23,8 @@ const formatNotification = (row) => {
   const plain = row.get({ plain: true });
   const config = TYPE_CONFIG[plain.tipo] || {};
 
+  const emisor = plain.emisor;
+
   return {
     id: plain.id,
     type: plain.tipo,
@@ -34,6 +36,10 @@ const formatNotification = (row) => {
     actionUrl: plain.action_url ?? config.actionUrl ?? null,
     referenceType: plain.referencia_tipo ?? null,
     referenceId: plain.referencia_id ?? null,
+    senderId: emisor?.id ?? null,
+    senderName: emisor
+      ? `${emisor.nombre} ${emisor.apellido}`.trim()
+      : null,
   };
 };
 
@@ -50,6 +56,9 @@ const listarMisNotificaciones = async (req, res) => {
 
   const rows = await notificacion.findAll({
     where,
+    include: [
+      { model: usuario, as: 'emisor', attributes: ['id', 'nombre', 'apellido'] },
+    ],
     order: [["createdAt", "DESC"]],
   });
 

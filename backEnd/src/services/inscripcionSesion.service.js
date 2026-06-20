@@ -99,33 +99,19 @@ const inscribirse = async (sesionId, usuarioId) => {
   const usuarioData = await usuario.findByPk(usuarioId);
   const emailEstudiante = usuarioData?.email;
 
-  const tituloNotif = estadoInicial === "aprobada"
-    ? "Inscripción confirmada"
-    : "Solicitud de inscripción enviada";
-
-  const mensajeNotif = estadoInicial === "aprobada"
-    ? `Te inscribiste correctamente a la sesión "${sesion.tema}".`
-    : `Solicitaste inscripción a la sesión "${sesion.tema}". Espera la aprobación del creador.`;
-
-  await crearNotificacion({
-    usuario_id: usuarioId,
-    titulo: tituloNotif,
-    tipo: "session",
-    mensaje: mensajeNotif,
-    referencia_tipo: "sesion_estudio",
-    referencia_id: sesion.id,
-    action_url: "/student/study-sessions",
-  });
-
   if (emailEstudiante) {
     const mensajeHtml = estadoInicial === "aprobada"
       ? `<p>Te inscribiste correctamente a la sesión <strong>"${sesion.tema}"</strong>.</p>`
       : `<p>Solicitaste inscripción a la sesión <strong>"${sesion.tema}"</strong>.</p>
          <p>Recibirás un correo cuando el creador apruebe o rechace tu solicitud.</p>`;
 
+    const tituloEmail = estadoInicial === "aprobada"
+      ? "Inscripción confirmada"
+      : "Solicitud de inscripción enviada";
+
     await sendMail({
       to: emailEstudiante,
-      subject: tituloNotif,
+      subject: tituloEmail,
       html: `<p>Hola ${estudianteData.nombre},</p>${mensajeHtml}<p>Saludos,<br/>El equipo de SIVA</p>`,
     });
   }
@@ -190,6 +176,7 @@ const actualizarEstadoParticipante = async (sesionId, inscripcionId, usuarioId, 
 
     await crearNotificacion({
       usuario_id: participante.usuario_id,
+      emisor_usuario_id: usuarioId,
       titulo: esAprobado ? "Inscripción aprobada" : "Inscripción rechazada",
       tipo: "session",
       mensaje: esAprobado
