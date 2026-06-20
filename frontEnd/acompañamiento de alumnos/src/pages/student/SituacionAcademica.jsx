@@ -118,71 +118,76 @@ function WizardPlan({ onCreated }) {
 
   return (
     <section className={styles.page}>
-      <header className={styles.pageHeader}>
+      <header className={styles.wizardHeader}>
         <h1>Mi Situación Académica</h1>
         <p>Primero, seleccioná tu carrera y plan de estudios</p>
       </header>
 
-      <div className={styles.wizardCard}>
-        {carreras.length === 0 ? (
-          <>
-            <p className={styles.errorText}>
-              No tenés carreras seleccionadas en tu perfil.
-            </p>
+      <div className={styles.wizardContainer}>
+        <div className={styles.wizardCard}>
+          {carreras.length === 0 ? (
+            <>
+              <p className={styles.errorText}>
+                No tenés carreras seleccionadas en tu perfil.
+              </p>
 
-            <p className={styles.hintText}>
-              Para comenzar, andá a tu perfil, tocá “Editar perfil” y agregá al menos una carrera.
-            </p>
-          </>
-        ) : (
-          <>
-            <div className={styles.wizardField}>
-              <label>Carrera</label>
-
-              <select
-                value={carreraId}
-                onChange={(e) => {
-                  setCarreraId(e.target.value);
-                  setPlanId('');
-                }}
-              >
-                <option value="">Seleccioná una carrera</option>
-
-                {carreras.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {planesList.length > 0 && (
+              <p className={styles.hintText}>
+                Para comenzar, andá a tu perfil, tocá “Editar perfil” y agregá al menos una carrera.
+              </p>
+            </>
+          ) : (
+            <>
               <div className={styles.wizardField}>
-                <label>Plan de estudios</label>
+                <label>Carrera</label>
 
-                <select value={planId} onChange={(e) => setPlanId(e.target.value)}>
-                  <option value="">Seleccioná un plan</option>
+                <select
+                  value={carreraId}
+                  onChange={(e) => {
+                    setCarreraId(e.target.value);
+                    setPlanId('');
+                  }}
+                >
+                  <option value="">Seleccioná una carrera</option>
 
-                  {planesList.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre} ({p.estado})
+                  {carreras.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
                     </option>
                   ))}
                 </select>
               </div>
-            )}
 
-            {error && <p className={styles.errorText}>{error}</p>}
+              {planesList.length > 0 && (
+                <div className={styles.wizardField}>
+                  <label>Plan de estudios</label>
 
-            <button
-              className={styles.primaryButton}
-              disabled={!planId || saving}
-              onClick={handleCrear}
-            >
-              {saving ? 'Creando...' : 'Comenzar'}
-            </button>
-          </>
-        )}
+                  <select
+                    value={planId}
+                    onChange={(e) => setPlanId(e.target.value)}
+                  >
+                    <option value="">Seleccioná un plan</option>
+
+                    {planesList.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre} ({p.estado})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {error && <p className={styles.errorText}>{error}</p>}
+
+              <button
+                className={styles.primaryButton}
+                disabled={!planId || saving}
+                onClick={handleCrear}
+              >
+                {saving ? 'Creando...' : 'Comenzar'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </section>
   );
