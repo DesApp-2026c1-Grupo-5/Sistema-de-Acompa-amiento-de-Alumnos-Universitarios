@@ -17,6 +17,13 @@ router.post(
   adminController.crearAdmin
 );
 
+router.delete(
+  "/admins/:id",
+  authMiddleware,
+  requireAdmin,
+  adminController.eliminarAdmin
+);
+
 router.get(
   "/admin/home/stats",
   authMiddleware,

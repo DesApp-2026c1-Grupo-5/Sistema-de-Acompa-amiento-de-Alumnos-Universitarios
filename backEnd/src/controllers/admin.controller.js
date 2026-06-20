@@ -111,4 +111,47 @@ const getHomeStats = async (req, res) => {
   });
 };
 
-module.exports = { crearAdmin, obtenerAdmins, getHomeStats };
+const eliminarAdmin = async (req, res) => {
+  const { id } = req.params;
+
+  const admin = await administrador.findByPk(id);
+
+  if (!admin) {
+    return res.status(404).json({
+      ok: false,
+      message: "Administrador no encontrado",
+    });
+  }
+
+  // Evita eliminarse a sí mismo
+  if (admin.usuario_id === req.user.sub) {
+    return res.status(400).json({
+      ok: false,
+      message: "No podés eliminar tu propia cuenta.",
+    });
+  }
+
+  await sequelize.transaction(async (t) => {
+    await administrador.destroy({
+      where: { id },
+      transaction: t,
+    });
+
+    await usuario.destroy({
+      where: { id: admin.usuario_id },
+      transaction: t,
+    });
+  });
+
+  return res.json({
+    ok: true,
+    message: "Administrador eliminado correctamente",
+  });
+};
+
+module.exports = {
+  crearAdmin,
+  obtenerAdmins,
+  eliminarAdmin,
+  getHomeStats,
+};

@@ -4,7 +4,7 @@ import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import ModalConfirmation from '../../components/common/ModalConfirmation';
 import Pagination from '../../components/common/Pagination';
-import { getAdmins, createAdmin } from '../../services/adminService';
+import { getAdmins, createAdmin, deleteAdmin } from '../../services/adminService';
 import styles from './Admins.module.css';
 
 const PAGE_SIZE = 5;
@@ -77,7 +77,6 @@ function Admins() {
         formData.password
       );
 
-      // el nuevo admin es el más reciente (orden createdAt DESC) → mostrar página 1
       if (page === 1) {
         await fetchPage(1);
       } else {
@@ -112,13 +111,23 @@ function Admins() {
     setShowDeleteModal(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (adminToDelete) {
-      setAdmins((prev) => prev.filter((admin) => admin.id !== adminToDelete.id));
-      console.log('DELETE /api/admins', adminToDelete.id);
+  const handleConfirmDelete = async () => {
+    if (!adminToDelete) return;
+
+    try {
+      await deleteAdmin(adminToDelete.id);
+
+      if (admins.length === 1 && page > 1) {
+        setPage((prevPage) => prevPage - 1);
+      } else {
+        await fetchPage(page);
+      }
+    } catch (err) {
+      alert(err.message || 'No se pudo eliminar el administrador.');
+    } finally {
+      setShowDeleteModal(false);
+      setAdminToDelete(null);
     }
-    setShowDeleteModal(false);
-    setAdminToDelete(null);
   };
 
   const handleCancelDelete = () => {
@@ -298,7 +307,7 @@ function Admins() {
               )}
             </div>
           )}
-</div>
+        </div>
       </div>
 
       <ModalConfirmation

@@ -5,3 +5,6 @@ export const getAdmins = ({ page = 1, limit = 10 } = {}) =>
 
 export const createAdmin = (nombre, apellido, email, password) =>
   api.post("/admins", { nombre, apellido, email, password });
+
+export const deleteAdmin = (id) =>
+  api.delete(`/admins/${id}`);
