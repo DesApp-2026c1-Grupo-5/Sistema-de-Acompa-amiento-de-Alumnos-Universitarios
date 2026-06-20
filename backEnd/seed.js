@@ -441,8 +441,9 @@ async function seed() {
     { material_id: materiales[17].id, estudiante_id: estFacu.id, valor: "like",    fecha: monthsAgo(0, 12) },
   ]);
 
-  // 7. Denuncias — 4 pendientes, 2 verificadas, 1 rechazada
+  // 7. Denuncias — materiales y publicaciones
   await db.denuncia.bulkCreate([
+    // Materiales — 4 pendientes, 2 verificadas, 1 rechazada
     { material_id: materiales[4].id,  denunciante_id: estLara.id,  motivo_id: motivos[2].id, admin_revisor_id: admin1.id, detalle: "Parece spam",                       estado: "pendiente",  fecha_creacion: monthsAgo(2), fecha_resolucion: null },
     { material_id: materiales[7].id,  denunciante_id: estDiego.id, motivo_id: motivos[1].id, admin_revisor_id: admin1.id, detalle: "Posible material con copyright",    estado: "pendiente",  fecha_creacion: monthsAgo(1), fecha_resolucion: null },
     { material_id: materiales[11].id, denunciante_id: estSofia.id, motivo_id: motivos[3].id, admin_revisor_id: admin1.id, detalle: "Información incorrecta sobre tipos", estado: "pendiente",  fecha_creacion: monthsAgo(1), fecha_resolucion: null },
@@ -513,6 +514,13 @@ async function seed() {
     postsData.map((p) => ({ ...p, updatedAt: p.createdAt })),
     { returning: true }
   );
+
+  // Denuncias de publicaciones — 2 pendientes, 1 verificada
+  await db.denuncia.bulkCreate([
+    { post_id: posts[2].id,  denunciante_id: estFacu.id,  motivo_id: motivos[0].id, admin_revisor_id: null,      detalle: "Contenido inapropiado",              estado: "pendiente",  fecha_creacion: monthsAgo(0, 10), fecha_resolucion: null },
+    { post_id: posts[11].id, denunciante_id: estSofia.id, motivo_id: motivos[2].id, admin_revisor_id: null,      detalle: "Publicidad no autorizada",           estado: "pendiente",  fecha_creacion: monthsAgo(0, 8),  fecha_resolucion: null },
+    { post_id: posts[5].id,  denunciante_id: estLara.id,  motivo_id: motivos[1].id, admin_revisor_id: admin1.id, detalle: "Contenido copiado de otra fuente",  estado: "verificada", fecha_creacion: monthsAgo(0, 12), fecha_resolucion: monthsAgo(0, 10) },
+  ]);
 
   // Votos
   await db.voto_post.bulkCreate([

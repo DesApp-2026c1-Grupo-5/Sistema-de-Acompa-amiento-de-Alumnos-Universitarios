@@ -68,7 +68,7 @@
 }
 .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 26px;
 }
@@ -102,6 +102,10 @@
 
 .suspendedLine::after {
   background: linear-gradient(90deg, #ff1744, #b00020);
+}
+
+.ocultoLine::after {
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
 }
 
 .summaryCard span {
@@ -175,7 +179,7 @@
 .tableRow {
   min-width: 720px;
   display: grid;
-  grid-template-columns: 2.2fr 0.8fr 0.7fr 0.8fr;
+  grid-template-columns: 2.2fr 0.8fr 0.7fr 0.8fr 0.8fr;
   align-items: center;
 }
 
@@ -348,6 +352,34 @@
 
 .detailInfo .statusBadge {
   font-weight: 700;
+}
+
+.detailPostContent {
+  padding: 14px 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 10px;
+}
+
+.detailPostContent p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #020617;
+  word-break: break-word;
+}
+
+:global(html.dark) .detailPostContent p {
+  color: #ffffff;
+}
+
+.categoryCell {
+  font-size: 12px;
+  color: #405a7a;
+  font-weight: 600;
+}
+
+:global(html.dark) .categoryCell {
+  color: #b7c8e6;
 }
 
 .complaintsBlock {
@@ -794,7 +826,7 @@
   }
 
   .summaryGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
     margin-bottom: 24px;
   }
@@ -895,6 +927,21 @@
 
   .statusBadge {
     justify-self: flex-start;
+  }
+
+  .categoryCell {
+    display: block;
+  }
+
+  .categoryCell::before {
+    content: 'Categoría: ';
+    font-weight: 700;
+    font-size: 12px;
+    color: #405a7a;
+  }
+
+  :global(html.dark) .categoryCell::before {
+    color: #b7c8e6;
   }
 
   .detailPanel {

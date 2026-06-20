@@ -13,10 +13,15 @@ const {
   listarStats,
   listarDenuncias,
   obtenerDetalle,
+  obtenerDetallePost,
   verificarDenuncias,
   rechazarDenuncias,
+  verificarDenunciasPost,
+  rechazarDenunciasPost,
   suspenderMaterial,
   restaurarMaterial,
+  ocultarPost,
+  mostrarPost,
 } = require("../controllers/denunciaAdmin.controller");
 
 router.get("/admin/denuncias/stats", authMiddleware, requireAdmin, listarStats);
@@ -34,6 +39,13 @@ router.get(
   authMiddleware,
   requireAdmin,
   obtenerDetalle
+);
+
+router.get(
+  "/admin/denuncias/post/:postId",
+  authMiddleware,
+  requireAdmin,
+  obtenerDetallePost
 );
 
 router.patch(
@@ -62,6 +74,34 @@ router.patch(
   authMiddleware,
   requireAdmin,
   restaurarMaterial
+);
+
+router.patch(
+  "/admin/posts/:id/denuncias/verificar",
+  authMiddleware,
+  requireAdmin,
+  verificarDenunciasPost
+);
+
+router.patch(
+  "/admin/posts/:id/denuncias/rechazar",
+  authMiddleware,
+  requireAdmin,
+  rechazarDenunciasPost
+);
+
+router.patch(
+  "/admin/posts/:id/ocultar",
+  authMiddleware,
+  requireAdmin,
+  ocultarPost
+);
+
+router.patch(
+  "/admin/posts/:id/mostrar",
+  authMiddleware,
+  requireAdmin,
+  mostrarPost
 );
 
 module.exports = router;

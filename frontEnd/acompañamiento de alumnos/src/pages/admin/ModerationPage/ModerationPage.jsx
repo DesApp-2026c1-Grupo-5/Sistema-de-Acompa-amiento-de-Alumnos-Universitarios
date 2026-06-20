@@ -8,6 +8,8 @@ import {
     MessageSquare,
     XCircle,
     Ban,
+    EyeOff,
+    Eye,
     AlertTriangle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -16,9 +18,13 @@ import {
     getDenunciasStats,
     getDenunciasAdmin,
     getDenunciaMaterialDetail,
+    getDenunciaPostDetail,
     rechazarDenunciasMaterial,
     suspenderMaterialAdmin,
     restaurarMaterialAdmin,
+    rechazarDenunciasPost,
+    ocultarPostAdmin,
+    mostrarPostAdmin,
 } from '../../../services/denunciaAdminService';
 import Pagination from '../../../components/common/Pagination';
 import styles from './ModerationPage.module.css';
@@ -30,6 +36,7 @@ const ESTADO_LABEL = {
     pendiente: 'Pendiente',
     rechazada: 'Rechazada',
     suspendido: 'Suspendido',
+    oculto: 'Oculta',
 };
 const COMPLAINT_ESTADO_LABEL = {
     pendiente: 'Pendiente',
@@ -38,12 +45,13 @@ const COMPLAINT_ESTADO_LABEL = {
 
 function mapListItem(it) {
     const uploader = it.uploader ?? {};
+    const descripcion = it.descripcion ?? '';
     return {
-        id: it.material.id,
-        titulo: it.material.titulo,
-        tipo: it.material.tipo,
-        suspendido: it.material.suspendido,
-        subidoPor: `${uploader.nombre ?? ''} ${uploader.apellido ?? ''}`.trim() || 'Sin uploader',
+        id: it.recurso_id,
+        tipo: it.tipo,
+        descripcion: descripcion.length > 60 ? descripcion.substring(0, 60) + '...' : descripcion,
+        categoria: it.categoria,
+        subidoPor: `${uploader.nombre ?? ''} ${uploader.apellido ?? ''}`.trim() || 'Sin usuario',
         cantidad: it.cantidad_denuncias,
         severidad: it.severidad,
         estado: it.estado_resumen,
@@ -52,32 +60,60 @@ function mapListItem(it) {
 
 function mapDetail(data) {
     const uploader = data.uploader ?? {};
-    return {
-        id: data.material.id,
-        titulo: data.material.titulo,
-        tipo: data.material.tipo,
-        suspendido: data.material.suspendido,
-        subidoPor: `${uploader.nombre ?? ''} ${uploader.apellido ?? ''}`.trim() || 'Sin uploader',
-        cantidad: data.cantidad_denuncias,
-        estado: data.estado_resumen,
-        denuncias: (data.denuncias ?? []).map((d) => ({
-            id: d.id,
-            motivo: d.motivo?.nombre ?? 'Sin motivo',
-            detalle: d.detalle ?? '',
-            estado: d.estado,
-            denunciante: d.denunciante
-                ? `${d.denunciante.nombre} ${d.denunciante.apellido}`.trim()
-                : '—',
-            fecha: d.fecha_creacion ? new Date(d.fecha_creacion).toLocaleDateString('es-AR') : '',
-        })),
-    };
+
+    if (data.material) {
+        return {
+            tipo: 'material',
+            id: data.material.id,
+            titulo: data.material.titulo,
+            tipoMaterial: data.material.tipo,
+            suspendido: data.material.suspendido,
+            subidoPor: `${uploader.nombre ?? ''} ${uploader.apellido ?? ''}`.trim() || 'Sin usuario',
+            cantidad: data.cantidad_denuncias,
+            estado: data.estado_resumen,
+            denuncias: (data.denuncias ?? []).map((d) => ({
+                id: d.id,
+                motivo: d.motivo?.nombre ?? 'Sin motivo',
+                detalle: d.detalle ?? '',
+                estado: d.estado,
+                denunciante: d.denunciante
+                    ? `${d.denunciante.nombre} ${d.denunciante.apellido}`.trim()
+                    : '—',
+                fecha: d.fecha_creacion ? new Date(d.fecha_creacion).toLocaleDateString('es-AR') : '',
+            })),
+        };
+    }
+
+    if (data.post) {
+        return {
+            tipo: 'post',
+            id: data.post.id,
+            contenido: data.post.contenido,
+            oculto: data.post.oculto,
+            subidoPor: `${uploader.nombre ?? ''} ${uploader.apellido ?? ''}`.trim() || 'Sin usuario',
+            cantidad: data.cantidad_denuncias,
+            estado: data.estado_resumen,
+            denuncias: (data.denuncias ?? []).map((d) => ({
+                id: d.id,
+                motivo: d.motivo?.nombre ?? 'Sin motivo',
+                detalle: d.detalle ?? '',
+                estado: d.estado,
+                denunciante: d.denunciante
+                    ? `${d.denunciante.nombre} ${d.denunciante.apellido}`.trim()
+                    : '—',
+                fecha: d.fecha_creacion ? new Date(d.fecha_creacion).toLocaleDateString('es-AR') : '',
+            })),
+        };
+    }
+
+    return null;
 }
 
 function ModerationPage() {
     const navigate = useNavigate();
 
-    const [materials, setMaterials] = useState([]);
-    const [stats, setStats] = useState({ pendientes: 0, verificadas: 0, materiales_suspendidos: 0 });
+    const [items, setItems] = useState([]);
+    const [stats, setStats] = useState({ pendientes: 0, verificadas: 0, materiales_suspendidos: 0, posts_ocultos: 0 });
     const [selectedDetail, setSelectedDetail] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
 
@@ -104,26 +140,28 @@ function ModerationPage() {
     const fetchList = useCallback(async ({ q, estado, page }) => {
         try {
             const res = await getDenunciasAdmin({ q, estado, page, limit: PAGE_SIZE });
-            const items = (res.data ?? []).map(mapListItem);
-            setMaterials(items);
+            const mapped = (res.data ?? []).map(mapListItem);
+            setItems(mapped);
             setTotalPages(res.pagination?.totalPages ?? 1);
-            return items;
+            return mapped;
         } catch (err) {
             setListError(err.message || 'No pudimos cargar la lista de denuncias.');
             return [];
         }
     }, []);
 
-    const fetchDetail = useCallback(async (materialId) => {
-        if (!materialId) {
+    const fetchDetail = useCallback(async (item) => {
+        if (!item) {
             setSelectedDetail(null);
             return;
         }
         try {
-            const res = await getDenunciaMaterialDetail(materialId);
+            const res = item.tipo === 'material'
+                ? await getDenunciaMaterialDetail(item.id)
+                : await getDenunciaPostDetail(item.id);
             setSelectedDetail(mapDetail(res.data));
         } catch (err) {
-            setActionError(err.message || 'No pudimos cargar el detalle del material.');
+            setActionError(err.message || 'No pudimos cargar el detalle.');
         }
     }, []);
 
@@ -132,11 +170,11 @@ function ModerationPage() {
         const load = async () => {
             setLoading(true);
             await fetchStats();
-            const items = await fetchList({ q: '', estado: 'todos', page: 1 });
+            const mapped = await fetchList({ q: '', estado: 'todos', page: 1 });
             if (cancelled) return;
-            if (items.length > 0) {
-                setSelectedId(items[0].id);
-                await fetchDetail(items[0].id);
+            if (mapped.length > 0) {
+                setSelectedId(mapped[0].id);
+                await fetchDetail(mapped[0]);
             }
             setLoading(false);
         };
@@ -150,11 +188,11 @@ function ModerationPage() {
         if (loading) return;
         const timer = setTimeout(async () => {
             setPage(1);
-            const items = await fetchList({ q: search, estado: statusFilter, page: 1 });
-            if (selectedId && !items.find((it) => it.id === selectedId)) {
-                setSelectedId(items[0]?.id ?? null);
-                if (items[0]) {
-                    fetchDetail(items[0].id);
+            const mapped = await fetchList({ q: search, estado: statusFilter, page: 1 });
+            if (selectedId && !mapped.find((it) => it.id === selectedId && it.tipo === (selectedDetail?.tipo ?? ''))) {
+                setSelectedId(mapped[0]?.id ?? null);
+                if (mapped[0]) {
+                    fetchDetail(mapped[0]);
                 } else {
                     setSelectedDetail(null);
                 }
@@ -169,10 +207,10 @@ function ModerationPage() {
         fetchList({ q: search, estado: statusFilter, page: n });
     };
 
-    const handleSelectMaterial = (material) => {
-        setSelectedId(material.id);
+    const handleSelectItem = (item) => {
+        setSelectedId(item.id);
         setActionError('');
-        fetchDetail(material.id);
+        fetchDetail(item);
         if (window.innerWidth <= 768) setDetailModalOpen(true);
     };
 
@@ -185,7 +223,7 @@ function ModerationPage() {
             await Promise.all([
                 fetchStats(),
                 fetchList({ q: search, estado: statusFilter, page }),
-                fetchDetail(selectedDetail.id),
+                fetchDetail(items.find((it) => it.id === selectedId)),
             ]);
         } catch (err) {
             setActionError(err.message || 'No pudimos completar la acción.');
@@ -194,13 +232,33 @@ function ModerationPage() {
         }
     };
 
-    const handleReject = () => runAction(rechazarDenunciasMaterial);
-    const handleSuspend = () => {
+    const handleReject = () => {
         if (!selectedDetail) return;
-        runAction(selectedDetail.suspendido ? restaurarMaterialAdmin : suspenderMaterialAdmin);
+        const fn = selectedDetail.tipo === 'material'
+            ? rechazarDenunciasMaterial
+            : rechazarDenunciasPost;
+        runAction(fn);
+    };
+
+    const handleSuspendOcultar = () => {
+        if (!selectedDetail) return;
+        if (selectedDetail.tipo === 'material') {
+            if (selectedDetail.suspendido) {
+                runAction(restaurarMaterialAdmin);
+            } else {
+                runAction(suspenderMaterialAdmin);
+            }
+        } else {
+            if (selectedDetail.oculto) {
+                runAction(mostrarPostAdmin);
+            } else {
+                runAction(ocultarPostAdmin);
+            }
+        }
     };
 
     const getIcon = (tipo) => {
+        if (tipo === 'post') return <MessageSquare size={18} />;
         const lowerTipo = (tipo || '').toLowerCase();
         if (lowerTipo.includes('link')) return <LinkIcon size={18} />;
         if (lowerTipo.includes('video') || lowerTipo.includes('youtube')) return <Video size={18} />;
@@ -209,7 +267,7 @@ function ModerationPage() {
     };
 
     const getStatusBadgeClass = (estado) => {
-        if (estado === 'suspendido') return styles.statusSuspended;
+        if (estado === 'suspendido' || estado === 'oculto') return styles.statusSuspended;
         if (estado === 'rechazada') return styles.statusRejected;
         return styles.statusPending;
     };
@@ -228,7 +286,7 @@ function ModerationPage() {
             <header className={styles.header}>
                 <div>
                     <h1>Denuncias</h1>
-                    <p>Gestión de materiales denunciados por usuarios</p>
+                    <p>Gestión de materiales y publicaciones denunciados por usuarios</p>
                 </div>
 
                 <button
@@ -256,6 +314,11 @@ function ModerationPage() {
                     <span>Materiales suspendidos</span>
                     <strong>{stats.materiales_suspendidos}</strong>
                 </article>
+
+                <article className={`${styles.summaryCard} ${styles.ocultoLine}`}>
+                    <span>Publicaciones ocultas</span>
+                    <strong>{stats.posts_ocultos}</strong>
+                </article>
             </section>
 
             {listError && <p className={styles.actionError}>{listError}</p>}
@@ -265,7 +328,7 @@ function ModerationPage() {
                     <Search size={17} />
                     <input
                         type="text"
-                        placeholder="Buscar material o usuario..."
+                        placeholder="Buscar descripción o usuario..."
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
                     />
@@ -279,45 +342,45 @@ function ModerationPage() {
                     <option value="pendiente">Pendiente</option>
                     <option value="rechazada">Rechazada</option>
                     <option value="suspendido">Suspendido</option>
+                    <option value="oculto">Oculta</option>
                 </select>
             </section>
 
             <div className={styles.content}>
                 <section className={styles.tableCard}>
                     <div className={styles.tableHeader}>
-                        <span>Material</span>
+                        <span>Descripción</span>
                         <span>Usuario</span>
                         <span>Denuncias</span>
                         <span>Estado</span>
+                        <span>Categoría</span>
                     </div>
 
                     <div className={styles.tableBody}>
-                        {materials.length === 0 && (
-                            <p className={styles.loading}>No se encontraron materiales denunciados.</p>
+                        {items.length === 0 && (
+                            <p className={styles.loading}>No se encontraron denuncias.</p>
                         )}
 
-                        {materials.map((material) => {
-                            const sev = material.severidad;
+                        {items.map((item) => {
+                            const sev = item.severidad;
                             return (
                                 <button
                                     type="button"
-                                    key={material.id}
-                                    className={`${styles.tableRow} ${selectedId === material.id ? styles.activeRow : ''}`}
-                                    onClick={() => handleSelectMaterial(material)}
+                                    key={`${item.tipo}-${item.id}`}
+                                    className={`${styles.tableRow} ${selectedId === item.id ? styles.activeRow : ''}`}
+                                    onClick={() => handleSelectItem(item)}
                                 >
                                     <div className={styles.materialCell}>
-                                        <div className={styles.materialIcon}>{getIcon(material.tipo)}</div>
-
+                                        <div className={styles.materialIcon}>{getIcon(item.tipo)}</div>
                                         <div>
-                                            <strong>{material.titulo}</strong>
-                                            <span>{material.tipo}</span>
+                                            <strong>{item.descripcion}</strong>
                                         </div>
                                     </div>
 
-                                    <span className={styles.userCell}>{material.subidoPor}</span>
+                                    <span className={styles.userCell}>{item.subidoPor}</span>
 
                                     <div className={styles.reportCell}>
-                                        <strong>{material.cantidad}</strong>
+                                        <strong>{item.cantidad}</strong>
                                         <span
                                             className={`${styles.riskBadge} ${sev === 'alta' ? styles.high : sev === 'media' ? styles.medium : styles.low}`}
                                         >
@@ -325,9 +388,11 @@ function ModerationPage() {
                                         </span>
                                     </div>
 
-                                    <span className={`${styles.statusBadge} ${getStatusBadgeClass(material.estado)}`}>
-                                        {ESTADO_LABEL[material.estado] ?? 'Pendiente'}
+                                    <span className={`${styles.statusBadge} ${getStatusBadgeClass(item.estado)}`}>
+                                        {ESTADO_LABEL[item.estado] ?? 'Pendiente'}
                                     </span>
+
+                                    <span className={styles.categoryCell}>{item.categoria}</span>
                                 </button>
                             );
                         })}
@@ -354,33 +419,61 @@ function ModerationPage() {
                             ×
                         </button>
 
-                        <div className={styles.detailHeader}>
-                            <div className={styles.detailIcon}>{getIcon(selectedDetail.tipo)}</div>
+                        {selectedDetail.tipo === 'material' ? (
+                            <>
+                                <div className={styles.detailHeader}>
+                                    <div className={styles.detailIcon}>{getIcon(selectedDetail.tipoMaterial)}</div>
+                                    <div>
+                                        <h2>{selectedDetail.titulo}</h2>
+                                        <p>Subido por {selectedDetail.subidoPor}</p>
+                                    </div>
+                                </div>
 
-                            <div>
-                                <h2>{selectedDetail.titulo}</h2>
-                                <p>Subido por {selectedDetail.subidoPor}</p>
-                            </div>
-                        </div>
+                                <div className={styles.detailInfo}>
+                                    <p>
+                                        <span>Tipo:</span>
+                                        <strong>{selectedDetail.tipoMaterial}</strong>
+                                    </p>
+                                    <p>
+                                        <span>Denuncias:</span>
+                                        <strong>{selectedDetail.cantidad}</strong>
+                                    </p>
+                                    <p>
+                                        <span>Estado:</span>
+                                        <strong className={`${styles.statusBadge} ${getStatusBadgeClass(selectedDetail.estado)}`}>
+                                            {ESTADO_LABEL[selectedDetail.estado] ?? 'Pendiente'}
+                                        </strong>
+                                    </p>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className={styles.detailHeader}>
+                                    <div className={styles.detailIcon}>{getIcon('post')}</div>
+                                    <div>
+                                        <h2>Publicación</h2>
+                                        <p>Publicado por {selectedDetail.subidoPor}</p>
+                                    </div>
+                                </div>
 
-                        <div className={styles.detailInfo}>
-                            <p>
-                                <span>Tipo:</span>
-                                <strong>{selectedDetail.tipo}</strong>
-                            </p>
+                                <div className={styles.detailPostContent}>
+                                    <p>{selectedDetail.contenido}</p>
+                                </div>
 
-                            <p>
-                                <span>Denuncias:</span>
-                                <strong>{selectedDetail.cantidad}</strong>
-                            </p>
-
-                            <p>
-                                <span>Estado:</span>
-                                <strong className={`${styles.statusBadge} ${getStatusBadgeClass(selectedDetail.estado)}`}>
-                                    {ESTADO_LABEL[selectedDetail.estado] ?? 'Pendiente'}
-                                </strong>
-                            </p>
-                        </div>
+                                <div className={styles.detailInfo}>
+                                    <p>
+                                        <span>Denuncias:</span>
+                                        <strong>{selectedDetail.cantidad}</strong>
+                                    </p>
+                                    <p>
+                                        <span>Estado:</span>
+                                        <strong className={`${styles.statusBadge} ${getStatusBadgeClass(selectedDetail.estado)}`}>
+                                            {ESTADO_LABEL[selectedDetail.estado] ?? 'Pendiente'}
+                                        </strong>
+                                    </p>
+                                </div>
+                            </>
+                        )}
 
                         {actionError && <p className={styles.actionError}>{actionError}</p>}
 
@@ -399,7 +492,6 @@ function ModerationPage() {
                                     <article key={denuncia.id} className={styles.complaintCard}>
                                         <div className={styles.complaintHeader}>
                                             <strong>{denuncia.motivo}</strong>
-
                                             <span className={`${styles.complaintStatus} ${getComplaintStatusClass(denuncia.estado)}`}>
                                                 {COMPLAINT_ESTADO_LABEL[denuncia.estado] ?? denuncia.estado}
                                             </span>
@@ -417,7 +509,6 @@ function ModerationPage() {
                         </div>
 
                         <div className={styles.actions}>
-
                             <button
                                 type="button"
                                 className={styles.rejectButton}
@@ -431,11 +522,20 @@ function ModerationPage() {
                             <button
                                 type="button"
                                 className={styles.suspendButton}
-                                onClick={handleSuspend}
+                                onClick={handleSuspendOcultar}
                                 disabled={actionLoading}
                             >
-                                <Ban size={16} />
-                                {selectedDetail.suspendido ? 'Restaurar material' : 'Suspender material'}
+                                {selectedDetail.tipo === 'material' ? (
+                                    <>
+                                        <Ban size={16} />
+                                        {selectedDetail.suspendido ? 'Restaurar material' : 'Suspender material'}
+                                    </>
+                                ) : (
+                                    <>
+                                        {selectedDetail.oculto ? <Eye size={16} /> : <EyeOff size={16} />}
+                                        {selectedDetail.oculto ? 'Mostrar publicación' : 'Ocultar publicación'}
+                                    </>
+                                )}
                             </button>
                         </div>
                     </aside>
