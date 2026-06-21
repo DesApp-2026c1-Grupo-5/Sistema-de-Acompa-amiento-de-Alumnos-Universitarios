@@ -10,6 +10,7 @@ const {
   oferta_academica,
   final,
 } = require("../db/models");
+const { obtenerMateriasConCorrelativas } = require("../services/simuladorCursada.service");
 
 const APROBADA = ["aprobada", "aprobado", "promocionada", "promotionada"];
 const REGULAR = ["regular", "regularizada", "regularizado"];
@@ -293,4 +294,30 @@ const getAcademicAssistant = async (req, res, next) => {
   });
 };
 
-module.exports = { getAcademicAssistant };
+const getPlanSubjects = async (req, res, next) => {
+  try {
+    const estudianteData = await estudiante.findOne({
+      where: { usuario_id: req.user.sub },
+    });
+
+    if (!estudianteData) {
+      return res.status(200).json({ ok: true, data: { subjects: [] } });
+    }
+
+    const situacion = await situacion_academica.findOne({
+      where: { estudiante_id: estudianteData.id },
+      order: [["fecha_inicio", "DESC"], ["createdAt", "DESC"], ["id", "DESC"]],
+    });
+
+    if (!situacion) {
+      return res.status(200).json({ ok: true, data: { subjects: [] } });
+    }
+
+    const data = await obtenerMateriasConCorrelativas(situacion.plan_id);
+    return res.status(200).json({ ok: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getAcademicAssistant, getPlanSubjects };
