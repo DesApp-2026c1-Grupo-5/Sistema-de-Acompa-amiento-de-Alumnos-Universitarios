@@ -23,3 +23,11 @@ export const confirmarImportacion = (materias, creditActivities = []) =>
 
 export const cambiarCarrera = (plan_id) =>
   api.patch("/student/academic-situation/change-career", { plan_id });
+
+export const guardarPlanCursada = (payload) => api.post("/student/plan-cursada", payload);
+
+export const obtenerPlanesCursada = () => api.get("/student/plan-cursada");
+
+export const obtenerPlanCursada = (id) => api.get(`/student/plan-cursada/${id}`);
+
+export const eliminarPlanCursada = (id) => api.delete(`/student/plan-cursada/${id}`);

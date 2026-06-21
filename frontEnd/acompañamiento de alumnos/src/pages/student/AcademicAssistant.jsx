@@ -63,7 +63,12 @@ function AcademicAssistant() {
         approvedIds={academic?.studentStatus?.approvedIds ?? []}
       />
 
-      <AcademicAssistantRecommendations />
+      <AcademicAssistantRecommendations
+        finals={academic?.finals ?? []}
+        subjects={academic?.subjects ?? []}
+        years={academic?.years ?? []}
+        stats={academic?.stats ?? {}}
+      />
     </div>
   );
 }
