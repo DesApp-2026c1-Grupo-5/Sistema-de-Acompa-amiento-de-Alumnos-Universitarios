@@ -9,7 +9,12 @@ const listarNotificacionesQuerySchema = Joi.object({
   leida: Joi.boolean().optional(),
 });
 
+const marcarLeidasBodySchema = Joi.object({
+  ids: Joi.array().items(Joi.number().integer().positive()).min(1).optional(),
+}).min(1);
+
 module.exports = {
   notificacionIdParamSchema,
   listarNotificacionesQuerySchema,
+  marcarLeidasBodySchema,
 };

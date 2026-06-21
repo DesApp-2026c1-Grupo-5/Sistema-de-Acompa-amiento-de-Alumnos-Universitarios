@@ -24,7 +24,7 @@ const formatNotification = (row) => {
   const config = TYPE_CONFIG[plain.tipo] || {};
 
   const emisor = plain.emisor;
-  let senderName = null;
+  let senderName = 'Equipo SIVA';
   if (emisor?.estudiante) {
     senderName = `${emisor.estudiante.nombre} ${emisor.estudiante.apellido}`.trim();
   } else if (emisor?.administrador) {

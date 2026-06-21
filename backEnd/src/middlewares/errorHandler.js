@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 const errorHandler = (err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
@@ -16,7 +18,7 @@ const errorHandler = (err, req, res, next) => {
   // técnicos (PG, Sequelize, etc.) al cliente. Se loguea el real y se devuelve
   // un mensaje genérico.
   if (!err.statusCode) {
-    console.error("[errorHandler]", err);
+    logger.error("errorHandler", err.message || err);
   }
 
   const message = err.statusCode

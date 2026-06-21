@@ -10,6 +10,10 @@ const crearNotificacion = async ({
   referencia_id,
   action_url,
 }) => {
+  if (emisor_usuario_id != null && Number(usuario_id) === Number(emisor_usuario_id)) {
+    return null;
+  }
+
   return notificacion.create({
     usuario_id,
     emisor_usuario_id: emisor_usuario_id ?? null,
@@ -24,6 +28,10 @@ const crearNotificacion = async ({
 };
 
 const crearNotificacionUnica = async (payload) => {
+  if (payload.emisor_usuario_id != null && Number(payload.usuario_id) === Number(payload.emisor_usuario_id)) {
+    return { notificacion: null, creada: false };
+  }
+
   const where = {
     usuario_id: payload.usuario_id,
     titulo: payload.titulo,

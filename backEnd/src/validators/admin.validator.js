@@ -32,4 +32,17 @@ const createAdminSchema = Joi.object({
   }),
 });
 
-module.exports = { createAdminSchema };
+const adminIdParamSchema = Joi.object({
+  id: Joi.number().integer().positive().required().messages({
+    "number.base": "El ID debe ser un número",
+    "number.positive": "El ID debe ser positivo",
+    "any.required": "El ID es obligatorio",
+  }),
+});
+
+const listarAdminsQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(50).default(10),
+});
+
+module.exports = { createAdminSchema, adminIdParamSchema, listarAdminsQuerySchema };

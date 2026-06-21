@@ -11,6 +11,7 @@ const {
 } = require("../db/models");
 const { crearNotificacion, crearNotificacionUnica } = require("./notificacion.service");
 const { sendMail } = require("./mailer.service");
+const logger = require("../utils/logger");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
 const DIAS_AVISO_REGULARIDAD = 30;
@@ -249,10 +250,10 @@ const verificarYEnviarRecordatorios = async () => {
 const iniciarRecordatorios = () => {
   cron.schedule("0 * * * *", () => {
     verificarYEnviarRecordatorios().catch((error) => {
-      console.error("[recordatorio] Error en verificarYEnviarRecordatorios:", error.message);
+      logger.error("recordatorio", "Error en verificarYEnviarRecordatorios", { error: error.message });
     });
   });
-  console.log(" Cron de recordatorios iniciado");
+  logger.info("recordatorio", "Cron de recordatorios iniciado");
 };
 
 module.exports = { iniciarRecordatorios };

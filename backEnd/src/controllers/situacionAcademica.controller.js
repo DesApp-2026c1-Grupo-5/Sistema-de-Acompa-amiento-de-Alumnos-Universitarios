@@ -2,6 +2,7 @@ const { Op } = require("sequelize");
 const db = require("../db/models");
 const { registrarAccionAcademica } = require("../services/publicacionAcademica.service");
 const { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo } = require("../services/excelImport.service");
+const planCursadaService = require("../services/planCursada.service");
 
 const {
   estudiante,
@@ -567,6 +568,61 @@ const cambiarCarrera = async (req, res, next) => {
   });
 };
 
+const getSituacionActivaSolo = async (estudianteId) =>
+  situacion_academica.findOne({
+    where: { estudiante_id: estudianteId },
+    order: [["fecha_inicio", "DESC"], ["createdAt", "DESC"], ["id", "DESC"]],
+  });
+
+const guardarPlanCursada = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActivaSolo(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada", 404));
+
+  const { nombre, items } = req.body;
+  const plan = await planCursadaService.crear(situacion.id, nombre, items);
+  return res.status(201).json({ ok: true, data: plan });
+};
+
+const obtenerPlanesCursada = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActivaSolo(estudianteData.id);
+  if (!situacion) return res.status(200).json({ ok: true, data: [] });
+
+  const planes = await planCursadaService.listar(situacion.id);
+  return res.status(200).json({ ok: true, data: planes });
+};
+
+const obtenerPlanCursada = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActivaSolo(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada", 404));
+
+  const plan = await planCursadaService.obtenerPorId(req.params.planCursadaId, situacion.id);
+  if (!plan) return next(buildError("Plan de cursada no encontrado", 404));
+
+  return res.status(200).json({ ok: true, data: plan });
+};
+
+const eliminarPlanCursada = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActivaSolo(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada", 404));
+
+  const eliminado = await planCursadaService.eliminar(req.params.planCursadaId, situacion.id);
+  if (!eliminado) return next(buildError("Plan de cursada no encontrado", 404));
+
+  return res.status(200).json({ ok: true, data: { id: eliminado.id } });
+};
+
 module.exports = {
   crearSituacion,
   obtenerSituacion,
@@ -579,4 +635,8 @@ module.exports = {
   importarExcel,
   confirmarImportacion,
   cambiarCarrera,
+  guardarPlanCursada,
+  obtenerPlanesCursada,
+  obtenerPlanCursada,
+  eliminarPlanCursada,
 };

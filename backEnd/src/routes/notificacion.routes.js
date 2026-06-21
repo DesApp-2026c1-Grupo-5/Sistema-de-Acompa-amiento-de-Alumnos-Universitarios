@@ -9,6 +9,7 @@ const notificacionAccionesController = require("../controllers/notificacion.acci
 const {
   notificacionIdParamSchema,
   listarNotificacionesQuerySchema,
+  marcarLeidasBodySchema,
 } = require("../validators/notificacion.validator");
 const { notificacion } = require("../db/models");
 
@@ -24,6 +25,7 @@ router.get(
 router.patch(
   "/notificaciones/leidas",
   authMiddleware,
+  validate(marcarLeidasBodySchema),
   notificacionAccionesController.marcarTodasComoLeidas
 );
 

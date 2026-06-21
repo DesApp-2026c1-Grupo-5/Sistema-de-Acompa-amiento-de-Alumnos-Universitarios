@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle, Eye, EyeOff, Download, Upload } from 'lucide-react';
 import Card from '../common/Card';
 import ErrorState from '../common/ErrorState';
 import { getCareerSubjects } from '../../services/plannerService';
+import { guardarPlanCursada, obtenerPlanesCursada, eliminarPlanCursada } from '../../services/situacionAcademicaService';
 import styles from './AcademicAssistantPlanner.module.css';
 
 function AcademicAssistantPlanner({ approvedIds = [] }) {
@@ -16,6 +17,12 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const [labelDraft, setLabelDraft] = useState('');
   const [expandedCorr, setExpandedCorr] = useState({});
   const [hideApproved, setHideApproved] = useState(false);
+  const [nombrePlan, setNombrePlan] = useState('');
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
+  const [planesGuardados, setPlanesGuardados] = useState([]);
+  const [cargandoPlanes, setCargandoPlanes] = useState(false);
+  const [mostrarPlanes, setMostrarPlanes] = useState(false);
   const dragSource = useRef(null);
   const labelInputRef = useRef(null);
 
@@ -67,6 +74,92 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (mensaje) {
+      const t = setTimeout(() => setMensaje(null), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [mensaje]);
+
+  const cargarPlanesGuardados = async () => {
+    setCargandoPlanes(true);
+    try {
+      const res = await obtenerPlanesCursada();
+      setPlanesGuardados(res?.data || []);
+    } catch {
+      setPlanesGuardados([]);
+    } finally {
+      setCargandoPlanes(false);
+    }
+  };
+
+  const handleCargarPlan = (planData) => {
+    const grupos = {};
+    for (const item of (planData.plan_cursada_items || [])) {
+      const materia = allSubjects.find((s) => s.id === item.materia_id);
+      if (!materia) continue;
+      const key = `${item.anio_proyectado}-${item.cuatrimestre_proyectado}`;
+      if (!grupos[key]) {
+        grupos[key] = {
+          year: item.anio_proyectado,
+          cuatrimestre: item.cuatrimestre_proyectado,
+          label: `Año ${item.anio_proyectado} - Cuatrimestre ${item.cuatrimestre_proyectado}`,
+          subjects: [],
+        };
+      }
+      grupos[key].subjects.push({
+        id: materia.id,
+        name: materia.name,
+        hours: materia.hours,
+        correlatives: materia.correlatives,
+        extraHours: 0,
+      });
+    }
+    setPlan(Object.values(grupos).sort((a, b) =>
+      a.year !== b.year ? a.year - b.year : a.cuatrimestre - b.cuatrimestre
+    ));
+    setMostrarPlanes(false);
+    setMensaje("Plan cargado correctamente");
+  };
+
+  const handleEliminarPlanGuardado = async (id) => {
+    try {
+      await eliminarPlanCursada(id);
+      setPlanesGuardados((prev) => prev.filter((p) => p.id !== id));
+      setMensaje("Plan eliminado");
+    } catch {
+      setMensaje("Error al eliminar el plan");
+    }
+  };
+
+  const handleGuardarPlan = async () => {
+    const nombre = nombrePlan.trim() || `Plan ${new Date().toLocaleDateString("es-AR")}`;
+    const items = [];
+    for (const grupo of plan) {
+      for (const sub of grupo.subjects) {
+        items.push({
+          materia_id: sub.id,
+          anio_proyectado: grupo.year || 1,
+          cuatrimestre_proyectado: grupo.cuatrimestre || 1,
+        });
+      }
+    }
+    if (items.length === 0) {
+      setMensaje("Agregá materias al plan antes de guardar");
+      return;
+    }
+    setGuardando(true);
+    try {
+      await guardarPlanCursada({ nombre, items });
+      setMensaje("Plan guardado correctamente");
+      setNombrePlan('');
+    } catch (err) {
+      setMensaje(err.message || "Error al guardar el plan");
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const handleToggleHide = (checked) => {
     setHideApproved(checked);
     if (allSubjects.length === 0) return;
@@ -78,7 +171,6 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
 
   const handleGenerate = () => {
     const remaining = filterSubjects([...allSubjects]);
-
     const newPlan = [];
     let yearCursor = 1;
     let cuatriCursor = 1;
@@ -341,12 +433,66 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
                 Ocultar aprobadas
               </label>
             )}
-            <button className={styles.saveButton} onClick={() => console.log('Plan guardado:', plan)}>
-              <Save size={16} />
-              Guardar plan
+            <button
+              className={styles.saveButton}
+              onClick={() => {
+                cargarPlanesGuardados();
+                setMostrarPlanes(true);
+              }}
+              title="Cargar plan guardado"
+            >
+              <Download size={16} />
+              Cargar plan
             </button>
           </div>
         </div>
+
+        {mensaje && (
+          <div className={styles.mensaje}>
+            {mensaje}
+          </div>
+        )}
+
+        {mostrarPlanes && (
+          <div className={styles.planesGuardados}>
+            <div className={styles.planesGuardadosHeader}>
+              <h4>Planes guardados</h4>
+              <button className={styles.closeButton} onClick={() => setMostrarPlanes(false)}>✕</button>
+            </div>
+            {cargandoPlanes ? (
+              <div className={styles.loadingState}>
+                <Loader2 size={16} className={styles.spinner} />
+                <p>Cargando planes...</p>
+              </div>
+            ) : planesGuardados.length === 0 ? (
+              <p className={styles.sinPlanes}>No tenés planes guardados</p>
+            ) : (
+              <div className={styles.listaPlanes}>
+                {planesGuardados.map((p) => (
+                  <div key={p.id} className={styles.planItem}>
+                    <span className={styles.planItemNombre}>{p.nombre}</span>
+                    <div className={styles.planItemAcciones}>
+                      <button
+                        className={styles.planItemBtn}
+                        onClick={() => handleCargarPlan(p)}
+                        title="Cargar este plan"
+                      >
+                        <Upload size={14} />
+                      </button>
+                      <button
+                        className={styles.planItemBtn}
+                        onClick={() => handleEliminarPlanGuardado(p.id)}
+                        title="Eliminar plan"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className={styles.summary}>
           Total del plan: <strong>{fixedClassHours}hs</strong> cursada + <strong>{fixedExtraHours}hs</strong> extra = <strong>{fixedTotalHours}hs</strong> · máx. <strong>{classHours}hs</strong> cursada + <strong>{extraCap}hs</strong> extra por cuatrimestre
@@ -482,6 +628,24 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
             </button>
           </div>
         )}
+
+        <div className={styles.saveRow}>
+          <input
+            type="text"
+            className={styles.nombreInput}
+            placeholder="Nombre del plan (opcional)"
+            value={nombrePlan}
+            onChange={(e) => setNombrePlan(e.target.value)}
+          />
+          <button
+            className={styles.saveButton}
+            onClick={handleGuardarPlan}
+            disabled={guardando || plan.length === 0}
+          >
+            <Save size={16} />
+            {guardando ? 'Guardando...' : 'Guardar plan'}
+          </button>
+        </div>
       </Card>
     </div>
   );
