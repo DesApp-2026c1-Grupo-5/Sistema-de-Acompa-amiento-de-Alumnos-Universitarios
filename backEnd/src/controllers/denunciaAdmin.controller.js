@@ -13,7 +13,6 @@ const {
 } = db;
 
 const { crearNotificacion } = require("../services/notificacion.service");
-const { sendMail } = require("../services/mailer.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -415,16 +414,6 @@ const notificarDenunciantes = async (
       referencia_id: d.id,
       action_url: actionUrl,
     });
-
-    const userEmail = denuncianteRaw.usuario?.email;
-    if (userEmail) {
-      await sendMail({
-        to: userEmail,
-        subject: `Denuncia ${texto}`,
-        html: `       <p>Tu denuncia sobre <strong>"${recursoNombre}"</strong> fue <strong>${texto}</strong>.</p>
-               <p>Saludos,<br/>El equipo de SIVA</p>`,
-      });
-    }
   }
 };
 
@@ -599,8 +588,6 @@ const suspenderMaterial = async (req, res, next) => {
     return count;
   });
 
-  const uploaderEmail = mat.estudiante?.usuario?.email;
-
   await crearNotificacion({
     usuario_id: mat.estudiante?.usuario_id,
     emisor_usuario_id: req.user.sub,
@@ -611,16 +598,6 @@ const suspenderMaterial = async (req, res, next) => {
     referencia_id: materialId,
     action_url: "/student/materials",
   });
-
-  if (uploaderEmail) {
-    await sendMail({
-      to: uploaderEmail,
-      subject: "Material suspendido",
-      html: `<p>Tu material <strong>"${mat.titulo}"</strong> fue suspendido debido a denuncias verificadas.</p>
-             <p>Si consideras que es un error, contacta con el administrador.</p>
-             <p>Saludos,<br/>El equipo de SIVA</p>`,
-    });
-  }
 
   notificarDenunciantes(pendientes, mat.titulo, "verificada", req.user.sub);
 
@@ -674,8 +651,6 @@ const restaurarMaterial = async (req, res, next) => {
     );
   });
 
-  const uploaderEmail = mat.estudiante?.usuario?.email;
-
   await crearNotificacion({
     usuario_id: mat.estudiante?.usuario_id,
     emisor_usuario_id: req.user.sub,
@@ -686,15 +661,6 @@ const restaurarMaterial = async (req, res, next) => {
     referencia_id: materialId,
     action_url: "/student/materials",
   });
-
-  if (uploaderEmail) {
-    await sendMail({
-      to: uploaderEmail,
-      subject: "Material restaurado",
-      html: `<p>Tu material <strong>"${mat.titulo}"</strong> fue restaurado y ya está visible nuevamente.</p>
-             <p>Saludos,<br/>El equipo de SIVA</p>`,
-    });
-  }
 
   return res.status(200).json({
     ok: true,
@@ -755,7 +721,6 @@ const ocultarPost = async (req, res, next) => {
     return count;
   });
 
-  const uploaderEmail = pub.estudiante?.usuario?.email;
   const contenidoBreve = pub.contenido.substring(0, 60);
 
   await crearNotificacion({
@@ -768,16 +733,6 @@ const ocultarPost = async (req, res, next) => {
     referencia_id: postId,
     action_url: "/student/home",
   });
-
-  if (uploaderEmail) {
-    await sendMail({
-      to: uploaderEmail,
-      subject: "Publicación oculta",
-      html: `<p>Tu publicación <strong>"${contenidoBreve}..."</strong> fue oculta debido a denuncias verificadas.</p>
-             <p>Si consideras que es un error, contacta con el administrador.</p>
-             <p>Saludos,<br/>El equipo de SIVA</p>`,
-    });
-  }
 
   notificarDenunciantes(
     pendientes,
@@ -834,7 +789,6 @@ const mostrarPost = async (req, res, next) => {
     );
   });
 
-  const uploaderEmail = pub.estudiante?.usuario?.email;
   const contenidoBreve = pub.contenido.substring(0, 60);
 
   await crearNotificacion({
@@ -847,15 +801,6 @@ const mostrarPost = async (req, res, next) => {
     referencia_id: postId,
     action_url: "/student/home",
   });
-
-  if (uploaderEmail) {
-    await sendMail({
-      to: uploaderEmail,
-      subject: "Publicación restaurada",
-      html: `<p>Tu publicación <strong>"${contenidoBreve}..."</strong> fue restaurada y ya está visible nuevamente.</p>
-             <p>Saludos,<br/>El equipo de SIVA</p>`,
-    });
-  }
 
   return res.status(200).json({
     ok: true,
