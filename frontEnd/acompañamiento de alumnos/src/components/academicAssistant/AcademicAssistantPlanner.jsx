@@ -67,8 +67,16 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   useEffect(() => {
     getCareerSubjects()
       .then((data) => {
-        setAllSubjects(data.subjects);
-        setPlan(buildDefaultPlan(data.subjects));
+        const subjects = data.subjects || [];
+        const currentPlan = data.currentPlan || [];
+
+        setAllSubjects(subjects);
+
+        if (currentPlan.length > 0) {
+          setPlan(currentPlan);
+        } else {
+          setPlan(buildDefaultPlan(subjects));
+        }
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
