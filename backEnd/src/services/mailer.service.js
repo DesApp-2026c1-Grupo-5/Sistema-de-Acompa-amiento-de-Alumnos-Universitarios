@@ -11,17 +11,34 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendMail = async ({ to, subject, html }) => {
+const verifyConnection = async () => {
   try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || "SIVA <noreply@siva.com>",
-      to,
-      subject,
-      html,
-    });
+    await transporter.verify();
+    return true;
   } catch (error) {
-    logger.error("mailer", "Error al enviar email", { error: error.message });
+    logger.error("mailer", "Error de conexion SMTP", { error: error.message });
+    return false;
   }
 };
 
-module.exports = { sendMail };
+const sendMail = async ({ to, subject, html }, intentos = 3) => {
+  for (let i = 1; i <= intentos; i++) {
+    try {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || "SIVA UNAHUR <noreply@siva.com>",
+        to,
+        subject,
+        html,
+      });
+      logger.info("mailer", "Email enviado", { to, subject, intento: i });
+      return { success: true };
+    } catch (error) {
+      logger.error("mailer", `Intento ${i}/${intentos} fallido`, { to, subject, error: error.message });
+      if (i === intentos) {
+        return { success: false, error: error.message };
+      }
+    }
+  }
+};
+
+module.exports = { sendMail, verifyConnection };
