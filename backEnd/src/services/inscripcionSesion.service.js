@@ -6,6 +6,7 @@ const {
 } = require("./sesionEstudio.service");
 const { crearNotificacion } = require("./notificacion.service");
 const { sendMail } = require("./mailer.service");
+const { renderTemplate } = require("./emailRenderer.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -100,19 +101,27 @@ const inscribirse = async (sesionId, usuarioId) => {
   const emailEstudiante = usuarioData?.email;
 
   if (emailEstudiante) {
-    const mensajeHtml = estadoInicial === "aprobada"
-      ? `<p>Te inscribiste correctamente a la sesión <strong>"${sesion.tema}"</strong>.</p>`
-      : `<p>Solicitaste inscripción a la sesión <strong>"${sesion.tema}"</strong>.</p>
-         <p>Recibirás un correo cuando el creador apruebe o rechace tu solicitud.</p>`;
-
+    const templateName = estadoInicial === "aprobada" ? "sessionEnrolled" : "sessionEnrolledPending";
     const tituloEmail = estadoInicial === "aprobada"
       ? "Inscripción confirmada"
       : "Solicitud de inscripción enviada";
 
+    const variables = {
+      titulo: tituloEmail,
+      nombre: estudianteData.nombre ?? "",
+      tema: sesion.tema ?? "",
+      fecha_hora: sesion.fecha_hora ? new Date(sesion.fecha_hora).toLocaleString("es-AR") : "",
+      duracion_minutos: sesion.duracion_minutos ?? "",
+      tipo: sesion.tipo ?? "",
+      link_ubicacion: sesion.link_ubicacion ?? "",
+    };
+
+    const html = renderTemplate(templateName, variables);
+
     await sendMail({
       to: emailEstudiante,
       subject: tituloEmail,
-      html: `<p>Hola ${estudianteData.nombre},</p>${mensajeHtml}<p>Saludos,<br/>El equipo de SIVA</p>`,
+      html,
     });
   }
 
@@ -202,12 +211,22 @@ const actualizarEstadoParticipante = async (sesionId, inscripcionId, usuarioId, 
     });
 
     if (emailParticipante) {
+      const tituloEmail = esAprobado ? "Inscripción aprobada" : "Inscripción rechazada";
+      const templateName = esAprobado ? "sessionApproved" : "sessionRejected";
+
+      const variables = {
+        titulo: tituloEmail,
+        nombre: participante.nombre ?? "",
+        tema: sesion.tema ?? "",
+        link_ubicacion: sesion.link_ubicacion ?? "",
+      };
+
+      const html = renderTemplate(templateName, variables);
+
       await sendMail({
         to: emailParticipante,
-        subject: esAprobado ? "Inscripción aprobada" : "Inscripción rechazada",
-        html: `<p>Hola ${participante.nombre},</p>
-               <p>Tu solicitud para la sesión <strong>"${sesion.tema}"</strong> fue <strong>${esAprobado ? "aprobada" : "rechazada"}</strong>.</p>
-               <p>Saludos,<br/>El equipo de SIVA</p>`,
+        subject: tituloEmail,
+        html,
       });
     }
   }
