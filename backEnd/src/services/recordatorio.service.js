@@ -11,6 +11,7 @@ const {
 } = require("../db/models");
 const { crearNotificacion, crearNotificacionUnica } = require("./notificacion.service");
 const { sendMail } = require("./mailer.service");
+const { renderTemplate } = require("./emailRenderer.service");
 const logger = require("../utils/logger");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
@@ -229,13 +230,20 @@ const verificarYEnviarRecordatorios = async () => {
       });
 
       if (emailEstudiante) {
+        const variables = {
+          titulo: `Recordatorio: "${sesion.tema}" comienza pronto`,
+          nombre: participante.nombre ?? "",
+          tema: sesion.tema ?? "",
+          fecha_hora: sesion.fecha_hora ? new Date(sesion.fecha_hora).toLocaleString("es-AR") : "",
+          duracion_minutos: sesion.duracion_minutos ?? "",
+          tipo: sesion.tipo ?? "",
+          link_ubicacion: sesion.link_ubicacion ?? "",
+        };
+
         await sendMail({
           to: emailEstudiante,
           subject: `Recordatorio: "${sesion.tema}" comienza pronto`,
-          html: `<p>Hola ${participante.nombre},</p>
-                 <p>Te recordamos que la sesión <strong>"${sesion.tema}"</strong> comienza en menos de 24 horas.</p>
-                 <p>No olvides conectarte a tiempo.</p>
-                 <p>Saludos,<br/>El equipo de SIVA</p>`,
+          html: renderTemplate("sessionReminder", variables),
         });
       }
 
