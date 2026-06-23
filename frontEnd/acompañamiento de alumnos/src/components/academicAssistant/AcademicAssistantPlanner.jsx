@@ -103,10 +103,22 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
 
   const handleCargarPlan = (planData) => {
     const grupos = {};
-    for (const item of (planData.plan_cursada_items || [])) {
+
+    const items = planData.plan_cursada_items || [];
+
+    for (const item of items) {
       const materia = allSubjects.find((s) => s.id === item.materia_id);
-      if (!materia) continue;
+
+      const materiaData = materia || {
+        id: item.materia_id,
+        name: item.materium?.nombre || item.materia?.nombre || `Materia ${item.materia_id}`,
+        hours: 6,
+        correlatives: [],
+        extraHours: 0,
+      };
+
       const key = `${item.anio_proyectado}-${item.cuatrimestre_proyectado}`;
+
       if (!grupos[key]) {
         grupos[key] = {
           year: item.anio_proyectado,
@@ -115,17 +127,22 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
           subjects: [],
         };
       }
+
       grupos[key].subjects.push({
-        id: materia.id,
-        name: materia.name,
-        hours: materia.hours,
-        correlatives: materia.correlatives,
-        extraHours: 0,
+        id: materiaData.id,
+        name: materiaData.name,
+        hours: materiaData.hours || 6,
+        correlatives: materiaData.correlatives || [],
+        extraHours: materiaData.extraHours || 0,
       });
     }
-    setPlan(Object.values(grupos).sort((a, b) =>
-      a.year !== b.year ? a.year - b.year : a.cuatrimestre - b.cuatrimestre
-    ));
+
+    setPlan(
+      Object.values(grupos).sort((a, b) =>
+        a.year !== b.year ? a.year - b.year : a.cuatrimestre - b.cuatrimestre
+      )
+    );
+
     setMostrarPlanes(false);
     setMensaje("Plan cargado correctamente");
   };

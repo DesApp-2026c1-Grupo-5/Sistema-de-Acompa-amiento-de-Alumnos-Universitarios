@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       plan_cursada.hasMany(models.plan_cursada_item, {
-        foreignKey: 'plan_id'
+        foreignKey: 'plan_id',
+        as: 'plan_cursada_items',
       });
 
     }
