@@ -16,7 +16,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X, Check } from 'lucide-react';
+import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X, Check, ChevronDown } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
@@ -33,6 +33,7 @@ function StudyPlan() {
   const [loadError, setLoadError] = useState(null);
   const [selectedYear, setSelectedYear] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedCode, setExpandedCode] = useState(null);
   const [subjectToDelete, setSubjectToDelete] = useState(null);
   const [deletingSubject, setDeletingSubject] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -484,7 +485,7 @@ function StudyPlan() {
 
       <div className={styles.tableCard}>
         <div className={styles.tableWrapper}>
-          <table className={styles.table}>
+          <table className={`${styles.table}${isEditing ? ' ' + styles.editingTable : ''}`}>
             <thead>
               <tr>
                 <th>Código</th>
@@ -500,7 +501,7 @@ function StudyPlan() {
             <tbody>
               {isEditing && (
                 <tr className={styles.newSubjectRow}>
-                  <td>
+                  <td className={styles.codeCell} data-label="Código">
                     <input
                       type="text"
                       className={styles.editInput}
@@ -509,7 +510,7 @@ function StudyPlan() {
                       onChange={(e) => handleNewSubjectChange('code', e.target.value)}
                     />
                   </td>
-                  <td>
+                  <td className={styles.nameCell} data-label="Materia">
                     <input
                       type="text"
                       className={styles.editInput}
@@ -518,7 +519,7 @@ function StudyPlan() {
                       onChange={(e) => handleNewSubjectChange('name', e.target.value)}
                     />
                   </td>
-                  <td>
+                  <td className={styles.yearCell} data-label="Año">
                     <select
                       className={styles.editSelect}
                       value={newSubject.year}
@@ -529,7 +530,7 @@ function StudyPlan() {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className={styles.modalityCell} data-label="Modalidad">
                     <select
                       className={styles.editSelect}
                       value={newSubject.semester}
@@ -539,7 +540,7 @@ function StudyPlan() {
                       <option value="Anual">Anual</option>
                     </select>
                   </td>
-                  <td>
+                  <td className={styles.typeCell} data-label="Tipo">
                     <select
                       className={styles.editSelect}
                       value={newSubject.type}
@@ -549,7 +550,7 @@ function StudyPlan() {
                       <option value="Optativa">Optativa</option>
                     </select>
                   </td>
-                  <td>
+                  <td className={styles.correlativesCell} data-label="Correlativas">
                     <input
                       type="text"
                       className={styles.editInput}
@@ -558,7 +559,7 @@ function StudyPlan() {
                       onChange={(e) => handleNewSubjectChange('correlatives', e.target.value)}
                     />
                   </td>
-                  <td>
+                  <td className={styles.creditsCell} data-label="Créditos">
                     <input
                       type="number"
                       className={styles.editInput}
@@ -567,10 +568,10 @@ function StudyPlan() {
                       onChange={(e) => handleNewSubjectChange('credits', parseInt(e.target.value) || 0)}
                     />
                   </td>
-                  <td>
-                    <Button 
-                      variant="iconSquare" 
-                      title="Agregar" 
+                  <td className={styles.actionsCell} data-label="Acciones">
+                    <Button
+                      variant="iconSquare"
+                      title="Agregar"
                       iconLeft={<Plus size={16} />}
                       onClick={handleAddNewSubject}
                     />
@@ -584,8 +585,8 @@ function StudyPlan() {
                     : subject;
                   
                   return (
-                    <tr key={subject.code}>
-                      <td>
+                    <tr key={subject.code} className={expandedCode === subject.code ? styles.expanded : ''}>
+                      <td className={styles.codeCell} data-label="Código">
                         {isEditing ? (
                           <input
                             type="text"
@@ -596,8 +597,16 @@ function StudyPlan() {
                         ) : (
                           <span className={styles.code}>{subject.code}</span>
                         )}
+                        <button
+                          type="button"
+                          className={styles.chevron}
+                          aria-label="Mostrar detalles"
+                          onClick={() => setExpandedCode(expandedCode === subject.code ? null : subject.code)}
+                        >
+                          <ChevronDown size={18} />
+                        </button>
                       </td>
-                      <td>
+                      <td className={styles.nameCell} data-label="Materia">
                         {isEditing ? (
                           <input
                             type="text"
@@ -609,7 +618,7 @@ function StudyPlan() {
                           <span className={styles.subjectName}>{subject.name}</span>
                         )}
                       </td>
-                      <td>
+                      <td className={styles.yearCell} data-label="Año">
                         {isEditing ? (
                           <select
                             className={styles.editSelect}
@@ -624,7 +633,7 @@ function StudyPlan() {
                           <span className={styles.year}>{subject.year}°</span>
                         )}
                       </td>
-                      <td>
+                      <td className={styles.modalityCell} data-label="Modalidad">
                         {isEditing ? (
                           <select
                             className={styles.editSelect}
@@ -638,7 +647,7 @@ function StudyPlan() {
                           <span className={styles.semesterBadge}>{subject.semester}</span>
                         )}
                       </td>
-                      <td>
+                      <td className={styles.typeCell} data-label="Tipo">
                         {isEditing ? (
                           <select
                             className={styles.editSelect}
@@ -654,7 +663,7 @@ function StudyPlan() {
                           </span>
                         )}
                       </td>
-                      <td>
+                      <td className={styles.correlativesCell} data-label="Correlativas">
                         {isEditing ? (
                           <input
                             type="text"
@@ -675,7 +684,7 @@ function StudyPlan() {
                           </div>
                         )}
                       </td>
-                      <td>
+                      <td className={styles.creditsCell} data-label="Créditos">
                         {isEditing ? (
                           <input
                             type="number"
@@ -688,7 +697,7 @@ function StudyPlan() {
                         )}
                       </td>
                       {isEditing && (
-                        <td>
+                        <td className={styles.actionsCell} data-label="Acciones">
                           <div className={styles.actions}>
                             <Button 
                               variant="iconSquareDanger" 

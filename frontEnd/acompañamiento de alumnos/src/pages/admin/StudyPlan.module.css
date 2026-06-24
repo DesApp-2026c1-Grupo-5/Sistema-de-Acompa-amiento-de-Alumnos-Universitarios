@@ -439,3 +439,140 @@
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-soft-blue);
 }
+
+.chevron {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.25rem;
+  }
+
+  .tableCard {
+    min-width: 0;
+  }
+
+  .searchContainer {
+    width: 100%;
+  }
+
+  .tableWrapper {
+    overflow-x: visible;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table tbody tr {
+    position: relative;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    margin: 0 1rem 1rem;
+  }
+
+  .table tbody tr:first-child {
+    margin-top: 1rem;
+  }
+
+  .table tbody tr:hover {
+    background: var(--bg);
+  }
+
+  .table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--border);
+    overflow-wrap: anywhere;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .table td.emptyState::before {
+    content: none;
+  }
+
+  .table tbody tr .chevron {
+    display: inline-flex;
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+  }
+
+  .table tbody tr.expanded .chevron {
+    transform: rotate(180deg);
+  }
+
+  .table td.codeCell,
+  .table td.nameCell {
+    border-bottom: none;
+    padding-right: 2rem;
+  }
+
+  .table td.yearCell,
+  .table td.modalityCell,
+  .table td.typeCell,
+  .table td.correlativesCell,
+  .table td.creditsCell,
+  .table td.actionsCell {
+    display: none;
+  }
+
+  .table tbody tr.expanded td.yearCell,
+  .table tbody tr.expanded td.modalityCell,
+  .table tbody tr.expanded td.typeCell,
+  .table tbody tr.expanded td.correlativesCell,
+  .table tbody tr.expanded td.creditsCell,
+  .table tbody tr.expanded td.actionsCell {
+    display: flex;
+  }
+
+  .table tbody tr.expanded td.nameCell {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table tbody tr.expanded td:last-child {
+    border-bottom: none;
+  }
+
+  .table tbody tr.newSubjectRow td {
+    display: flex;
+  }
+
+  .editingTable tbody td {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375rem;
+  }
+
+  .editingTable tbody td .editInput,
+  .editingTable tbody td .editSelect {
+    width: 100%;
+  }
+}
