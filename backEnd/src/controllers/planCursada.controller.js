@@ -39,10 +39,13 @@ const formatPlan = (plan) => {
             materia_id: item.materia_id,
             anio_proyectado: item.anio_proyectado,
             cuatrimestre_proyectado: item.cuatrimestre_proyectado,
+            horas: item.horas,
+            horas_extra: item.horas_extra,
             materia: item.materia
                 ? {
                     id: item.materia.id,
                     nombre: item.materia.nombre,
+                    carga_horaria_semanal: item.materia.carga_horaria_semanal,
                 }
                 : null,
         })),
@@ -114,6 +117,8 @@ const guardarPlanCursada = async (req, res, next) => {
                 materia_id: Number(item.materia_id),
                 anio_proyectado: Number(item.anio_proyectado) || 1,
                 cuatrimestre_proyectado: Number(item.cuatrimestre_proyectado) || 1,
+                horas: Number(item.horas) || 0,
+                horas_extra: Number(item.horas_extra) || 0,
             }));
 
             await plan_cursada_item.bulkCreate(itemsToCreate, { transaction: t });
@@ -125,10 +130,12 @@ const guardarPlanCursada = async (req, res, next) => {
             include: [
                 {
                     model: plan_cursada_item,
+                    as: "plan_cursada_items",
                     include: [
                         {
                             model: materia,
-                            attributes: ["id", "nombre"],
+                            as: "materia",
+                            attributes: ["id", "nombre", "carga_horaria_semanal"],
                         },
                     ],
                 },
@@ -161,10 +168,12 @@ const obtenerPlanesCursada = async (req, res, next) => {
             include: [
                 {
                     model: plan_cursada_item,
+                    as: "plan_cursada_items",
                     include: [
                         {
                             model: materia,
-                            attributes: ["id", "nombre"],
+                            as: "materia",
+                            attributes: ["id", "nombre", "carga_horaria_semanal"],
                         },
                     ],
                 },
@@ -207,10 +216,12 @@ const obtenerPlanCursada = async (req, res, next) => {
             include: [
                 {
                     model: plan_cursada_item,
+                    as: "plan_cursada_items",
                     include: [
                         {
                             model: materia,
-                            attributes: ["id", "nombre"],
+                            as: "materia",
+                            attributes: ["id", "nombre", "carga_horaria_semanal"],
                         },
                     ],
                 },

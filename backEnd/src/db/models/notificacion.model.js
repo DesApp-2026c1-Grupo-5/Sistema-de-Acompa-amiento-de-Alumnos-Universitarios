@@ -14,11 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   notificacion.init({
-    usuario_id: DataTypes.INTEGER,
-    emisor_usuario_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
     titulo: DataTypes.STRING,
     tipo: DataTypes.STRING,
     mensaje: DataTypes.STRING,

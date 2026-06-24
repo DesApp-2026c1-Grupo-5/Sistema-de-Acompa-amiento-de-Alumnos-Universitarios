@@ -81,24 +81,33 @@
 }
 
 .planner button.saveButton {
-  height: 36px;
-  padding: 0 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
-  color: var(--text-h) !important;
+  height: 42px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #08b7c8, #039b97);
+  color: #ffffff !important;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
   cursor: pointer;
-  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(8, 183, 200, 0.25);
+  transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+}
+
+.planner button.saveButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .planner button.saveButton svg {
-  color: var(--text-h) !important;
-  stroke: var(--text-h) !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .planner button.generateButton svg {
@@ -116,12 +125,12 @@
 }
 
 :global(html.dark) .planner button.saveButton {
-  color: var(--text-h) !important;
+  color: #ffffff !important;
 }
 
 :global(html.dark) .planner button.saveButton svg {
-  color: var(--text-h) !important;
-  stroke: var(--text-h) !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 :global(html.dark) .planner button.corrButton {
@@ -173,10 +182,10 @@
   border-color: #f59e0b !important;
 }
 
-.planner button.saveButton:hover {
+.planner button.saveButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: var(--color-soft);
-  border-color: var(--accent);
+  opacity: 0.94;
+  box-shadow: 0 6px 16px rgba(8, 183, 200, 0.32);
 }
 
 .summary {
@@ -191,6 +200,40 @@
 
 .summary strong {
   color: #0d9488;
+}
+
+.saveRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.nombreInput {
+  flex: 1 1 260px;
+  min-width: 0;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nombreInput::placeholder {
+  color: var(--text-muted);
+}
+
+.nombreInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
 :global(html.dark) .planner .summary {
@@ -621,4 +664,62 @@
 
 .toggleLabel:hover .toggleVisual {
   border-color: var(--accent);
+}
+
+/* Pestañas de planes guardados (estilo "Mis sesiones") */
+.tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+  margin: 4px 0 18px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.planner .tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--text-muted) !important;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.planner .tabs button:hover {
+  color: var(--accent) !important;
+}
+
+.planner .tabs .activeTab {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent);
+}
+
+.tabDeleteIcon {
+  opacity: 0.5;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.tabDeleteIcon:hover {
+  opacity: 1;
+  color: #ef4444;
+}
+
+.mensaje {
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  background: rgba(8, 183, 200, 0.12);
+  border: 1px solid var(--accent);
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
 }

@@ -14,12 +14,14 @@ export async function getCareerSubjects() {
         cuatrimestre: s.cuatrimestre || (s.year % 2 === 0 ? 2 : 1),
       })),
       currentPlan,
+      materiasNombres: res?.data?.materiasNombres ?? {},
       summary: res?.data?.summary ?? null,
     };
   } catch {
     return {
       subjects: [],
       currentPlan: [],
+      materiasNombres: {},
       summary: null,
     };
   }
