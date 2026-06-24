@@ -276,3 +276,109 @@
   font-size: 0.85rem;
   font-weight: 600;
 }
+
+.chevron {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.25rem;
+  }
+
+  .content,
+  .formCard,
+  .tableCard {
+    min-width: 0;
+  }
+
+  .tableWrapper {
+    overflow-x: visible;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table tr {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    margin: 0 1rem 1rem;
+  }
+
+  .table tr:first-child {
+    margin-top: 1rem;
+  }
+
+  .table tr:hover td {
+    background: transparent;
+  }
+
+  .table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--border);
+    overflow-wrap: anywhere;
+  }
+
+  .table td.actionsCell {
+    border-bottom: none;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .table td.nameCell {
+    font-size: 1.05rem;
+    cursor: pointer;
+    border-bottom: none;
+  }
+
+  .table td.nameCell::before {
+    content: none;
+  }
+
+  .table td.nameCell .chevron {
+    display: block;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+  }
+
+  .table tr.expanded td.nameCell .chevron {
+    transform: rotate(180deg);
+  }
+
+  .table td.emailCell,
+  .table td.dateCell,
+  .table td.actionsCell {
+    display: none;
+  }
+
+  .table tr.expanded td.emailCell,
+  .table tr.expanded td.dateCell,
+  .table tr.expanded td.actionsCell {
+    display: flex;
+  }
+
+  .table tr.expanded td.nameCell {
+    border-bottom: 1px solid var(--border);
+  }
+}
