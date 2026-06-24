@@ -16,14 +16,17 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       plan_cursada_item.belongsTo(models.materia, {
-        foreignKey: 'materia_id'
+        foreignKey: 'materia_id',
+        as: 'materia'
       });
 
     }
   }
   plan_cursada_item.init({
     anio_proyectado: DataTypes.INTEGER,
-    cuatrimestre_proyectado: DataTypes.INTEGER
+    cuatrimestre_proyectado: DataTypes.INTEGER,
+    horas: DataTypes.INTEGER,
+    horas_extra: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'plan_cursada_item',

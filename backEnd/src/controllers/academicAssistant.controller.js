@@ -421,6 +421,8 @@ const getPlanSubjects = async (req, res, next) => {
         return a.cuatrimestre - b.cuatrimestre;
       });
 
+    const pendientesIds = new Set(materiasPendientes.map((m) => m.id));
+
     const currentPlan = [];
     const materiasPlanificadas = new Set();
     const materiasDisponibles = [...materiasPendientes];
@@ -448,7 +450,8 @@ const getPlanSubjects = async (req, res, next) => {
         const cumpleCorrelativas = materiaActual.correlatives.every(
           (correlativaId) =>
             materiasHabilitantes.has(correlativaId) ||
-            materiasPlanificadas.has(correlativaId)
+            materiasPlanificadas.has(correlativaId) ||
+            !pendientesIds.has(correlativaId)
         );
 
         if (!cumpleCorrelativas) continue;
@@ -503,11 +506,21 @@ const getPlanSubjects = async (req, res, next) => {
       }
     }
 
+    const todasMaterias = await materia.findAll({
+      attributes: ["id", "nombre"],
+      raw: true,
+    });
+    const materiasNombres = {};
+    for (const m of todasMaterias) {
+      materiasNombres[m.id] = m.nombre;
+    }
+
     return res.status(200).json({
       ok: true,
       data: {
         subjects: materiasPendientes,
         currentPlan,
+        materiasNombres,
         summary: {
           totalSubjects: materias.length,
           pendingSubjects: materiasPendientes.length,

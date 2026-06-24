@@ -8,6 +8,8 @@ const crearPlanCursadaSchema = Joi.object({
         materia_id: Joi.number().integer().positive().required(),
         anio_proyectado: Joi.number().integer().min(1).max(10).required(),
         cuatrimestre_proyectado: Joi.number().integer().min(1).max(2).required(),
+        horas: Joi.number().integer().min(0).max(80).optional(),
+        horas_extra: Joi.number().integer().min(0).max(80).optional(),
       })
     )
     .min(1)
@@ -23,6 +25,8 @@ const actualizarPlanCursadaSchema = Joi.object({
         materia_id: Joi.number().integer().positive().required(),
         anio_proyectado: Joi.number().integer().min(1).max(10).required(),
         cuatrimestre_proyectado: Joi.number().integer().min(1).max(2).required(),
+        horas: Joi.number().integer().min(0).max(80).optional(),
+        horas_extra: Joi.number().integer().min(0).max(80).optional(),
       })
     )
     .min(1)
