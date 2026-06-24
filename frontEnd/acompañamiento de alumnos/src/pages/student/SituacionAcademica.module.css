@@ -303,6 +303,258 @@
   color: #020617;
 }
 
+.chevron {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #405a7a;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+:global(.dark) .chevron,
+:global(.dark-mode) .chevron,
+:global([data-theme='dark']) .chevron {
+  color: #b7c8e6;
+}
+
+@media (max-width: 768px) {
+  .tableWrapper {
+    overflow-x: visible;
+  }
+
+  .materiasTable thead {
+    display: none;
+  }
+
+  .materiasTable,
+  .materiasTable tbody,
+  .materiasTable tr,
+  .materiasTable td {
+    display: block;
+  }
+
+  .materiasTable tbody tr {
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 6px 14px;
+    margin-bottom: 12px;
+  }
+
+  .materiasTable td {
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    overflow-wrap: anywhere;
+  }
+
+  .materiasTable td:first-child {
+    width: auto;
+  }
+
+  .materiasTable td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #405a7a;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .materiasTable td.nameCell {
+    border-bottom: none;
+    padding-right: 28px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .materiasTable td.nameCell::before {
+    content: none;
+  }
+
+  .materiasTable tbody tr .chevron {
+    display: inline-flex;
+    position: absolute;
+    top: 10px;
+    right: 12px;
+  }
+
+  .materiasTable tbody tr.expanded .chevron {
+    transform: rotate(180deg);
+  }
+
+  .materiasTable td.statusCell,
+  .materiasTable td.yearCell,
+  .materiasTable td.semesterCell,
+  .materiasTable td.gradeCell,
+  .materiasTable td.creditsCell,
+  .materiasTable td.finalsCell {
+    display: none;
+  }
+
+  .materiasTable tbody tr.expanded td.statusCell,
+  .materiasTable tbody tr.expanded td.yearCell,
+  .materiasTable tbody tr.expanded td.semesterCell,
+  .materiasTable tbody tr.expanded td.gradeCell,
+  .materiasTable tbody tr.expanded td.creditsCell,
+  .materiasTable tbody tr.expanded td.finalsCell {
+    display: flex;
+  }
+
+  .materiasTable tbody tr.expanded td.nameCell {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 8px;
+  }
+
+  .materiasTable tbody tr.expanded td:last-child {
+    border-bottom: none;
+  }
+
+  .materiasTable.editingTable tbody td {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .materiasTable.editingTable tbody td input,
+  .materiasTable.editingTable tbody td select {
+    max-width: none;
+    width: 100%;
+  }
+
+  :global(.dark) .materiasTable tbody tr,
+  :global(.dark-mode) .materiasTable tbody tr,
+  :global([data-theme='dark']) .materiasTable tbody tr {
+    border-color: #334155;
+  }
+
+  :global(.dark) .materiasTable td::before,
+  :global(.dark-mode) .materiasTable td::before,
+  :global([data-theme='dark']) .materiasTable td::before {
+    color: #b7c8e6;
+  }
+
+  :global(.dark) .materiasTable tbody tr.expanded td.nameCell,
+  :global(.dark-mode) .materiasTable tbody tr.expanded td.nameCell,
+  :global([data-theme='dark']) .materiasTable tbody tr.expanded td.nameCell {
+    border-bottom-color: #334155;
+  }
+}
+
+@media (max-width: 768px) {
+  .actividadesTable thead {
+    display: none;
+  }
+
+  .actividadesTable,
+  .actividadesTable tbody,
+  .actividadesTable tr,
+  .actividadesTable td {
+    display: block;
+  }
+
+  .actividadesTable tbody tr {
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 6px 14px;
+    margin-bottom: 12px;
+  }
+
+  .actividadesTable td {
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    overflow-wrap: anywhere;
+  }
+
+  .actividadesTable td:first-child {
+    width: auto;
+  }
+
+  .actividadesTable td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #405a7a;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .actividadesTable td.nameCell {
+    border-bottom: none;
+    padding-right: 28px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .actividadesTable td.nameCell::before {
+    content: none;
+  }
+
+  .actividadesTable tbody tr .chevron {
+    display: inline-flex;
+    position: absolute;
+    top: 10px;
+    right: 12px;
+  }
+
+  .actividadesTable tbody tr.expanded .chevron {
+    transform: rotate(180deg);
+  }
+
+  .actividadesTable td.statusCell,
+  .actividadesTable td.creditsCell,
+  .actividadesTable td.dateCell,
+  .actividadesTable td.actionsCell {
+    display: none;
+  }
+
+  .actividadesTable tbody tr.expanded td.statusCell,
+  .actividadesTable tbody tr.expanded td.creditsCell,
+  .actividadesTable tbody tr.expanded td.dateCell,
+  .actividadesTable tbody tr.expanded td.actionsCell {
+    display: flex;
+  }
+
+  .actividadesTable tbody tr.expanded td.nameCell {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 8px;
+  }
+
+  .actividadesTable tbody tr.expanded td:last-child {
+    border-bottom: none;
+  }
+
+  .actividadForm {
+    flex-wrap: wrap;
+  }
+
+  :global(.dark) .actividadesTable tbody tr,
+  :global(.dark-mode) .actividadesTable tbody tr,
+  :global([data-theme='dark']) .actividadesTable tbody tr {
+    border-color: #334155;
+  }
+
+  :global(.dark) .actividadesTable td::before,
+  :global(.dark-mode) .actividadesTable td::before,
+  :global([data-theme='dark']) .actividadesTable td::before {
+    color: #b7c8e6;
+  }
+
+  :global(.dark) .actividadesTable tbody tr.expanded td.nameCell,
+  :global(.dark-mode) .actividadesTable tbody tr.expanded td.nameCell,
+  :global([data-theme='dark']) .actividadesTable tbody tr.expanded td.nameCell {
+    border-bottom-color: #334155;
+  }
+}
+
 @media (max-width: 900px) {
   .statsGrid {
     grid-template-columns: 1fr;
