@@ -301,20 +301,222 @@ const getPlanSubjects = async (req, res, next) => {
     });
 
     if (!estudianteData) {
-      return res.status(200).json({ ok: true, data: { subjects: [] } });
+      return res.status(200).json({
+        ok: true,
+        data: {
+          subjects: [],
+          currentPlan: [],
+        },
+      });
     }
 
-    const situacion = await situacion_academica.findOne({
-      where: { estudiante_id: estudianteData.id },
-      order: [["fecha_inicio", "DESC"], ["createdAt", "DESC"], ["id", "DESC"]],
-    });
+    const situacion = await getSituacionActiva(estudianteData.id);
 
     if (!situacion) {
-      return res.status(200).json({ ok: true, data: { subjects: [] } });
+      return res.status(200).json({
+        ok: true,
+        data: {
+          subjects: [],
+          currentPlan: [],
+        },
+      });
     }
 
-    const data = await obtenerMateriasConCorrelativas(situacion.plan_id);
-    return res.status(200).json({ ok: true, data });
+    const plan = await plan_estudio.findByPk(situacion.plan_id, {
+      include: [
+        {
+          model: materia,
+          as: "materias",
+          include: [
+            {
+              model: correlatividad,
+              as: "correlatividades",
+              attributes: ["materia_id", "materia_requisito_id", "tipo"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!plan) {
+      return res.status(200).json({
+        ok: true,
+        data: {
+          subjects: [],
+          currentPlan: [],
+        },
+      });
+    }
+
+    const estados = await estado_materia.findAll({
+      where: { situacion_id: situacion.id },
+      attributes: ["materia_id", "estado"],
+      raw: true,
+    });
+
+    const estadoPorMateria = new Map(
+      estados.map((estado) => [estado.materia_id, estado.estado])
+    );
+
+    const materias = plan.materias || [];
+
+    const aprobadasIds = new Set(
+      estados
+        .filter((estado) => esAprobada(estado.estado))
+        .map((estado) => estado.materia_id)
+    );
+
+    const regularizadasIds = new Set(
+      estados
+        .filter((estado) => esRegular(estado.estado))
+        .map((estado) => estado.materia_id)
+    );
+
+    const cursandoIds = new Set(
+      estados
+        .filter((estado) => esCursando(estado.estado))
+        .map((estado) => estado.materia_id)
+    );
+
+    const materiasHabilitantes = new Set([
+      ...aprobadasIds,
+      ...regularizadasIds,
+    ]);
+
+    const materiasPendientes = materias
+      .filter((m) => {
+        const estado = estadoPorMateria.get(m.id);
+
+        return (
+          !esAprobada(estado) &&
+          !esRegular(estado) &&
+          !esCursando(estado)
+        );
+      })
+      .map((m) => {
+        const correlativas = (m.correlatividades || []).map(
+          (c) => c.materia_requisito_id
+        );
+
+        return {
+          id: m.id,
+          name: m.nombre,
+          year: m.anio_cursada || 1,
+          cuatrimestre:
+            m.cuatrimestre ||
+            m.cuatrimestre_cursada ||
+            (m.anio_cursada % 2 === 0 ? 2 : 1),
+          type: m.modalidad || "Cuatrimestral",
+          hours: m.horas_semanales || m.carga_horaria || 6,
+          credits: m.creditos_otorga || 0,
+          correlatives: correlativas,
+          status: "pendiente",
+          approved: aprobadasIds.has(m.id),
+          regularized: regularizadasIds.has(m.id),
+          inProgress: cursandoIds.has(m.id),
+        };
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.cuatrimestre - b.cuatrimestre;
+      });
+
+    const currentPlan = [];
+    const materiasPlanificadas = new Set();
+    const materiasDisponibles = [...materiasPendientes];
+
+    let anioActual = 1;
+    let cuatrimestreActual = 1;
+    let seguridad = 0;
+
+    while (materiasDisponibles.length > 0 && seguridad < 200) {
+      seguridad += 1;
+
+      const grupo = {
+        year: anioActual,
+        cuatrimestre: cuatrimestreActual,
+        label: `Año ${anioActual} - Cuatrimestre ${cuatrimestreActual}`,
+        subjects: [],
+      };
+
+      let horasGrupo = 0;
+      let huboMateriaAgregada = false;
+
+      for (let i = 0; i < materiasDisponibles.length; i += 1) {
+        const materiaActual = materiasDisponibles[i];
+
+        const cumpleCorrelativas = materiaActual.correlatives.every(
+          (correlativaId) =>
+            materiasHabilitantes.has(correlativaId) ||
+            materiasPlanificadas.has(correlativaId)
+        );
+
+        if (!cumpleCorrelativas) continue;
+
+        if (horasGrupo + materiaActual.hours > 20) continue;
+
+        grupo.subjects.push({
+          id: materiaActual.id,
+          name: materiaActual.name,
+          hours: materiaActual.hours,
+          correlatives: materiaActual.correlatives,
+          extraHours: 0,
+        });
+
+        horasGrupo += materiaActual.hours;
+        materiasPlanificadas.add(materiaActual.id);
+        materiasDisponibles.splice(i, 1);
+        i -= 1;
+        huboMateriaAgregada = true;
+      }
+
+      if (grupo.subjects.length > 0) {
+        currentPlan.push(grupo);
+      }
+
+      if (cuatrimestreActual === 1) {
+        cuatrimestreActual = 2;
+      } else {
+        cuatrimestreActual = 1;
+        anioActual += 1;
+      }
+
+      if (!huboMateriaAgregada && materiasDisponibles.length > 0) {
+        const materiaForzada = materiasDisponibles.shift();
+
+        currentPlan.push({
+          year: anioActual,
+          cuatrimestre: cuatrimestreActual,
+          label: `Año ${anioActual} - Cuatrimestre ${cuatrimestreActual}`,
+          subjects: [
+            {
+              id: materiaForzada.id,
+              name: materiaForzada.name,
+              hours: materiaForzada.hours,
+              correlatives: materiaForzada.correlatives,
+              extraHours: 0,
+            },
+          ],
+        });
+
+        materiasPlanificadas.add(materiaForzada.id);
+      }
+    }
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        subjects: materiasPendientes,
+        currentPlan,
+        summary: {
+          totalSubjects: materias.length,
+          pendingSubjects: materiasPendientes.length,
+          approvedSubjects: aprobadasIds.size,
+          regularizedSubjects: regularizadasIds.size,
+          inProgressSubjects: cursandoIds.size,
+        },
+      },
+    });
   } catch (err) {
     next(err);
   }
