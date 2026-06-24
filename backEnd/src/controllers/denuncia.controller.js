@@ -4,7 +4,6 @@ const {
   material,
   post,
   estudiante,
-  usuario,
 } = require("../db/models");
 
 const { crearNotificacion } = require("../services/notificacion.service");
@@ -18,7 +17,6 @@ const buildError = (message, statusCode) => {
 const getEstudianteActual = async (req) => {
   return estudiante.findOne({
     where: { usuario_id: req.user.sub },
-    include: [{ model: usuario, attributes: ["email"] }],
   });
 };
 
@@ -45,7 +43,6 @@ const crearDenunciaParaRecurso = ({
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });

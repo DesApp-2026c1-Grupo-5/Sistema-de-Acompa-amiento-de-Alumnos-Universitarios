@@ -45,7 +45,6 @@ const verificarRegularidades = async () => {
         include: [
           {
             model: Estudiante,
-            include: [{ model: usuario, attributes: ["email"] }],
           },
         ],
       },
@@ -93,7 +92,6 @@ const verificarSesionesFinalizadas = async () => {
       {
         model: Estudiante,
         as: "creador",
-        include: [{ model: usuario, attributes: ["email"] }],
       },
       {
         model: inscripcion_sesion,
@@ -103,7 +101,6 @@ const verificarSesionesFinalizadas = async () => {
         include: [
           {
             model: Estudiante,
-            include: [{ model: usuario, attributes: ["email"] }],
           },
         ],
       },

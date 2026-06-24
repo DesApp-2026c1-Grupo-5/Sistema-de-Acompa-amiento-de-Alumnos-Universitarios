@@ -8,7 +8,6 @@ const {
   post,
   estudiante,
   administrador,
-  usuario,
   sequelize,
 } = db;
 
@@ -434,7 +433,6 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
       {
         model: estudiante,
         as: "denunciante",
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -545,7 +543,6 @@ const suspenderMaterial = async (req, res, next) => {
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -557,12 +554,11 @@ const suspenderMaterial = async (req, res, next) => {
   }
 
   const pendientes = await denuncia.findAll({
-    where: { material_id: materialId, estado: "pendiente" },
+    where: { post_id: postId, estado: "pendiente" },
     include: [
       {
         model: estudiante,
         as: "denunciante",
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -621,7 +617,6 @@ const restaurarMaterial = async (req, res, next) => {
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -678,7 +673,6 @@ const ocultarPost = async (req, res, next) => {
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -695,7 +689,6 @@ const ocultarPost = async (req, res, next) => {
       {
         model: estudiante,
         as: "denunciante",
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -762,7 +755,6 @@ const mostrarPost = async (req, res, next) => {
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
