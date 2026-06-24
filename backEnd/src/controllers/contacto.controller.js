@@ -1,5 +1,7 @@
 const { Op } = require("sequelize");
 const { contacto, estudiante, usuario } = require("../db/models");
+const { sendMail } = require("../services/mailer.service");
+const { renderTemplate } = require("../services/emailRenderer.service");
 
 const aceptarInvitacion = async (req, res) => {
   await req.contacto.update({
@@ -117,6 +119,25 @@ const enviarInvitacion = async (req, res) => {
     estado: "pendiente",
     fecha_solicitud: new Date(),
   });
+
+  const receptor = await estudiante.findByPk(receptorId, {
+    include: [{ model: usuario, attributes: ["email"] }],
+  });
+
+  if (receptor?.usuario?.email) {
+    const nombreSolicitante = `${solicitante.nombre ?? ""} ${solicitante.apellido ?? ""}`.trim();
+    const html = renderTemplate("contactInvitation", {
+      titulo: "Nueva solicitud de conexión",
+      nombre_receptor: receptor.nombre ?? "estudiante",
+      nombre_solicitante: nombreSolicitante,
+    });
+
+    await sendMail({
+      to: receptor.usuario.email,
+      subject: `Solicitud de conexión de ${nombreSolicitante}`,
+      html,
+    });
+  }
 
   res.json({
     ok: true,

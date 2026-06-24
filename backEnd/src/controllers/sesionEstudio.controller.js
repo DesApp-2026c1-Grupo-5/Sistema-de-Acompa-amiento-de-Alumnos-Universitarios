@@ -5,8 +5,11 @@ const {
   materia,
   inscripcion_sesion,
   archivo_sesion_estudio,
+  usuario,
 } = require("../db/models");
 const { crearNotificacion } = require("../services/notificacion.service");
+const { sendMail } = require("../services/mailer.service");
+const { renderTemplate } = require("../services/emailRenderer.service");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
 
@@ -16,7 +19,11 @@ const buildError = (message, statusCode) => {
   return error;
 };
 
-const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje, emisor_usuario_id }) => {
+const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje, emisor_usuario_id, templateName }) => {
+  const sesion = await sesion_estudio.findByPk(sesionId, {
+    attributes: ["tema", "fecha_hora", "duracion_minutos", "tipo", "link_ubicacion"],
+  });
+
   const inscripciones = await inscripcion_sesion.findAll({
     where: {
       sesion_id: sesionId,
@@ -25,9 +32,19 @@ const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje, emisor_
     include: [
       {
         model: estudiante,
+        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
+
+  const variables = {
+    titulo,
+    tema: sesion?.tema ?? "",
+    fecha_hora: sesion?.fecha_hora ? new Date(sesion.fecha_hora).toLocaleString("es-AR") : "",
+    duracion_minutos: sesion?.duracion_minutos ?? "",
+    tipo: sesion?.tipo ?? "",
+    link_ubicacion: sesion?.link_ubicacion ?? "",
+  };
 
   for (const inscripcion of inscripciones) {
     const participante = inscripcion.estudiante;
@@ -43,6 +60,15 @@ const notificarParticipantesSesion = async ({ sesionId, titulo, mensaje, emisor_
       referencia_id: sesionId,
       action_url: "/student/study-sessions",
     });
+
+    if (templateName && participante.usuario?.email) {
+      const html = renderTemplate(templateName, { ...variables, nombre: participante.nombre ?? "" });
+      await sendMail({
+        to: participante.usuario.email,
+        subject: titulo,
+        html,
+      });
+    }
   }
 };
 
@@ -302,6 +328,7 @@ const editarSesion = async (req, res, next) => {
     titulo: "Sesión modificada",
     mensaje: `La sesión "${sesion.tema}" fue modificada por su creador.`,
     emisor_usuario_id: req.user.sub,
+    templateName: "sessionModified",
   });
 
   return res.status(200).json({
@@ -334,6 +361,7 @@ const cancelarSesion = async (req, res, next) => {
     titulo: "Sesión cancelada",
     mensaje: `La sesión "${sesion.tema}" fue cancelada por su creador.`,
     emisor_usuario_id: req.user.sub,
+    templateName: "sessionCancelled",
   });
 
   return res.status(200).json({

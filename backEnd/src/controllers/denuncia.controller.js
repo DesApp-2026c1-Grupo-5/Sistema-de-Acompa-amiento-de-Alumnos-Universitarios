@@ -4,11 +4,9 @@ const {
   material,
   post,
   estudiante,
-  usuario,
 } = require("../db/models");
 
 const { crearNotificacion } = require("../services/notificacion.service");
-const { sendMail } = require("../services/mailer.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -19,7 +17,6 @@ const buildError = (message, statusCode) => {
 const getEstudianteActual = async (req) => {
   return estudiante.findOne({
     where: { usuario_id: req.user.sub },
-    include: [{ model: usuario, attributes: ["email"] }],
   });
 };
 
@@ -27,7 +24,6 @@ const crearDenunciaParaRecurso = ({
   modelo,
   foreignKey,
   recursoNombre,
-  articulo,
   tipoNotificacion,
   actionUrl,
   resumenKey,
@@ -47,7 +43,6 @@ const crearDenunciaParaRecurso = ({
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -106,27 +101,6 @@ const crearDenunciaParaRecurso = ({
       referencia_id: nueva.id,
       action_url: actionUrl,
     });
-
-    const emailAutor = recursoAutor.usuario?.email;
-    if (emailAutor) {
-      await sendMail({
-        to: emailAutor,
-        subject: `${recursoNombre} denunciado`,
-        html: `<p>Tu ${recursoNombre.toLowerCase()} <strong>"${resumen}"</strong> recibió una denuncia.</p>
-               <p>El equipo de SIVA la revisará.</p>
-               <p>Saludos,<br/>El equipo de SIVA</p>`,
-      });
-    }
-  }
-
-  if (estudianteData.usuario?.email) {
-    await sendMail({
-      to: estudianteData.usuario.email,
-      subject: "Denuncia realizada",
-      html: `<p>Registramos tu denuncia sobre ${articulo} ${recursoNombre.toLowerCase()} <strong>"${resumen}"</strong>.</p>
-             <p>El equipo de SIVA la revisará.</p>
-             <p>Saludos,<br/>El equipo de SIVA</p>`,
-    });
   }
 
   return res.status(201).json({ ok: true, data: nueva });
@@ -150,7 +124,6 @@ const crearDenunciaMaterial = crearDenunciaParaRecurso({
   modelo: material,
   foreignKey: "material_id",
   recursoNombre: "Material",
-  articulo: "el",
   tipoNotificacion: "material",
   actionUrl: "/student/materials",
   resumenKey: "titulo",
@@ -163,7 +136,6 @@ const crearDenunciaPost = crearDenunciaParaRecurso({
   modelo: post,
   foreignKey: "post_id",
   recursoNombre: "Publicación",
-  articulo: "la",
   tipoNotificacion: "general",
   actionUrl: "/student/home",
   resumenKey: "contenido",

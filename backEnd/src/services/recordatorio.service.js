@@ -11,6 +11,7 @@ const {
 } = require("../db/models");
 const { crearNotificacion, crearNotificacionUnica } = require("./notificacion.service");
 const { sendMail } = require("./mailer.service");
+const { renderTemplate } = require("./emailRenderer.service");
 const logger = require("../utils/logger");
 
 const ESTADOS_ACTIVOS = ["aprobada", "inscripto"];
@@ -29,36 +30,6 @@ const sumarAnios = (fecha, anios) => {
   return copia;
 };
 
-const notificarConCorreo = async ({
-  usuarioId,
-  email,
-  titulo,
-  mensaje,
-  html,
-  referenciaTipo,
-  referenciaId,
-  tipo,
-  actionUrl,
-}) => {
-  const resultado = await crearNotificacionUnica({
-    usuario_id: usuarioId,
-    titulo,
-    tipo,
-    mensaje,
-    referencia_tipo: referenciaTipo,
-    referencia_id: referenciaId,
-    action_url: actionUrl,
-  });
-
-  if (email && resultado.creada) {
-    await sendMail({
-      to: email,
-      subject: titulo,
-      html,
-    });
-  }
-};
-
 const verificarRegularidades = async () => {
   const ahora = new Date();
 
@@ -74,7 +45,6 @@ const verificarRegularidades = async () => {
         include: [
           {
             model: Estudiante,
-            include: [{ model: usuario, attributes: ["email"] }],
           },
         ],
       },
@@ -96,20 +66,19 @@ const verificarRegularidades = async () => {
     const fechaVencimiento = formatearFecha(vence);
     const vencida = diasRestantes < 0;
 
-    await notificarConCorreo({
-      usuarioId: estudiante.usuario_id,
-      email: estudiante.usuario?.email ?? null,
-      titulo: vencida ? "Regularidad vencida" : "Regularidad próxima a vencer",
-      mensaje: vencida
-        ? `La regularidad de ${materiaNombre} venció el ${fechaVencimiento}.`
-        : `La regularidad de ${materiaNombre} vence el ${fechaVencimiento}.`,
-      html: vencida
-        ? `<p>La regularidad de <strong>${materiaNombre}</strong> venció el ${fechaVencimiento}.</p><p>Revisá tu situación académica.</p>`
-        : `<p>La regularidad de <strong>${materiaNombre}</strong> vence el ${fechaVencimiento}.</p><p>Revisá tu situación académica.</p>`,
-      referenciaTipo: "estado_materia",
-      referenciaId: estado.id,
+    const titulo = vencida ? "Regularidad vencida" : "Regularidad próxima a vencer";
+    const mensaje = vencida
+      ? `La regularidad de ${materiaNombre} venció el ${fechaVencimiento}.`
+      : `La regularidad de ${materiaNombre} vence el ${fechaVencimiento}.`;
+
+    await crearNotificacionUnica({
+      usuario_id: estudiante.usuario_id,
+      titulo,
       tipo: "academic",
-      actionUrl: "/student/academic-status",
+      mensaje,
+      referencia_tipo: "estado_materia",
+      referencia_id: estado.id,
+      action_url: "/student/academic-status",
     });
   }
 };
@@ -123,7 +92,6 @@ const verificarSesionesFinalizadas = async () => {
       {
         model: Estudiante,
         as: "creador",
-        include: [{ model: usuario, attributes: ["email"] }],
       },
       {
         model: inscripcion_sesion,
@@ -133,7 +101,6 @@ const verificarSesionesFinalizadas = async () => {
         include: [
           {
             model: Estudiante,
-            include: [{ model: usuario, attributes: ["email"] }],
           },
         ],
       },
@@ -159,16 +126,14 @@ const verificarSesionesFinalizadas = async () => {
     ].filter((item) => item.usuarioId);
 
     for (const destinatario of usuariosDestinatarios) {
-      await notificarConCorreo({
-        usuarioId: destinatario.usuarioId,
-        email: destinatario.email,
+      await crearNotificacionUnica({
+        usuario_id: destinatario.usuarioId,
         titulo: "Sesión finalizada",
-        mensaje: `La sesión "${sesion.tema}" finalizó.`,
-        html: `<p>La sesión <strong>"${sesion.tema}"</strong> finalizó.</p><p>Podés revisar tus sesiones desde la app.</p>`,
-        referenciaTipo: "sesion_estudio",
-        referenciaId: sesion.id,
         tipo: "session",
-        actionUrl: "/student/study-sessions",
+        mensaje: `La sesión "${sesion.tema}" finalizó.`,
+        referencia_tipo: "sesion_estudio",
+        referencia_id: sesion.id,
+        action_url: "/student/study-sessions",
       });
     }
   }
@@ -229,13 +194,20 @@ const verificarYEnviarRecordatorios = async () => {
       });
 
       if (emailEstudiante) {
+        const variables = {
+          titulo: `Recordatorio: "${sesion.tema}" comienza pronto`,
+          nombre: participante.nombre ?? "",
+          tema: sesion.tema ?? "",
+          fecha_hora: sesion.fecha_hora ? new Date(sesion.fecha_hora).toLocaleString("es-AR") : "",
+          duracion_minutos: sesion.duracion_minutos ?? "",
+          tipo: sesion.tipo ?? "",
+          link_ubicacion: sesion.link_ubicacion ?? "",
+        };
+
         await sendMail({
           to: emailEstudiante,
           subject: `Recordatorio: "${sesion.tema}" comienza pronto`,
-          html: `<p>Hola ${participante.nombre},</p>
-                 <p>Te recordamos que la sesión <strong>"${sesion.tema}"</strong> comienza en menos de 24 horas.</p>
-                 <p>No olvides conectarte a tiempo.</p>
-                 <p>Saludos,<br/>El equipo de SIVA</p>`,
+          html: renderTemplate("sessionReminder", variables),
         });
       }
 
