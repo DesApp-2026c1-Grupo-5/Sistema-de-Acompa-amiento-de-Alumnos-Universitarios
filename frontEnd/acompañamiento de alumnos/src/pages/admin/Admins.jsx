@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Trash2, ChevronDown } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import ModalConfirmation from '../../components/common/ModalConfirmation';
@@ -20,6 +20,7 @@ function Admins() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [expandedId, setExpandedId] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -281,13 +282,18 @@ function Admins() {
                 </thead>
                 <tbody>
                   {admins.map((admin) => (
-                    <tr key={admin.id}>
-                      <td className={styles.nameCell}>
-                        {admin.nombre} {admin.apellido}
+                    <tr key={admin.id} className={expandedId === admin.id ? styles.expanded : ''}>
+                      <td
+                        className={styles.nameCell}
+                        data-label="Nombre"
+                        onClick={() => setExpandedId(expandedId === admin.id ? null : admin.id)}
+                      >
+                        <span className={styles.nameText}>{admin.nombre} {admin.apellido}</span>
+                        <ChevronDown size={18} className={styles.chevron} />
                       </td>
-                      <td className={styles.emailCell}>{admin.email}</td>
-                      <td className={styles.dateCell}>{admin.createdAt?.slice(0, 10)}</td>
-                      <td>
+                      <td className={styles.emailCell} data-label="Email">{admin.email}</td>
+                      <td className={styles.dateCell} data-label="Fecha creación">{admin.createdAt?.slice(0, 10)}</td>
+                      <td className={styles.actionsCell} data-label="Acciones">
                         <Button
                           variant="iconSquareDanger"
                           title="Eliminar"
@@ -302,7 +308,14 @@ function Admins() {
 
               {totalPages > 1 && (
                 <div className={styles.paginationSection}>
-                  <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onChange={(p) => {
+                      setPage(p);
+                      setExpandedId(null);
+                    }}
+                  />
                 </div>
               )}
             </div>

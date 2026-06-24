@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle, Eye, EyeOff, Download, Upload } from 'lucide-react';
+import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import Card from '../common/Card';
 import ErrorState from '../common/ErrorState';
 import { getCareerSubjects } from '../../services/plannerService';
@@ -11,6 +11,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const [extraCap, setExtraCap] = useState(10);
   const [plan, setPlan] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
+  const [materiasNombres, setMateriasNombres] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingLabel, setEditingLabel] = useState(null);
@@ -21,10 +22,10 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [planesGuardados, setPlanesGuardados] = useState([]);
-  const [cargandoPlanes, setCargandoPlanes] = useState(false);
-  const [mostrarPlanes, setMostrarPlanes] = useState(false);
+  const [activePlanTab, setActivePlanTab] = useState('nuevo');
   const dragSource = useRef(null);
   const labelInputRef = useRef(null);
+  const workingPlanRef = useRef([]);
 
   const approvedSet = useMemo(() => new Set(approvedIds), [approvedIds]);
 
@@ -33,6 +34,16 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
     for (const s of allSubjects) map[s.id] = s.name;
     return map;
   }, [allSubjects]);
+
+  const pendingIds = useMemo(
+    () => new Set(allSubjects.map((s) => s.id)),
+    [allSubjects]
+  );
+
+  // Una correlativa está satisfecha si ya no es una materia pendiente
+  // (aprobada/regular/cursando), si está aprobada, o si se cursó en un grupo anterior.
+  const corrSatisfecha = (cId, earlierIds) =>
+    !pendingIds.has(cId) || approvedSet.has(cId) || earlierIds.has(cId);
 
   function filterSubjects(subjects) {
     if (!hideApproved || approvedSet.size === 0) return subjects;
@@ -64,14 +75,35 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
     return `Cuatrimestre ${n}`;
   }
 
+  const cargarPlanesGuardados = async () => {
+    try {
+      const res = await obtenerPlanesCursada();
+      setPlanesGuardados(res?.data || []);
+    } catch {
+      setPlanesGuardados([]);
+    }
+  };
+
   useEffect(() => {
     getCareerSubjects()
       .then((data) => {
-        setAllSubjects(data.subjects);
-        setPlan(buildDefaultPlan(data.subjects));
+        const subjects = data.subjects || [];
+        const currentPlan = data.currentPlan || [];
+
+        setAllSubjects(subjects);
+        setMateriasNombres(data.materiasNombres || {});
+
+        if (currentPlan.length > 0) {
+          setPlan(currentPlan);
+        } else {
+          setPlan(buildDefaultPlan(subjects));
+        }
       })
       .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        cargarPlanesGuardados();
+      });
   }, []);
 
   useEffect(() => {
@@ -81,24 +113,27 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
     }
   }, [mensaje]);
 
-  const cargarPlanesGuardados = async () => {
-    setCargandoPlanes(true);
-    try {
-      const res = await obtenerPlanesCursada();
-      setPlanesGuardados(res?.data || []);
-    } catch {
-      setPlanesGuardados([]);
-    } finally {
-      setCargandoPlanes(false);
-    }
-  };
-
   const handleCargarPlan = (planData) => {
     const grupos = {};
-    for (const item of (planData.plan_cursada_items || [])) {
+
+    const items = planData.plan_cursada_items || [];
+
+    for (const item of items) {
       const materia = allSubjects.find((s) => s.id === item.materia_id);
-      if (!materia) continue;
+
+      const name =
+        materia?.name ||
+        item.materia?.nombre ||
+        `Materia ${item.materia_id}`;
+      const hours =
+        item.horas ??
+        item.materia?.carga_horaria_semanal ??
+        materia?.hours ??
+        6;
+      const extraHours = item.horas_extra ?? 0;
+
       const key = `${item.anio_proyectado}-${item.cuatrimestre_proyectado}`;
+
       if (!grupos[key]) {
         grupos[key] = {
           year: item.anio_proyectado,
@@ -107,25 +142,40 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
           subjects: [],
         };
       }
+
       grupos[key].subjects.push({
-        id: materia.id,
-        name: materia.name,
-        hours: materia.hours,
-        correlatives: materia.correlatives,
-        extraHours: 0,
+        id: item.materia_id,
+        name,
+        hours,
+        correlatives: materia?.correlatives || [],
+        extraHours,
       });
     }
-    setPlan(Object.values(grupos).sort((a, b) =>
-      a.year !== b.year ? a.year - b.year : a.cuatrimestre - b.cuatrimestre
-    ));
-    setMostrarPlanes(false);
-    setMensaje("Plan cargado correctamente");
+
+    setPlan(
+      Object.values(grupos).sort((a, b) =>
+        a.year !== b.year ? a.year - b.year : a.cuatrimestre - b.cuatrimestre
+      )
+    );
+  };
+
+  const seleccionarNuevoPlan = () => {
+    if (activePlanTab === 'nuevo') return;
+    setActivePlanTab('nuevo');
+    setPlan(workingPlanRef.current);
+  };
+
+  const seleccionarPlanGuardado = (planData) => {
+    if (activePlanTab === 'nuevo') workingPlanRef.current = plan;
+    setActivePlanTab(planData.id);
+    handleCargarPlan(planData);
   };
 
   const handleEliminarPlanGuardado = async (id) => {
     try {
       await eliminarPlanCursada(id);
       setPlanesGuardados((prev) => prev.filter((p) => p.id !== id));
+      if (activePlanTab === id) seleccionarNuevoPlan();
       setMensaje("Plan eliminado");
     } catch {
       setMensaje("Error al eliminar el plan");
@@ -141,6 +191,8 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
           materia_id: sub.id,
           anio_proyectado: grupo.year || 1,
           cuatrimestre_proyectado: grupo.cuatrimestre || 1,
+          horas: sub.hours || 0,
+          horas_extra: sub.extraHours || 0,
         });
       }
     }
@@ -153,6 +205,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
       await guardarPlanCursada({ nombre, items });
       setMensaje("Plan guardado correctamente");
       setNombrePlan('');
+      await cargarPlanesGuardados();
     } catch (err) {
       setMensaje(err.message || "Error al guardar el plan");
     } finally {
@@ -172,62 +225,63 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const handleGenerate = () => {
     const remaining = filterSubjects([...allSubjects]);
     const newPlan = [];
+    const placedIds = new Set();
     let yearCursor = 1;
     let cuatriCursor = 1;
-    let groupHours = 0;
+    let iterationGuard = 0;
 
-    function ensureGroup() {
-      if (
-        newPlan.length === 0 ||
-        newPlan[newPlan.length - 1].cuatrimestre !== cuatriCursor ||
-        newPlan[newPlan.length - 1].year !== yearCursor
-      ) {
+    const advanceCursor = () => {
+      if (cuatriCursor === 1) {
+        cuatriCursor = 2;
+      } else {
+        cuatriCursor = 1;
+        yearCursor++;
+      }
+    };
+
+    while (remaining.length > 0 && iterationGuard < 200) {
+      iterationGuard++;
+
+      const group = {
+        year: yearCursor,
+        cuatrimestre: cuatriCursor,
+        label: `Año ${yearCursor} - Cuatrimestre ${cuatriCursor}`,
+        subjects: [],
+      };
+      let groupHours = 0;
+
+      // Las correlativas deben estar en un cuatrimestre anterior (no en este).
+      const earlierIds = new Set(placedIds);
+
+      for (let i = 0; i < remaining.length; i++) {
+        const s = remaining[i];
+        const met = s.correlatives.every((cId) => corrSatisfecha(cId, earlierIds));
+        if (!met) continue;
+        if (groupHours + s.hours > classHours) continue;
+
+        group.subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives, extraHours: 0 });
+        groupHours += s.hours;
+        remaining.splice(i, 1);
+        i--;
+      }
+
+      if (group.subjects.length > 0) {
+        for (const sub of group.subjects) placedIds.add(sub.id);
+        newPlan.push(group);
+      } else if (remaining.length > 0) {
+        // Deadlock (correlativas circulares o datos inconsistentes): forzar una materia
+        // para no perderla ni generar cuatrimestres vacíos infinitos.
+        const forced = remaining.shift();
+        placedIds.add(forced.id);
         newPlan.push({
           year: yearCursor,
           cuatrimestre: cuatriCursor,
           label: `Año ${yearCursor} - Cuatrimestre ${cuatriCursor}`,
-          subjects: [],
+          subjects: [{ id: forced.id, name: forced.name, hours: forced.hours, correlatives: forced.correlatives, extraHours: 0 }],
         });
-        groupHours = 0;
-      }
-    }
-
-    let iterationGuard = 0;
-    while (remaining.length > 0 && iterationGuard < 200) {
-      iterationGuard++;
-      ensureGroup();
-      let placed = false;
-
-      const earlierIds = new Set();
-      for (let g = 0; g < newPlan.length - 1; g++) {
-        for (const sub of newPlan[g].subjects) earlierIds.add(sub.id);
       }
 
-      for (let i = 0; i < remaining.length; i++) {
-        const s = remaining[i];
-        const met = s.correlatives.length === 0 || s.correlatives.every(
-          (cId) => earlierIds.has(cId) || approvedSet.has(cId)
-        );
-
-        if (!met) continue;
-
-        if (groupHours + s.hours <= classHours) {
-          newPlan[newPlan.length - 1].subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives, extraHours: 0 });
-          groupHours += s.hours;
-          remaining.splice(i, 1);
-          placed = true;
-          break;
-        }
-      }
-
-      if (!placed) {
-        if (cuatriCursor === 1) {
-          cuatriCursor = 2;
-        } else {
-          cuatriCursor = 1;
-          yearCursor++;
-        }
-      }
+      advanceCursor();
     }
 
     for (const group of newPlan) {
@@ -433,17 +487,6 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
                 Ocultar aprobadas
               </label>
             )}
-            <button
-              className={styles.saveButton}
-              onClick={() => {
-                cargarPlanesGuardados();
-                setMostrarPlanes(true);
-              }}
-              title="Cargar plan guardado"
-            >
-              <Download size={16} />
-              Cargar plan
-            </button>
           </div>
         </div>
 
@@ -453,46 +496,31 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
           </div>
         )}
 
-        {mostrarPlanes && (
-          <div className={styles.planesGuardados}>
-            <div className={styles.planesGuardadosHeader}>
-              <h4>Planes guardados</h4>
-              <button className={styles.closeButton} onClick={() => setMostrarPlanes(false)}>✕</button>
-            </div>
-            {cargandoPlanes ? (
-              <div className={styles.loadingState}>
-                <Loader2 size={16} className={styles.spinner} />
-                <p>Cargando planes...</p>
-              </div>
-            ) : planesGuardados.length === 0 ? (
-              <p className={styles.sinPlanes}>No tenés planes guardados</p>
-            ) : (
-              <div className={styles.listaPlanes}>
-                {planesGuardados.map((p) => (
-                  <div key={p.id} className={styles.planItem}>
-                    <span className={styles.planItemNombre}>{p.nombre}</span>
-                    <div className={styles.planItemAcciones}>
-                      <button
-                        className={styles.planItemBtn}
-                        onClick={() => handleCargarPlan(p)}
-                        title="Cargar este plan"
-                      >
-                        <Upload size={14} />
-                      </button>
-                      <button
-                        className={styles.planItemBtn}
-                        onClick={() => handleEliminarPlanGuardado(p.id)}
-                        title="Eliminar plan"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <div className={styles.tabs}>
+          <button
+            className={activePlanTab === 'nuevo' ? styles.activeTab : ''}
+            onClick={seleccionarNuevoPlan}
+          >
+            Nuevo plan
+          </button>
+          {planesGuardados.map((p) => (
+            <button
+              key={p.id}
+              className={activePlanTab === p.id ? styles.activeTab : ''}
+              onClick={() => seleccionarPlanGuardado(p)}
+            >
+              {p.nombre}
+              <Trash2
+                size={14}
+                className={styles.tabDeleteIcon}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEliminarPlanGuardado(p.id);
+                }}
+              />
+            </button>
+          ))}
+        </div>
 
         <div className={styles.summary}>
           Total del plan: <strong>{fixedClassHours}hs</strong> cursada + <strong>{fixedExtraHours}hs</strong> extra = <strong>{fixedTotalHours}hs</strong> · máx. <strong>{classHours}hs</strong> cursada + <strong>{extraCap}hs</strong> extra por cuatrimestre
@@ -565,7 +593,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
                         for (const s of plan[g].subjects) earlierIds.add(s.id);
                       }
                       const corrUnmet = hasCorr && !subject.correlatives.every(
-                        (cId) => earlierIds.has(cId) || approvedSet.has(cId)
+                        (cId) => corrSatisfecha(cId, earlierIds)
                       );
 
                       return (
@@ -609,7 +637,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
                               <span className={styles.corrLabel}>Correlativas:</span>
                               {subject.correlatives.map((cId) => (
                                 <span key={cId} className={styles.corrChip}>
-                                  {subjectNameMap[cId] || `ID ${cId}`}
+                                  {materiasNombres[cId] || subjectNameMap[cId] || `ID ${cId}`}
                                 </span>
                               ))}
                             </div>

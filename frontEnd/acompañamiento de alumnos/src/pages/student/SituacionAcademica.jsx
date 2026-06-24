@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { getMyProfile } from '../../services/profileService';
 import { getCarreras } from '../../services/carreraService';
 import { cambiarCarrera } from "../../services/situacionAcademicaService";
@@ -203,6 +204,8 @@ export default function SituacionAcademica() {
   const [saving, setSaving] = useState(false);
   const [sinSituacion, setSinSituacion] = useState(false);
   const [cambiandoCarrera, setCambiandoCarrera] = useState(false);
+  const [expandedMateria, setExpandedMateria] = useState(null);
+  const [expandedActividad, setExpandedActividad] = useState(null);
   const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '' });
 
   const cargarDatos = useCallback(async () => {
@@ -417,7 +420,7 @@ export default function SituacionAcademica() {
 
         <button
           type="button"
-          className={styles.primaryButton}
+          className={styles.changeCareerButton}
           onClick={() => setCambiandoCarrera(true)}
         >
           Cambiar carrera
@@ -534,7 +537,7 @@ export default function SituacionAcademica() {
         {!mostrarCargaExcel && (
           <>
             <div className={styles.tableWrapper}>
-              <table className={styles.table}>
+              <table className={`${styles.table} ${styles.materiasTable}${editando ? ' ' + styles.editingTable : ''}`}>
                 <thead>
                   <tr>
                     <th>Materia</th>
@@ -549,15 +552,23 @@ export default function SituacionAcademica() {
                 <tbody>
                   {subjects.map((materia) => {
                     return (
-                      <tr key={materia.materia_id}>
-                        <td>
+                      <tr key={materia.materia_id} className={expandedMateria === materia.materia_id ? styles.expanded : ''}>
+                        <td className={styles.nameCell} data-label="Materia">
                           {editando ? (
                             <input type="text" value={materia.name} readOnly />
                           ) : (
                             materia.name
                           )}
+                          <button
+                            type="button"
+                            className={styles.chevron}
+                            aria-label="Mostrar detalles"
+                            onClick={() => setExpandedMateria(expandedMateria === materia.materia_id ? null : materia.materia_id)}
+                          >
+                            <ChevronDown size={18} />
+                          </button>
                         </td>
-                        <td>
+                        <td className={styles.statusCell} data-label="Estado">
                           {editando ? (
                             <select value={materia.status} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'status', e.target.value)}>
                               {ESTADOS.map((est) => <option key={est} value={est}>{est}</option>)}
@@ -568,25 +579,25 @@ export default function SituacionAcademica() {
                             </span>
                           )}
                         </td>
-                        <td>
+                        <td className={styles.yearCell} data-label="Año">
                           {materia.year_in_career ? `${materia.year_in_career}°` : '-'}
                         </td>
-                        <td>
+                        <td className={styles.semesterCell} data-label="Cuatrimestre">
                           {editando ? (
                             <input type="number" min="1" max="2" value={materia.academic_semester || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_semester', e.target.value ? Number(e.target.value) : null)} />
                           ) : (
                             materia.academic_semester ? `${materia.academic_semester}°` : '-'
                           )}
                         </td>
-                        <td>
+                        <td className={styles.gradeCell} data-label="Nota">
                           {editando ? (
                             <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'grade', e.target.value ? Number(e.target.value) : null)} />
                           ) : (
                             materia.grade ?? '-'
                           )}
                         </td>
-                        <td>{materia.credits || '-'}</td>
-                        <td>
+                        <td className={styles.creditsCell} data-label="Créditos">{materia.credits || '-'}</td>
+                        <td className={styles.finalsCell} data-label="Finales">
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             {materia.finals?.map((f) => (
                               <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
@@ -635,7 +646,7 @@ export default function SituacionAcademica() {
           <h2>Actividades con créditos</h2>
         </div>
         {credit_activities?.length > 0 ? (
-          <table className={styles.table}>
+          <table className={`${styles.table} ${styles.actividadesTable}`}>
             <thead>
               <tr>
                 <th>Descripción</th>
@@ -647,17 +658,27 @@ export default function SituacionAcademica() {
             </thead>
             <tbody>
               {credit_activities.map((act) => (
-                <tr key={act.id}>
-                  <td>{act.description}</td>
-                  <td>
+                <tr key={act.id} className={expandedActividad === act.id ? styles.expanded : ''}>
+                  <td className={styles.nameCell} data-label="Descripción">
+                    {act.description}
+                    <button
+                      type="button"
+                      className={styles.chevron}
+                      aria-label="Mostrar detalles"
+                      onClick={() => setExpandedActividad(expandedActividad === act.id ? null : act.id)}
+                    >
+                      <ChevronDown size={18} />
+                    </button>
+                  </td>
+                  <td className={styles.statusCell} data-label="Estado">
                     <span className={`${styles.badge} ${styles[`badge${act.estado === 'aprobada' ? 'Aprobada' : 'Pendiente'}`] || ''}`}>
                       {act.estado || 'pendiente'}
                     </span>
                   </td>
-                  <td>{act.credits}</td>
-                  <td>{act.date ? new Date(act.date).toLocaleDateString() : '-'}</td>
+                  <td className={styles.creditsCell} data-label="Créditos">{act.credits}</td>
+                  <td className={styles.dateCell} data-label="Fecha">{act.date ? new Date(act.date).toLocaleDateString() : '-'}</td>
                   {editando && (
-                    <td><button type="button" className={styles.smallBtn} onClick={() => handleEliminarActividad(act.id)}>✕</button></td>
+                    <td className={styles.actionsCell} data-label="Acciones"><button type="button" className={styles.smallBtn} onClick={() => handleEliminarActividad(act.id)}>✕</button></td>
                   )}
                 </tr>
               ))}

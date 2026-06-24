@@ -4,6 +4,13 @@ const { plan_cursada, plan_cursada_item } = db;
 const listar = async (situacionId) =>
   plan_cursada.findAll({
     where: { situacion_id: situacionId },
+    include: [
+      {
+        model: plan_cursada_item,
+        as: "plan_cursada_items",
+        include: [{ model: db.materia, as: "materia", attributes: ["id", "nombre", "carga_horaria_semanal"] }],
+      },
+    ],
     order: [["created_at", "DESC"]],
   });
 
@@ -13,7 +20,8 @@ const obtenerPorId = async (id, situacionId) =>
     include: [
       {
         model: plan_cursada_item,
-        include: [{ model: db.materia, attributes: ["id", "nombre", "anio_cursada", "carga_horaria_semanal"] }],
+        as: "plan_cursada_items",
+        include: [{ model: db.materia, as: "materia", attributes: ["id", "nombre", "anio_cursada", "carga_horaria_semanal"] }],
       },
     ],
   });
@@ -32,13 +40,21 @@ const crear = async (situacionId, nombre, items) =>
           materia_id: item.materia_id,
           anio_proyectado: item.anio_proyectado,
           cuatrimestre_proyectado: item.cuatrimestre_proyectado,
+          horas: item.horas ?? 0,
+          horas_extra: item.horas_extra ?? 0,
         })),
         { transaction: t },
       );
     }
 
     const creado = await plan_cursada.findByPk(pc.id, {
-      include: [{ model: plan_cursada_item }],
+      include: [
+        {
+          model: plan_cursada_item,
+          as: "plan_cursada_items",
+          include: [{ model: db.materia, as: "materia", attributes: ["id", "nombre", "carga_horaria_semanal"] }],
+        },
+      ],
       transaction: t,
     });
 
