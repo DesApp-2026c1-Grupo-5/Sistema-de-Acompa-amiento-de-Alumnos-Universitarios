@@ -1,6 +1,7 @@
 .page {
-  width: 100%;
-  padding: 18px 38px 40px;
+  max-width: 1252px;
+  margin: 0 auto;
+  padding: 26px 24px 56px;
   background: #ffffff;
   color: #020617;
 }
@@ -15,14 +16,14 @@
 
 .pageHeader h1 {
   margin: 0 0 6px;
-  font-size: 25px;
+  font-size: 30px;
   font-weight: 700;
   color: #020617;
 }
 
 .pageHeader p {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: #405a7a;
 }
 
@@ -54,7 +55,7 @@
 
 .statCard small {
   margin-left: 2px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
   color: #405a7a;
 }
@@ -63,7 +64,7 @@
   position: absolute;
   left: 20px;
   bottom: 21px;
-  font-size: 11px;
+  font-size: 13px;
   color: #405a7a;
 }
 
@@ -118,7 +119,7 @@
 
 .tableHeader h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 21px;
   font-weight: 700;
   color: #020617;
 }
@@ -169,6 +170,26 @@
   color: #ffffff;
 }
 
+.changeCareerButton {
+  flex-shrink: 0;
+  height: 42px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 11px;
+  background: #08aeb8;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.changeCareerButton:hover {
+  background: #07959e;
+  transform: translateY(-1px);
+}
+
 .secondaryButton {
   height: 32px;
   padding: 0 18px;
@@ -208,15 +229,15 @@
 .table th {
   padding: 0 14px 12px;
   text-align: left;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: #405a7a;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .table td {
-  padding: 10px 14px;
-  font-size: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
   color: #020617;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
@@ -230,11 +251,11 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  height: 20px;
-  padding: 0 9px;
-  border-radius: 7px;
-  font-size: 10px;
-  font-weight: 500;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .badgeAprobada {
@@ -361,7 +382,7 @@
     content: attr(data-label);
     font-weight: 600;
     color: #405a7a;
-    font-size: 11px;
+    font-size: 13px;
     flex-shrink: 0;
   }
 
@@ -369,7 +390,7 @@
     border-bottom: none;
     padding-right: 28px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .materiasTable td.nameCell::before {
@@ -385,6 +406,24 @@
 
   .materiasTable tbody tr.expanded .chevron {
     transform: rotate(180deg);
+  }
+
+  .materiasTable tbody tr.expanded,
+  .actividadesTable tbody tr.expanded {
+    border-color: #08aeb8;
+    background: #f0fdfa;
+    box-shadow: 0 6px 18px rgba(8, 174, 184, 0.18);
+  }
+
+  :global(.dark) .materiasTable tbody tr.expanded,
+  :global(.dark-mode) .materiasTable tbody tr.expanded,
+  :global([data-theme='dark']) .materiasTable tbody tr.expanded,
+  :global(.dark) .actividadesTable tbody tr.expanded,
+  :global(.dark-mode) .actividadesTable tbody tr.expanded,
+  :global([data-theme='dark']) .actividadesTable tbody tr.expanded {
+    border-color: #08aeb8;
+    background: rgba(8, 174, 184, 0.12);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
   }
 
   .materiasTable td.statusCell,
@@ -483,7 +522,7 @@
     content: attr(data-label);
     font-weight: 600;
     color: #405a7a;
-    font-size: 11px;
+    font-size: 13px;
     flex-shrink: 0;
   }
 
@@ -491,7 +530,7 @@
     border-bottom: none;
     padding-right: 28px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .actividadesTable td.nameCell::before {
@@ -569,15 +608,27 @@
   }
 }
 
+@media (max-width: 560px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .changeCareerButton {
+    width: 100%;
+  }
+}
+
 .table input,
 .table select {
-  height: 25px;
+  height: 32px;
   padding: 0 11px;
   border: 1px solid #e5e7eb;
   border-radius: 9px;
   background: #ffffff;
   color: #000000;
-  font-size: 11px;
+  font-size: 14px;
   outline: none;
 }
 

@@ -420,7 +420,7 @@ export default function SituacionAcademica() {
 
         <button
           type="button"
-          className={styles.primaryButton}
+          className={styles.changeCareerButton}
           onClick={() => setCambiandoCarrera(true)}
         >
           Cambiar carrera
