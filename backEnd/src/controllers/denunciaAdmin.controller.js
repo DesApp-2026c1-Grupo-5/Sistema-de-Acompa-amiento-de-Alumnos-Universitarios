@@ -439,7 +439,13 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
   });
 
   if (pendientes.length === 0) {
-    return next(buildError("No hay denuncias pendientes para procesar", 400));
+    const existenDenuncias = await denuncia.count({
+      where: { material_id: materialId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Este material no tiene denuncias", 400));
+    }
+    return next(buildError("Ya se rechazaron las denuncias de este material", 400));
   }
 
   const adminId = await getAdminId(req);
@@ -488,7 +494,16 @@ const cambiarEstadoDenunciasPost = (nuevoEstado) => async (req, res, next) => {
   });
 
   if (pendientes.length === 0) {
-    return next(buildError("No hay denuncias pendientes para procesar", 400));
+    const existenDenuncias = await denuncia.count({
+      where: { post_id: postId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Esta publicación no tiene denuncias", 400));
+    }
+    if (pub.oculto) {
+      return next(buildError("Ya se ocultó esta publicación", 400));
+    }
+    return next(buildError("Ya se rechazaron las denuncias de esta publicación", 400));
   }
 
   const adminId = await getAdminId(req);
@@ -563,6 +578,16 @@ const suspenderMaterial = async (req, res, next) => {
       },
     ],
   });
+
+  if (pendientes.length === 0) {
+    const existenDenuncias = await denuncia.count({
+      where: { material_id: materialId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Este material no tiene denuncias", 400));
+    }
+    return next(buildError("Ya se rechazaron las denuncias de este material", 400));
+  }
 
   const adminId = await getAdminId(req);
   if (!adminId) {
@@ -693,6 +718,16 @@ const ocultarPost = async (req, res, next) => {
       },
     ],
   });
+
+  if (pendientes.length === 0) {
+    const existenDenuncias = await denuncia.count({
+      where: { post_id: postId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Esta publicación no tiene denuncias", 400));
+    }
+    return next(buildError("Ya se rechazaron las denuncias de esta publicación", 400));
+  }
 
   const adminId = await getAdminId(req);
   if (!adminId) {
