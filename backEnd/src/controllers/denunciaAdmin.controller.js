@@ -8,6 +8,7 @@ const {
   post,
   estudiante,
   administrador,
+  usuario,
   sequelize,
 } = db;
 
@@ -554,7 +555,7 @@ const suspenderMaterial = async (req, res, next) => {
   }
 
   const pendientes = await denuncia.findAll({
-    where: { post_id: postId, estado: "pendiente" },
+    where: { material_id: materialId, estado: "pendiente" },
     include: [
       {
         model: estudiante,
