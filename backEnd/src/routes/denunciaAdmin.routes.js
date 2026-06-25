@@ -10,6 +10,7 @@ const {
   materialIdParamSchema,
   postIdParamSchema,
   denunciaAdminIdParamSchema,
+  denunciaIdParamSchema,
 } = require("../validators/denunciaAdmin.validator");
 
 const {
@@ -25,6 +26,7 @@ const {
   restaurarMaterial,
   ocultarPost,
   mostrarPost,
+  rechazarDenuncia,
 } = require("../controllers/denunciaAdmin.controller");
 
 router.get("/admin/denuncias/stats", authMiddleware, requireAdmin, listarStats);
@@ -115,6 +117,14 @@ router.patch(
   requireAdmin,
   validate(denunciaAdminIdParamSchema, "params"),
   mostrarPost
+);
+
+router.patch(
+  "/admin/denuncias/:denunciaId/rechazar",
+  authMiddleware,
+  requireAdmin,
+  validate(denunciaIdParamSchema, "params"),
+  rechazarDenuncia
 );
 
 module.exports = router;

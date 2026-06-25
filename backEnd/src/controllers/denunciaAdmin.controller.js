@@ -445,7 +445,7 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
     if (existenDenuncias === 0) {
       return next(buildError("Este material no tiene denuncias", 400));
     }
-    return next(buildError("Ya se rechazaron las denuncias de este material", 400));
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
   }
 
   const adminId = await getAdminId(req);
@@ -503,7 +503,7 @@ const cambiarEstadoDenunciasPost = (nuevoEstado) => async (req, res, next) => {
     if (pub.oculto) {
       return next(buildError("Ya se ocultó esta publicación", 400));
     }
-    return next(buildError("Ya se rechazaron las denuncias de esta publicación", 400));
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
   }
 
   const adminId = await getAdminId(req);
@@ -586,7 +586,7 @@ const suspenderMaterial = async (req, res, next) => {
     if (existenDenuncias === 0) {
       return next(buildError("Este material no tiene denuncias", 400));
     }
-    return next(buildError("Ya se rechazaron las denuncias de este material", 400));
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
   }
 
   const adminId = await getAdminId(req);
@@ -666,7 +666,7 @@ const restaurarMaterial = async (req, res, next) => {
         admin_revisor_id: null,
       },
       {
-        where: { material_id: materialId },
+        where: { material_id: materialId, estado: "verificada" },
         transaction: t,
       }
     );
@@ -726,7 +726,7 @@ const ocultarPost = async (req, res, next) => {
     if (existenDenuncias === 0) {
       return next(buildError("Esta publicación no tiene denuncias", 400));
     }
-    return next(buildError("Ya se rechazaron las denuncias de esta publicación", 400));
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
   }
 
   const adminId = await getAdminId(req);
@@ -811,7 +811,7 @@ const mostrarPost = async (req, res, next) => {
         admin_revisor_id: null,
       },
       {
-        where: { post_id: postId },
+        where: { post_id: postId, estado: "verificada" },
         transaction: t,
       }
     );
@@ -836,6 +836,80 @@ const mostrarPost = async (req, res, next) => {
   });
 };
 
+const rechazarDenuncia = async (req, res, next) => {
+  const denunciaId = Number(req.params.denunciaId);
+  if (!Number.isInteger(denunciaId) || denunciaId <= 0) {
+    return next(buildError("id de denuncia invalido", 400));
+  }
+
+  const den = await denuncia.findByPk(denunciaId, {
+    include: [
+      { model: material, attributes: ["id", "titulo", "suspendido"] },
+      { model: post, attributes: ["id", "contenido", "oculto"] },
+      {
+        model: estudiante,
+        as: "denunciante",
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
+  });
+
+  if (!den) {
+    return next(buildError("Denuncia no encontrada", 404));
+  }
+
+  if (den.estado === "rechazada") {
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
+  }
+
+  if (den.estado === "verificada") {
+    return next(buildError("Esta denuncia ya fue resuelta", 400));
+  }
+
+  if (den.material?.suspendido) {
+    return next(buildError("Este material ya está suspendido", 400));
+  }
+
+  if (den.post?.oculto) {
+    return next(buildError("Esta publicación ya está oculta", 400));
+  }
+
+  const adminId = await getAdminId(req);
+  if (!adminId) {
+    return next(buildError("Administrador no encontrado", 404));
+  }
+
+  await den.update({
+    estado: "rechazada",
+    fecha_resolucion: new Date(),
+    admin_revisor_id: adminId,
+  });
+
+  const recursoNombre = den.material?.titulo ?? den.post?.contenido ?? "recurso";
+  const recursoAbr = String(recursoNombre).substring(0, 60);
+
+  if (den.denunciante) {
+    await crearNotificacion({
+      usuario_id: den.denunciante.usuario_id,
+      emisor_usuario_id: req.user.sub,
+      titulo: "Denuncia rechazada",
+      tipo: "general",
+      mensaje: `Tu denuncia sobre "${recursoAbr}" fue rechazada.`,
+      referencia_tipo: "denuncia",
+      referencia_id: den.id,
+      action_url: den.material ? "/student/materials" : "/student/home",
+    });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    data: {
+      id: den.id,
+      estado: "rechazada",
+    },
+  });
+};
+
 module.exports = {
   listarStats,
   listarDenuncias,
@@ -849,4 +923,5 @@ module.exports = {
   restaurarMaterial,
   ocultarPost,
   mostrarPost,
+  rechazarDenuncia,
 };

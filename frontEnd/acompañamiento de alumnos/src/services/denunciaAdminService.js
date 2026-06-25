@@ -37,3 +37,6 @@ export const ocultarPostAdmin = (postId) =>
 
 export const mostrarPostAdmin = (postId) =>
   api.patch(`/admin/posts/${postId}/mostrar`);
+
+export const rechazarDenuncia = (denunciaId) =>
+  api.patch(`/admin/denuncias/${denunciaId}/rechazar`);

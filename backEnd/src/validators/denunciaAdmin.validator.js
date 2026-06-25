@@ -23,9 +23,14 @@ const denunciaAdminIdParamSchema = Joi.object({
   id: Joi.number().integer().positive().required(),
 });
 
+const denunciaIdParamSchema = Joi.object({
+  denunciaId: Joi.number().integer().positive().required(),
+});
+
 module.exports = {
   listarDenunciasQuerySchema,
   materialIdParamSchema,
   postIdParamSchema,
   denunciaAdminIdParamSchema,
+  denunciaIdParamSchema,
 };
