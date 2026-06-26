@@ -331,7 +331,6 @@
 .detailInfo {
   padding: 14px 0;
   border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
 }
 
 .detailInfo p {
@@ -356,7 +355,6 @@
 
 .detailPostContent {
   padding: 14px 0;
-  border-bottom: 1px solid #e5e7eb;
   margin-bottom: 10px;
 }
 
@@ -590,6 +588,14 @@
   color: #405a7a;
 }
 
+.complaintCardSelected {
+  background: #e0f7fa;
+}
+
+:global(html.dark) .complaintCardSelected {
+  background: rgba(0, 188, 212, 0.15);
+}
+
 /* Botones visibles */
 
 .rejectButton {
@@ -801,6 +807,11 @@
 :global(html.dark) .suspendButton svg {
   color: #ffffff !important;
   stroke: #ffffff !important;
+}
+
+.rejectButtonHidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .detailOverlay,

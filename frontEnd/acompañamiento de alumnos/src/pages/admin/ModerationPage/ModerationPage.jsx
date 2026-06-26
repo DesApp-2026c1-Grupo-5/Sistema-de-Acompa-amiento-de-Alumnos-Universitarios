@@ -19,10 +19,9 @@ import {
     getDenunciasAdmin,
     getDenunciaMaterialDetail,
     getDenunciaPostDetail,
-    rechazarDenunciasMaterial,
+    rechazarDenuncia,
     suspenderMaterialAdmin,
     restaurarMaterialAdmin,
-    rechazarDenunciasPost,
     ocultarPostAdmin,
     mostrarPostAdmin,
 } from '../../../services/denunciaAdminService';
@@ -127,6 +126,7 @@ function ModerationPage() {
     const [actionError, setActionError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [selectedDenunciaId, setSelectedDenunciaId] = useState(null);
 
     const fetchStats = useCallback(async () => {
         try {
@@ -159,11 +159,14 @@ function ModerationPage() {
             const res = item.tipo === 'material'
                 ? await getDenunciaMaterialDetail(item.id)
                 : await getDenunciaPostDetail(item.id);
-            setSelectedDetail(mapDetail(res.data));
+            const detail = mapDetail(res.data);
+            setSelectedDetail(detail);
+            const primeraPendiente = detail?.denuncias?.find(d => d.estado === 'pendiente');
+            setSelectedDenunciaId(primeraPendiente ? primeraPendiente.id : null);
         } catch (err) {
             setActionError(err.message || 'No pudimos cargar el detalle.');
         }
-    }, []);
+    }, [setSelectedDenunciaId]);
 
     useEffect(() => {
         let cancelled = false;
@@ -210,6 +213,7 @@ function ModerationPage() {
     const handleSelectItem = (item) => {
         setSelectedKey(`${item.tipo}-${item.id}`);
         setActionError('');
+        setSelectedDenunciaId(null);
         fetchDetail(item);
         if (window.innerWidth <= 768) setDetailModalOpen(true);
     };
@@ -220,6 +224,7 @@ function ModerationPage() {
         setActionLoading(true);
         try {
             await actionFn(selectedDetail.id);
+            setSelectedDenunciaId(null);
             await Promise.all([
                 fetchStats(),
                 fetchList({ q: search, estado: statusFilter, page }),
@@ -232,12 +237,9 @@ function ModerationPage() {
         }
     };
 
-    const handleReject = () => {
-        if (!selectedDetail) return;
-        const fn = selectedDetail.tipo === 'material'
-            ? rechazarDenunciasMaterial
-            : rechazarDenunciasPost;
-        runAction(fn);
+    const handleRejectDenuncia = () => {
+        if (!selectedDenunciaId) return;
+        runAction(() => rechazarDenuncia(selectedDenunciaId));
     };
 
     const handleSuspendOcultar = () => {
@@ -276,6 +278,9 @@ function ModerationPage() {
         if (estado === 'rechazada') return styles.complaintRejected;
         return styles.complaintPending;
     };
+
+    const pendienteSeleccionada = selectedDenunciaId &&
+        selectedDetail?.denuncias.some(d => d.id === selectedDenunciaId && d.estado === 'pendiente');
 
     if (loading) {
         return <p className={styles.loading}>Cargando denuncias...</p>;
@@ -489,7 +494,11 @@ function ModerationPage() {
                                 )}
 
                                 {selectedDetail.denuncias.map((denuncia) => (
-                                    <article key={denuncia.id} className={styles.complaintCard}>
+                                    <article
+                                        key={denuncia.id}
+                                        className={`${styles.complaintCard} ${selectedDenunciaId === denuncia.id ? styles.complaintCardSelected : ''}`}
+                                        onClick={denuncia.estado === 'pendiente' ? () => setSelectedDenunciaId(denuncia.id) : undefined}
+                                    >
                                         <div className={styles.complaintHeader}>
                                             <strong>{denuncia.motivo}</strong>
                                             <span className={`${styles.complaintStatus} ${getComplaintStatusClass(denuncia.estado)}`}>
@@ -511,14 +520,13 @@ function ModerationPage() {
                         <div className={styles.actions}>
                             <button
                                 type="button"
-                                className={styles.rejectButton}
-                                onClick={handleReject}
-                                disabled={actionLoading}
+                                className={`${styles.rejectButton} ${pendienteSeleccionada ? '' : styles.rejectButtonHidden}`}
+                                onClick={handleRejectDenuncia}
+                                disabled={!pendienteSeleccionada || actionLoading}
                             >
                                 <XCircle size={16} />
                                 Rechazar denuncia
                             </button>
-
                             <button
                                 type="button"
                                 className={styles.suspendButton}
