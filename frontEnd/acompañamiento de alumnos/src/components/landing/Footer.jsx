@@ -15,11 +15,7 @@ const Footer = () => {
             La plataforma integral para estudiantes universitarios que buscan
             optimizar su trayectoria académica y conectar con su comunidad.
           </p>
-
-          <div className={styles.landingFooter__social}>
-            <span>𝕏</span>
-            <span>Instagram</span>
-          </div>
+          
         </div>
 
         <div className={styles.landingFooter__bottom}>
