@@ -1,8 +1,14 @@
 .page {
+  --bg: #ffffff;
+  --card-bg: #ffffff;
+  --text-h: #000000;
+  --text-p: #1f3757;
+  --border: #dbe3ef;
+
   min-height: 100vh;
   padding: 24px 16px 80px;
-  background: var(--bg, #f8fafc);
-  color: var(--text-h, #111827);
+  background: var(--bg);
+  color: var(--text-h);
   scroll-behavior: smooth;
 }
 
@@ -11,8 +17,8 @@
   margin: 0 auto 24px;
   padding: 32px 22px;
   border-radius: 24px;
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border, #e5e7eb);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
 }
 
@@ -32,7 +38,7 @@
 
 .hero h1 {
   margin: 0 0 12px;
-  color: var(--text-h, #111827);
+  color: var(--text-h);
   font-size: clamp(2rem, 6vw, 3.5rem);
   line-height: 1.05;
 }
@@ -40,14 +46,14 @@
 .hero p {
   max-width: 820px;
   margin: 0 0 18px;
-  color: var(--text-p, #4b5563);
+  color: var(--text-p);
   font-size: 1rem;
   line-height: 1.7;
 }
 
 .updated {
   display: inline-block;
-  color: var(--text-p, #6b7280);
+  color: var(--text-p);
   font-size: 0.92rem;
   font-weight: 700;
 }
@@ -60,6 +66,22 @@
 .content {
   display: grid;
   gap: 18px;
+}
+
+.content section {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  color: #000000;
+}
+
+.content h2,
+.content h3 {
+  color: #000000;
+}
+
+.content p,
+.content li {
+  color: #1f3757;
 }
 
 .faqList {
