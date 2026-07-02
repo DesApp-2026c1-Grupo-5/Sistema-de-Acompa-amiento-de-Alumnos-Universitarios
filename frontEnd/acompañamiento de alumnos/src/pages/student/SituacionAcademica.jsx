@@ -273,6 +273,7 @@ export default function SituacionAcademica() {
         anio: s.academic_year,
         cuatrimestre: s.academic_semester,
         nota: s.grade,
+        fecha: s.fecha,
       }));
       await actualizarMaterias(materias);
       setEditando(false);
@@ -308,21 +309,45 @@ export default function SituacionAcademica() {
   const handleAgregarFinal = async (materiaId) => {
     const fechaInput = document.getElementById(`fecha-${materiaId}`);
     const notaInput = document.getElementById(`nota-${materiaId}`);
+
     if (!fechaInput || !notaInput) return;
+
     const fecha = fechaInput.value;
     const nota = Number(notaInput.value);
+
     if (!fecha || Number.isNaN(nota) || nota < 0 || nota > 10) {
       setError('Completá la fecha y la nota (0-10)');
       return;
     }
-    const estado_materia_id = data.subjects.find((s) => s.materia_id === materiaId)?.finals?.[0]?.estado_materia_id;
+
+    const materia = data.subjects.find((s) => s.materia_id === materiaId);
+
+    if (!materia?.estado_materia_id) {
+      setError('No se encontró el estado académico de esta materia');
+      return;
+    }
+
     try {
       await crearFinal({
-        estado_materia_id: estado_materia_id || materiaId,
+        estado_materia_id: materia.estado_materia_id,
         fecha,
         nota,
         aprobado: nota >= 4,
       });
+
+      if (nota >= 4 && materia.status !== 'aprobada') {
+        await actualizarMaterias([
+          {
+            materia_id: materia.materia_id,
+            estado: 'aprobada',
+            anio: materia.academic_year,
+            cuatrimestre: materia.academic_semester,
+            nota,
+            fecha,
+          },
+        ]);
+      }
+
       await cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al agregar final');
@@ -614,7 +639,15 @@ export default function SituacionAcademica() {
                                     <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
                                   </>
                                 ) : (
-                                  <span>{new Date(f.fecha).toLocaleDateString()}: {f.nota}</span>
+                                  <div className={styles.finalInfo}>
+                                    <span>
+                                      <strong>Fecha:</strong> {new Date(f.fecha).toLocaleDateString()}
+                                    </span>
+
+                                    <span>
+                                      <strong>Nota:</strong> {f.nota}
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                             ))}

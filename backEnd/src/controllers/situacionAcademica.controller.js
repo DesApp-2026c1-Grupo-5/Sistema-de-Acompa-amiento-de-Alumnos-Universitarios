@@ -152,6 +152,7 @@ const buildSubjectDetail = async (situacionId, planId) => {
     const em = estadoPorMateria.get(m.id) || {};
     return {
       materia_id: m.id,
+      estado_materia_id: em.id ?? null,
       name: m.nombre,
       code: m.codigo,
       year_in_career: m.anio_cursada,
