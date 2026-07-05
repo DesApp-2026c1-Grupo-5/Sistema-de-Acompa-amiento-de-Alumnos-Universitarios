@@ -55,7 +55,7 @@
   width: 100%;
   padding: 16px 18px 16px 52px;
   border-radius: 14px;
-  border: 1px solid #aeb8c9;
+  border: 1px solid var(--border);
   background: var(--card-bg);
   color: var(--text-h);
   font-size: 16px;
@@ -79,7 +79,7 @@
   width: 100%;
   margin-top: 10px;
   padding: 8px;
-  border: 1px solid #dbe3ef;
+  border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--card-bg);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
@@ -120,7 +120,7 @@
 }
 
 .studentResult:hover {
-  background: rgba(3, 156, 154, 0.08);
+  background: rgba(3, 156, 154, 0.12);
   transform: translateY(-1px);
 }
 
@@ -132,6 +132,7 @@
   color: #039c9a;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
 }
 
 .studentInfo {
@@ -219,6 +220,60 @@
   50% {
     border-color: transparent;
   }
+}
+
+/* DARK MODE */
+
+:global(.dark) .searchInput,
+:global(.dark-mode) .searchInput,
+:global([data-theme='dark']) .searchInput {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(.dark) .searchInput::placeholder,
+:global(.dark-mode) .searchInput::placeholder,
+:global([data-theme='dark']) .searchInput::placeholder {
+  color: #94a3b8;
+}
+
+:global(.dark) .searchIcon,
+:global(.dark-mode) .searchIcon,
+:global([data-theme='dark']) .searchIcon {
+  color: #94a3b8;
+}
+
+:global(.dark) .searchResults,
+:global(.dark-mode) .searchResults,
+:global([data-theme='dark']) .searchResults {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+:global(.dark) .studentResult:hover,
+:global(.dark-mode) .studentResult:hover,
+:global([data-theme='dark']) .studentResult:hover {
+  background: rgba(3, 156, 154, 0.14);
+}
+
+:global(.dark) .studentInfo strong,
+:global(.dark-mode) .studentInfo strong,
+:global([data-theme='dark']) .studentInfo strong {
+  color: #ffffff;
+}
+
+:global(.dark) .studentInfo small,
+:global(.dark-mode) .studentInfo small,
+:global([data-theme='dark']) .studentInfo small {
+  color: #b7c8e6;
+}
+
+:global(.dark) .searchMessage,
+:global(.dark-mode) .searchMessage,
+:global([data-theme='dark']) .searchMessage {
+  color: #b7c8e6;
 }
 
 @media (max-width: 640px) {
