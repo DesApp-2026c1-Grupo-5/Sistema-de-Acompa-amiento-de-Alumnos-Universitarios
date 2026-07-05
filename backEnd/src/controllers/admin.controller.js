@@ -94,41 +94,48 @@ const obtenerAdmins = async (req, res) => {
 };
 
 const buscarEstudiantes = async (req, res) => {
-  const q = (req.query.q || "").trim();
+  const q = (req.query.q || "").trim().toLowerCase();
 
   if (q.length < 2) {
-    return res.json({
-      ok: true,
-      data: [],
-    });
+    return res.json({ ok: true, data: [] });
   }
 
   const estudiantes = await estudiante.findAll({
     include: {
       model: usuario,
-      attributes: ["email", "activo"],
+      attributes: ["email", "activo", "tipo"],
       where: {
         tipo: "estudiante",
       },
       required: true,
     },
-    where: {
-      [Op.or]: [
-        { nombre_completo: { [Op.like]: `%${q}%` } },
-        { "$usuario.email$": { [Op.like]: `%${q}%` } },
-      ],
-    },
-    limit: 10,
-    order: [["nombre_completo", "ASC"]],
+    order: [["id", "ASC"]],
   });
 
-  const data = estudiantes.map((e) => {
+  const filtrados = estudiantes.filter((e) => {
+    const plain = e.get({ plain: true });
+
+    const nombreCompleto = `${plain.nombre || ""} ${plain.apellido || ""}`.toLowerCase();
+    const nombreVisible = (plain.nombre_completo || "").toLowerCase();
+    const email = (plain.usuario?.email || "").toLowerCase();
+
+    return (
+      nombreCompleto.includes(q) ||
+      nombreVisible.includes(q) ||
+      email.includes(q)
+    );
+  });
+
+  const data = filtrados.slice(0, 10).map((e) => {
     const plain = e.get({ plain: true });
 
     return {
       estudiante_id: plain.id,
       usuario_id: plain.usuario_id,
-      nombre_completo: plain.nombre_completo,
+      nombre_completo:
+        plain.nombre_completo ||
+        `${plain.nombre || ""} ${plain.apellido || ""}`.trim() ||
+        "Estudiante sin nombre",
       email: plain.usuario?.email ?? "",
       activo: plain.usuario?.activo ?? false,
     };

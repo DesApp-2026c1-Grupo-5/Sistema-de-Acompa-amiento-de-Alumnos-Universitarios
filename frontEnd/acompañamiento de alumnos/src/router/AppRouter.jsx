@@ -40,12 +40,12 @@ const router = createBrowserRouter([
     element: <PrivacyPage />,
   },
   {
-  path: '/terminos',
-  element: <TermsPage />,
+    path: '/terminos',
+    element: <TermsPage />,
   },
   {
-  path: '/cookies',
-  element: <InfoNotice />,
+    path: '/cookies',
+    element: <InfoNotice />,
   },
   {
     element: <PrivateRoute requiredTipo="estudiante" />,
@@ -83,7 +83,7 @@ const router = createBrowserRouter([
           },
           {
             path: '/student/report-material/:id',
-            element: <ReportMaterial />, 
+            element: <ReportMaterial />,
           },
           {
             path: '/student/report-publication/:id',
@@ -91,7 +91,7 @@ const router = createBrowserRouter([
           },
           {
             path: '/student/notifications',
-            element: <Notifications />, 
+            element: <Notifications />,
           },
         ],
       },
@@ -106,6 +106,10 @@ const router = createBrowserRouter([
           {
             path: '/admin/home',
             element: <HomeAdmin />,
+          },
+          {
+            path: '/admin/students/:userId/profile',
+            element: <Profile />,
           },
           {
             path: '/admin/careers',
