@@ -115,3 +115,35 @@
   color: var(--text-muted);
   font-size: 18px;
 }
+
+.welcomeSubtitle {
+  margin: 24px 0 0;
+  color: var(--text-muted);
+  font-size: 18px;
+
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  border-right: 2px solid #039c9a;
+
+  animation:
+    typingSubtitle 2.6s steps(36, end) forwards,
+    blinkSubtitleCursor .75s step-end infinite;
+}
+
+@keyframes typingSubtitle {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 36ch;
+  }
+}
+
+@keyframes blinkSubtitleCursor {
+  50% {
+    border-color: transparent;
+  }
+}
