@@ -34,6 +34,53 @@
   animation: pulse 2s infinite;
 }
 
+.searchContainer {
+  margin-top: 36px;
+  width: 100%;
+  max-width: 620px;
+
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+
+  padding: 16px 18px 16px 52px;
+
+  border-radius: 14px;
+  border: 1px solid #bfc7d5;
+
+  background: var(--card-bg);
+  color: var(--text-h);
+
+  font-size: 16px;
+
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #039c9a;
+  box-shadow: 0 0 0 4px rgba(3,156,154,.12);
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;

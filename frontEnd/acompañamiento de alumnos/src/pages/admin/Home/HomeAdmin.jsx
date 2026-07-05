@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Search } from 'lucide-react';
 
 import { useAuth } from '../../../context/useAuth';
 import styles from './Home.module.css';
@@ -26,6 +26,16 @@ function HomeAdmin() {
       <p className={styles.welcomeSubtitle}>
         Panel de Administración de SIVA UNAHUR
       </p>
+
+      <div className={styles.searchContainer}>
+        <Search className={styles.searchIcon} size={20} />
+
+        <input
+          type="text"
+          className={styles.searchInput}
+          placeholder="Buscar estudiante por nombre, apellido o correo..."
+        />
+      </div>
     </div>
   );
 }
