@@ -1,6 +1,8 @@
+const { Op } = require("sequelize");
 const { hashPassword } = require("../utils/password");
 const db = require("../db/models");
-const { usuario, administrador, materia, sequelize } = db;
+
+const { usuario, administrador, estudiante, sequelize } = db;
 
 const crearAdmin = async (req, res) => {
   const { nombre, apellido, email, password } = req.body;
@@ -69,6 +71,7 @@ const obtenerAdmins = async (req, res) => {
 
   const data = rows.map((a) => {
     const plain = a.get({ plain: true });
+
     return {
       id: plain.id,
       nombre: plain.nombre,
@@ -90,24 +93,50 @@ const obtenerAdmins = async (req, res) => {
   });
 };
 
-const getHomeStats = async (req, res) => {
-  const [activeUsers, totalUsers, activeSubjects] = await Promise.all([
-    usuario.count({ where: { activo: true } }),
-    usuario.count(),
-    materia.count(),
-  ]);
+const buscarEstudiantes = async (req, res) => {
+  const q = (req.query.q || "").trim();
 
-  const activityRate = totalUsers > 0
-    ? Math.round((activeUsers / totalUsers) * 100)
-    : 0;
+  if (q.length < 2) {
+    return res.json({
+      ok: true,
+      data: [],
+    });
+  }
+
+  const estudiantes = await estudiante.findAll({
+    include: {
+      model: usuario,
+      attributes: ["email", "activo"],
+      where: {
+        tipo: "estudiante",
+      },
+      required: true,
+    },
+    where: {
+      [Op.or]: [
+        { nombre_completo: { [Op.like]: `%${q}%` } },
+        { "$usuario.email$": { [Op.like]: `%${q}%` } },
+      ],
+    },
+    limit: 10,
+    order: [["nombre_completo", "ASC"]],
+  });
+
+  const data = estudiantes.map((e) => {
+    const plain = e.get({ plain: true });
+
+    return {
+      estudiante_id: plain.id,
+      usuario_id: plain.usuario_id,
+      nombre_completo: plain.nombre_completo,
+      email: plain.usuario?.email ?? "",
+      activo: plain.usuario?.activo ?? false,
+    };
+  });
 
   return res.json({
     ok: true,
-    data: {
-      active_users: activeUsers,
-      active_subjects: activeSubjects,
-      activity_rate: activityRate,
-    },
+    data,
   });
 };
 
@@ -123,7 +152,6 @@ const eliminarAdmin = async (req, res) => {
     });
   }
 
-  // Evita eliminarse a sí mismo
   if (admin.usuario_id === req.user.sub) {
     return res.status(400).json({
       ok: false,
@@ -153,5 +181,5 @@ module.exports = {
   crearAdmin,
   obtenerAdmins,
   eliminarAdmin,
-  getHomeStats,
+  buscarEstudiantes,
 };

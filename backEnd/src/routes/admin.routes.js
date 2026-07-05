@@ -2,7 +2,11 @@ const express = require("express");
 const authMiddleware = require("../middlewares/auth.middleware");
 const requireAdmin = require("../middlewares/requireAdmin.middleware");
 const validate = require("../middlewares/validate.middleware");
-const { createAdminSchema, adminIdParamSchema, listarAdminsQuerySchema } = require("../validators/admin.validator");
+const {
+  createAdminSchema,
+  adminIdParamSchema,
+  listarAdminsQuerySchema,
+} = require("../validators/admin.validator");
 const adminController = require("../controllers/admin.controller");
 
 const router = express.Router();
@@ -32,10 +36,10 @@ router.delete(
 );
 
 router.get(
-  "/admin/home/stats",
+  "/admin/home/students/search",
   authMiddleware,
   requireAdmin,
-  adminController.getHomeStats
+  adminController.buscarEstudiantes
 );
 
 module.exports = router;

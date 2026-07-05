@@ -1,3 +1,12 @@
 import { api } from "./api";
 
-export const getAdminHomeStats = () => api.get("/admin/home/stats");
+/**
+ * Busca estudiantes por nombre, apellido o email.
+ * @param {string} query
+ */
+export const buscarEstudiantesAdmin = (query) =>
+  api.get("/admin/home/students/search", {
+    params: {
+      q: query,
+    },
+  });
