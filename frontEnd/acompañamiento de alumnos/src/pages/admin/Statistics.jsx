@@ -41,20 +41,32 @@ export default function Statistics() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const cargarEstadisticas = async () => {
       try {
-        const res = await getAdminStats();
+        setError(null);
+
+        const res = await getAdminStats(ratingOrder);
+
         if (cancelled) return;
+
         setData(res?.data ?? null);
       } catch (err) {
         if (cancelled) return;
-        setError(err.message || 'No se pudieron cargar las estadísticas');
+
+        setError(
+          err.message ||
+          'No se pudieron cargar las estadísticas'
+        );
       }
-    })();
+    };
+
+    cargarEstadisticas();
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [ratingOrder]);
 
   if (error) {
     return <p className={styles.loading}>{error}</p>;
@@ -65,7 +77,9 @@ export default function Statistics() {
   }
 
   const currentData =
-    activeTab === 'uso' ? data.usoSistema : data.reportesSociales;
+    activeTab === 'uso'
+      ? data.usoSistema
+      : data.reportesSociales;
 
   return (
     <section className={styles.page}>
@@ -77,6 +91,7 @@ export default function Statistics() {
       <section className={styles.filtersCard}>
         <div className={styles.filterGroup}>
           <label>Período</label>
+
           <select>
             <option>Últimos 7 días</option>
             <option>Últimos 30 días</option>
@@ -86,6 +101,7 @@ export default function Statistics() {
 
         <div className={styles.filterGroup}>
           <label>Carrera</label>
+
           <select>
             <option>Todas las carreras</option>
             <option>Lic. en Sistemas</option>
@@ -97,6 +113,7 @@ export default function Statistics() {
 
         <div className={styles.filterGroup}>
           <label>Plan de estudios</label>
+
           <select>
             <option>Todos los planes</option>
             <option>Plan 2023</option>
@@ -107,6 +124,7 @@ export default function Statistics() {
 
         <div className={styles.filterGroup}>
           <label>Año académico</label>
+
           <select>
             <option>Todos</option>
             <option>2026</option>
@@ -120,14 +138,22 @@ export default function Statistics() {
 
       <div className={styles.tabs}>
         <button
-          className={activeTab === 'uso' ? styles.activeTab : ''}
+          className={
+            activeTab === 'uso'
+              ? styles.activeTab
+              : ''
+          }
           onClick={() => setActiveTab('uso')}
         >
           Reportes de Uso del Sistema
         </button>
 
         <button
-          className={activeTab === 'social' ? styles.activeTab : ''}
+          className={
+            activeTab === 'social'
+              ? styles.activeTab
+              : ''
+          }
           onClick={() => setActiveTab('social')}
         >
           Reportes Sociales
@@ -139,18 +165,24 @@ export default function Statistics() {
           const Icon = icons[metric.icon];
 
           return (
-            <article className={styles.metricCard} key={metric.id}>
+            <article
+              className={styles.metricCard}
+              key={metric.id}
+            >
               <div className={styles.metricTop}>
-                <div className={`${styles.metricIcon} ${styles[metric.icon]}`}>
+                <div
+                  className={`${styles.metricIcon} ${styles[metric.icon]}`}
+                >
                   <Icon size={21} />
                 </div>
 
                 {metric.trend && (
                   <span
-                    className={`${styles.trend} ${metric.trendType === 'negative'
-                      ? styles.negative
-                      : styles.positive
-                      }`}
+                    className={`${styles.trend} ${
+                      metric.trendType === 'negative'
+                        ? styles.negative
+                        : styles.positive
+                    }`}
                   >
                     ↗ {metric.trend}
                   </span>
@@ -171,19 +203,29 @@ export default function Statistics() {
           setRatingOrder={setRatingOrder}
         />
       ) : (
-        <ReportesSociales data={data.reportesSociales} />
+        <ReportesSociales
+          data={data.reportesSociales}
+        />
       )}
     </section>
   );
 }
 
-function UsoSistema({ data, ratingOrder, setRatingOrder }) {
+function UsoSistema({
+  data,
+  ratingOrder,
+  setRatingOrder,
+}) {
   const sesionesData = useMemo(
     () =>
-      data.sesionesPeriodo.months.map((m, i) => ({
-        month: m,
-        value: data.sesionesPeriodo.data?.[i] ?? 0,
-      })),
+      data.sesionesPeriodo.months.map(
+        (month, index) => ({
+          month,
+          value:
+            data.sesionesPeriodo.data?.[index] ??
+            0,
+        })
+      ),
     [data.sesionesPeriodo]
   );
 
@@ -210,7 +252,9 @@ function UsoSistema({ data, ratingOrder, setRatingOrder }) {
         />
       </div>
 
-      <CareerSubjectsCard items={data.materiasPorCarrera} />
+      <CareerSubjectsCard
+        items={data.materiasPorCarrera}
+      />
 
       <MonthlyLineChart
         title="Sesiones de estudio creadas por período"
@@ -226,15 +270,21 @@ function UsoSistema({ data, ratingOrder, setRatingOrder }) {
       />
 
       <div className={styles.twoColumns}>
-        <ModerationStats stats={data.moderacion} />
-        <ModerationDonut stats={data.moderacion} />
+        <ModerationStats
+          stats={data.moderacion}
+        />
+
+        <ModerationDonut
+          stats={data.moderacion}
+        />
       </div>
     </>
   );
 }
 
 function ReportesSociales({ data }) {
-  const conexionesData = data.distribucionConexionesData || [];
+  const conexionesData =
+    data.distribucionConexionesData || [];
 
   return (
     <>
@@ -254,24 +304,72 @@ function ReportesSociales({ data }) {
         <OccupancyCard data={data.ocupacion} />
       </div>
 
-      <ActiveCareersTable items={data.carrerasActivas} />
+      <ActiveCareersTable
+        items={data.carrerasActivas}
+      />
     </>
   );
 }
 
-function MonthlyLineChart({ title, data, footerLeft, footerRight }) {
+function MonthlyLineChart({
+  title,
+  data,
+  footerLeft,
+  footerRight,
+}) {
   return (
     <section className={styles.chartCard}>
       <h2>{title}</h2>
 
-      <div style={{ width: '100%', height: 220 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 20, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="#e5e7eb" vertical={false} />
-            <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#405a7a' }} />
-            <YAxis tick={{ fontSize: 11, fill: '#405a7a' }} allowDecimals={false} />
+      <div
+        style={{
+          width: '100%',
+          height: 220,
+        }}
+      >
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+          <LineChart
+            data={data}
+            margin={{
+              top: 8,
+              right: 20,
+              bottom: 0,
+              left: 0,
+            }}
+          >
+            <CartesianGrid
+              stroke="#e5e7eb"
+              vertical={false}
+            />
+
+            <XAxis
+              dataKey="month"
+              tick={{
+                fontSize: 11,
+                fill: '#405a7a',
+              }}
+            />
+
+            <YAxis
+              tick={{
+                fontSize: 11,
+                fill: '#405a7a',
+              }}
+              allowDecimals={false}
+            />
+
             <Tooltip />
-            <Line type="monotone" dataKey="value" stroke="#00a8c7" strokeWidth={2} dot={{ r: 3 }} />
+
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#00a8c7"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -286,19 +384,61 @@ function MonthlyLineChart({ title, data, footerLeft, footerRight }) {
   );
 }
 
-function DistributionBarChart({ title, data }) {
+function DistributionBarChart({
+  title,
+  data,
+}) {
   return (
     <section className={styles.chartCard}>
       <h2>{title}</h2>
 
-      <div style={{ width: '100%', height: 220 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 20, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="#e5e7eb" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#405a7a' }} />
-            <YAxis tick={{ fontSize: 11, fill: '#405a7a' }} allowDecimals={false} />
+      <div
+        style={{
+          width: '100%',
+          height: 220,
+        }}
+      >
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+          <BarChart
+            data={data}
+            margin={{
+              top: 8,
+              right: 20,
+              bottom: 0,
+              left: 0,
+            }}
+          >
+            <CartesianGrid
+              stroke="#e5e7eb"
+              vertical={false}
+            />
+
+            <XAxis
+              dataKey="label"
+              tick={{
+                fontSize: 11,
+                fill: '#405a7a',
+              }}
+            />
+
+            <YAxis
+              tick={{
+                fontSize: 11,
+                fill: '#405a7a',
+              }}
+              allowDecimals={false}
+            />
+
             <Tooltip />
-            <Bar dataKey="students" fill="#00a8c7" radius={[4, 4, 0, 0]} />
+
+            <Bar
+              dataKey="students"
+              fill="#00a8c7"
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -306,25 +446,41 @@ function DistributionBarChart({ title, data }) {
   );
 }
 
-function DistributionCard({ title, items, valueKey, valueLabel }) {
+function DistributionCard({
+  title,
+  items,
+  valueKey,
+  valueLabel,
+}) {
   return (
-    <section className={`${styles.card} ${styles.scrollTableCard}`}>
+    <section
+      className={`${styles.card} ${styles.scrollTableCard}`}
+    >
       <h2>{title}</h2>
 
       <div className={styles.distributionList}>
         {items.map((item) => (
-          <div className={styles.distributionItem} key={item.label}>
-            <div className={styles.distributionHeader}>
+          <div
+            className={styles.distributionItem}
+            key={item.label}
+          >
+            <div
+              className={styles.distributionHeader}
+            >
               <span>{item.label}</span>
+
               <span>
-                {item[valueKey]} {valueLabel} ({item.percentage}%)
+                {item[valueKey]} {valueLabel}{' '}
+                ({item.percentage}%)
               </span>
             </div>
 
             <div className={styles.barTrack}>
               <div
                 className={styles.barFill}
-                style={{ width: `${item.percentage}%` }}
+                style={{
+                  width: `${item.percentage}%`,
+                }}
               />
             </div>
           </div>
@@ -335,8 +491,15 @@ function DistributionCard({ title, items, valueKey, valueLabel }) {
 }
 
 function CareerSubjectsCard({ items }) {
-  const maxCursadas = Math.max(...items.map((item) => item.cursadas));
-  const maxAprobadas = Math.max(...items.map((item) => item.aprobadas));
+  const maxCursadas = Math.max(
+    1,
+    ...items.map((item) => item.cursadas)
+  );
+
+  const maxAprobadas = Math.max(
+    1,
+    ...items.map((item) => item.aprobadas)
+  );
 
   return (
     <section className={styles.card}>
@@ -344,29 +507,50 @@ function CareerSubjectsCard({ items }) {
 
       <div className={styles.careerList}>
         {items.map((item) => (
-          <div className={styles.careerRow} key={item.career}>
+          <div
+            className={styles.careerRow}
+            key={item.career}
+          >
             <h3>{item.career}</h3>
 
             <div className={styles.careerBars}>
               <div>
                 <span>Cursadas</span>
+
                 <div className={styles.barLine}>
                   <div
                     className={styles.barCyan}
-                    style={{ width: `${(item.cursadas / maxCursadas) * 100}%` }}
+                    style={{
+                      width: `${
+                        (item.cursadas /
+                          maxCursadas) *
+                        100
+                      }%`,
+                    }}
                   />
+
                   <strong>{item.cursadas}</strong>
                 </div>
               </div>
 
               <div>
                 <span>Aprobadas</span>
+
                 <div className={styles.barLine}>
                   <div
                     className={styles.barGreen}
-                    style={{ width: `${(item.aprobadas / maxAprobadas) * 100}%` }}
+                    style={{
+                      width: `${
+                        (item.aprobadas /
+                          maxAprobadas) *
+                        100
+                      }%`,
+                    }}
                   />
-                  <strong>{item.aprobadas}</strong>
+
+                  <strong>
+                    {item.aprobadas}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -382,28 +566,12 @@ function TopMaterialsTable({
   ratingOrder,
   setRatingOrder,
 }) {
-  const sortedItems = useMemo(() => {
-    const copy = [...items];
-
-    if (ratingOrder === 'desc') {
-      return copy.sort(
-        (a, b) => Number(b.rating) - Number(a.rating)
-      );
-    }
-
-    if (ratingOrder === 'asc') {
-      return copy.sort(
-        (a, b) => Number(a.rating) - Number(b.rating)
-      );
-    }
-
-    return copy;
-  }, [items, ratingOrder]);
-
   return (
     <section className={styles.card}>
       <div className={styles.tableTitleRow}>
-        <h2>Materias con más materiales compartidos</h2>
+        <h2>
+          Materias con más materiales compartidos
+        </h2>
 
         <div className={styles.ratingFilter}>
           <label htmlFor="rating-order">
@@ -413,12 +581,18 @@ function TopMaterialsTable({
           <select
             id="rating-order"
             value={ratingOrder}
-            onChange={(e) => setRatingOrder(e.target.value)}
+            onChange={(event) =>
+              setRatingOrder(event.target.value)
+            }
           >
-            <option value="default">Orden original</option>
+            <option value="default">
+              Orden original
+            </option>
+
             <option value="desc">
               Mayor a menor
             </option>
+
             <option value="asc">
               Menor a mayor
             </option>
@@ -437,11 +611,17 @@ function TopMaterialsTable({
         </thead>
 
         <tbody>
-          {sortedItems.map((item, index) => (
-            <tr key={`${item.subject}-${item.position}`}>
+          {items.map((item) => (
+            <tr
+              key={`${item.subject}-${item.position}`}
+            >
               <td>
-                <span className={styles.positionBadge}>
-                  {index + 1}
+                <span
+                  className={
+                    styles.positionBadge
+                  }
+                >
+                  {item.position}
                 </span>
               </td>
 
@@ -472,17 +652,29 @@ function ModerationStats({ stats }) {
           <span>Total de denuncias</span>
           <strong>{stats.total}</strong>
         </p>
+
         <p>
           <span>Denuncias pendientes</span>
-          <strong className={styles.orange}>{stats.pendientes}</strong>
+
+          <strong className={styles.orange}>
+            {stats.pendientes}
+          </strong>
         </p>
+
         <p>
           <span>Denuncias aceptadas</span>
-          <strong className={styles.red}>{stats.aceptadas}</strong>
+
+          <strong className={styles.red}>
+            {stats.aceptadas}
+          </strong>
         </p>
+
         <p>
           <span>Denuncias rechazadas</span>
-          <strong className={styles.green}>{stats.rechazadas}</strong>
+
+          <strong className={styles.green}>
+            {stats.rechazadas}
+          </strong>
         </p>
       </div>
     </section>
@@ -491,21 +683,39 @@ function ModerationStats({ stats }) {
 
 function ModerationDonut({ stats }) {
   const total = stats.total || 0;
-  const pPct = total > 0 ? (stats.pendientes / total) * 100 : 0;
-  const aPct = total > 0 ? (stats.aceptadas / total) * 100 : 0;
+
+  const pPct =
+    total > 0
+      ? (stats.pendientes / total) * 100
+      : 0;
+
+  const aPct =
+    total > 0
+      ? (stats.aceptadas / total) * 100
+      : 0;
+
   const donutStyle =
     total > 0
       ? {
-        background: `conic-gradient(#f59e0b 0 ${pPct}%, #ef4444 ${pPct}% ${pPct + aPct}%, #22c55e ${pPct + aPct}% 100%)`,
-      }
-      : { background: '#e5e7eb' };
+          background: `conic-gradient(
+            #f59e0b 0 ${pPct}%,
+            #ef4444 ${pPct}% ${pPct + aPct}%,
+            #22c55e ${pPct + aPct}% 100%
+          )`,
+        }
+      : {
+          background: '#e5e7eb',
+        };
 
   return (
     <section className={styles.card}>
       <h2>Distribución de denuncias</h2>
 
       <div className={styles.donutWrapper}>
-        <div className={styles.donut} style={donutStyle}>
+        <div
+          className={styles.donut}
+          style={donutStyle}
+        >
           <div>
             <strong>{stats.total}</strong>
             <span>Total</span>
@@ -514,18 +724,45 @@ function ModerationDonut({ stats }) {
       </div>
 
       <div className={styles.legend}>
-        <span><i className={styles.legendOrange} />Pendientes</span>
-        <span><i className={styles.legendRed} />Aceptadas</span>
-        <span><i className={styles.legendGreen} />Rechazadas</span>
+        <span>
+          <i
+            className={
+              styles.legendOrange
+            }
+          />
+          Pendientes
+        </span>
+
+        <span>
+          <i
+            className={
+              styles.legendRed
+            }
+          />
+          Aceptadas
+        </span>
+
+        <span>
+          <i
+            className={
+              styles.legendGreen
+            }
+          />
+          Rechazadas
+        </span>
       </div>
     </section>
   );
 }
 
 function OccupancyCard({ data }) {
-  const pct = data.percentage || 0;
+  const percentage = data.percentage || 0;
+
   const donutStyle = {
-    background: `conic-gradient(#06b6d4 0 ${pct}%, #e5e7eb ${pct}% 100%)`,
+    background: `conic-gradient(
+      #06b6d4 0 ${percentage}%,
+      #e5e7eb ${percentage}% 100%
+    )`,
   };
 
   return (
@@ -533,9 +770,15 @@ function OccupancyCard({ data }) {
       <h2>Tasa de ocupación de sesiones</h2>
 
       <div className={styles.donutWrapper}>
-        <div className={styles.occupancyDonut} style={donutStyle}>
+        <div
+          className={styles.occupancyDonut}
+          style={donutStyle}
+        >
           <div>
-            <strong>{data.percentage}%</strong>
+            <strong>
+              {data.percentage}%
+            </strong>
+
             <span>Ocupación</span>
           </div>
         </div>
@@ -544,12 +787,18 @@ function OccupancyCard({ data }) {
       <div className={styles.occupancyRows}>
         <p>
           <span>Cupos llenos</span>
-          <strong>{data.cuposLlenos} sesiones</strong>
+
+          <strong>
+            {data.cuposLlenos} sesiones
+          </strong>
         </p>
 
         <p>
           <span>Con disponibilidad</span>
-          <strong>{data.conDisponibilidad} sesiones</strong>
+
+          <strong>
+            {data.conDisponibilidad} sesiones
+          </strong>
         </p>
       </div>
     </section>
@@ -559,7 +808,9 @@ function OccupancyCard({ data }) {
 function ActiveCareersTable({ items }) {
   return (
     <section className={styles.card}>
-      <h2>Carreras con comunidad más activa</h2>
+      <h2>
+        Carreras con comunidad más activa
+      </h2>
 
       <table className={styles.table}>
         <thead>
@@ -577,15 +828,32 @@ function ActiveCareersTable({ items }) {
           {items.map((item) => (
             <tr key={item.position}>
               <td>
-                <span className={styles.purpleBadge}>{item.position}</span>
+                <span
+                  className={
+                    styles.purpleBadge
+                  }
+                >
+                  {item.position}
+                </span>
               </td>
+
               <td>{item.career}</td>
               <td>{item.posts}</td>
               <td>{item.sessions}</td>
               <td>{item.interactions}</td>
+
               <td>
-                <div className={styles.scoreCell}>
-                  <span style={{ width: `${item.score}%` }} />
+                <div
+                  className={
+                    styles.scoreCell
+                  }
+                >
+                  <span
+                    style={{
+                      width: `${item.score}%`,
+                    }}
+                  />
+
                   <strong>{item.score}</strong>
                 </div>
               </td>

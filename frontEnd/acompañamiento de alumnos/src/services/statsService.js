@@ -1,3 +1,6 @@
 import { api } from "./api";
 
-export const getAdminStats = () => api.get("/admin/stats");
+export const getAdminStats = (ratingOrder = "default") =>
+  api.get(
+    `/admin/stats?ratingOrder=${encodeURIComponent(ratingOrder)}`
+  );
