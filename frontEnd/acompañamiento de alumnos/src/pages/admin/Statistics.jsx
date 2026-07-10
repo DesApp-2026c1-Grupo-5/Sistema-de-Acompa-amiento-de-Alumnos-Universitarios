@@ -37,6 +37,7 @@ export default function Statistics() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('uso');
+  const [ratingOrder, setRatingOrder] = useState('default');
 
   useEffect(() => {
     let cancelled = false;
@@ -147,8 +148,8 @@ export default function Statistics() {
                 {metric.trend && (
                   <span
                     className={`${styles.trend} ${metric.trendType === 'negative'
-                        ? styles.negative
-                        : styles.positive
+                      ? styles.negative
+                      : styles.positive
                       }`}
                   >
                     ↗ {metric.trend}
@@ -164,7 +165,11 @@ export default function Statistics() {
       </section>
 
       {activeTab === 'uso' ? (
-        <UsoSistema data={data.usoSistema} />
+        <UsoSistema
+          data={data.usoSistema}
+          ratingOrder={ratingOrder}
+          setRatingOrder={setRatingOrder}
+        />
       ) : (
         <ReportesSociales data={data.reportesSociales} />
       )}
@@ -172,7 +177,7 @@ export default function Statistics() {
   );
 }
 
-function UsoSistema({ data }) {
+function UsoSistema({ data, ratingOrder, setRatingOrder }) {
   const sesionesData = useMemo(
     () =>
       data.sesionesPeriodo.months.map((m, i) => ({
@@ -214,7 +219,11 @@ function UsoSistema({ data }) {
         footerRight={`Promedio mensual: ${data.sesionesPeriodo.promedio}`}
       />
 
-      <TopMaterialsTable items={data.materiasConMasMateriales} />
+      <TopMaterialsTable
+        items={data.materiasConMasMateriales}
+        ratingOrder={ratingOrder}
+        setRatingOrder={setRatingOrder}
+      />
 
       <div className={styles.twoColumns}>
         <ModerationStats stats={data.moderacion} />
@@ -368,10 +377,54 @@ function CareerSubjectsCard({ items }) {
   );
 }
 
-function TopMaterialsTable({ items }) {
+function TopMaterialsTable({
+  items,
+  ratingOrder,
+  setRatingOrder,
+}) {
+  const sortedItems = useMemo(() => {
+    const copy = [...items];
+
+    if (ratingOrder === 'desc') {
+      return copy.sort(
+        (a, b) => Number(b.rating) - Number(a.rating)
+      );
+    }
+
+    if (ratingOrder === 'asc') {
+      return copy.sort(
+        (a, b) => Number(a.rating) - Number(b.rating)
+      );
+    }
+
+    return copy;
+  }, [items, ratingOrder]);
+
   return (
     <section className={styles.card}>
-      <h2>Materias con más materiales compartidos</h2>
+      <div className={styles.tableTitleRow}>
+        <h2>Materias con más materiales compartidos</h2>
+
+        <div className={styles.ratingFilter}>
+          <label htmlFor="rating-order">
+            Ordenar valoración
+          </label>
+
+          <select
+            id="rating-order"
+            value={ratingOrder}
+            onChange={(e) => setRatingOrder(e.target.value)}
+          >
+            <option value="default">Orden original</option>
+            <option value="desc">
+              Mayor a menor
+            </option>
+            <option value="asc">
+              Menor a mayor
+            </option>
+          </select>
+        </div>
+      </div>
 
       <table className={styles.table}>
         <thead>
@@ -384,13 +437,17 @@ function TopMaterialsTable({ items }) {
         </thead>
 
         <tbody>
-          {items.map((item) => (
-            <tr key={item.position}>
+          {sortedItems.map((item, index) => (
+            <tr key={`${item.subject}-${item.position}`}>
               <td>
-                <span className={styles.positionBadge}>{item.position}</span>
+                <span className={styles.positionBadge}>
+                  {index + 1}
+                </span>
               </td>
+
               <td>{item.subject}</td>
               <td>{item.materials}</td>
+
               <td>
                 <span className={styles.rating}>
                   <ThumbsUp size={15} />
@@ -439,8 +496,8 @@ function ModerationDonut({ stats }) {
   const donutStyle =
     total > 0
       ? {
-          background: `conic-gradient(#f59e0b 0 ${pPct}%, #ef4444 ${pPct}% ${pPct + aPct}%, #22c55e ${pPct + aPct}% 100%)`,
-        }
+        background: `conic-gradient(#f59e0b 0 ${pPct}%, #ef4444 ${pPct}% ${pPct + aPct}%, #22c55e ${pPct + aPct}% 100%)`,
+      }
       : { background: '#e5e7eb' };
 
   return (

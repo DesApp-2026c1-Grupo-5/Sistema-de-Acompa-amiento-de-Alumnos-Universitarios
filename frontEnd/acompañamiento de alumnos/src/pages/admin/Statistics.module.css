@@ -226,6 +226,52 @@
   font-weight: 700;
 }
 
+.tableTitleRow {
+  margin-bottom: 22px;
+
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tableTitleRow h2 {
+  margin: 0;
+}
+
+.ratingFilter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ratingFilter label {
+  color: #405a7a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ratingFilter select {
+  min-width: 160px;
+  height: 32px;
+  padding: 0 10px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #020617;
+
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ratingFilter select:focus {
+  outline: none;
+  border-color: #08a8a8;
+  box-shadow: 0 0 0 2px rgba(8, 168, 168, 0.15);
+}
+
 .emptyChart {
   height: 220px;
 
@@ -474,8 +520,8 @@
   background: conic-gradient(#06b6d4 0 78%, #f1f5f9 78% 100%);
 }
 
-.donut > div,
-.occupancyDonut > div {
+.donut>div,
+.occupancyDonut>div {
   width: 82px;
   height: 82px;
 
@@ -569,6 +615,7 @@
 }
 
 @media (max-width: 900px) {
+
   .filtersCard,
   .metricsGrid,
   .twoColumns,
@@ -697,8 +744,8 @@
 
 /* DONUTS */
 
-:global(html.dark) .donut > div,
-:global(html.dark) .occupancyDonut > div {
+:global(html.dark) .donut>div,
+:global(html.dark) .occupancyDonut>div {
   background: #1b2942;
 }
 
@@ -706,20 +753,16 @@
 
 :global(html.dark) .occupancyDonut {
   background:
-    conic-gradient(
-      #14c8e3 0 78%,
-      #334155 78% 100%
-    );
+    conic-gradient(#14c8e3 0 78%,
+      #334155 78% 100%);
 }
 
 /* DISTRIBUCION DONUT */
 
 :global(html.dark) .donut {
   background:
-    conic-gradient(
-      #ff2d3f 0 30%,
-      #00d65a 30% 100%
-    );
+    conic-gradient(#ff2d3f 0 30%,
+      #00d65a 30% 100%);
 }
 
 /* SCORE */
@@ -754,6 +797,24 @@
   color: #ffffff;
 }
 
+/*FILTER*/
+
+:global(html.dark) .ratingFilter label {
+  color: #9db1ce;
+}
+
+:global(html.dark) .ratingFilter select,
+:global(html.dark) .ratingFilter select option {
+  background: #081226;
+  border-color: #31415f;
+  color: #ffffff;
+}
+
+:global(html.dark) .ratingFilter select:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+}
+
 @media (max-width: 640px) {
   .card {
     overflow-x: auto;
@@ -784,5 +845,13 @@
   :global(html.dark) .card::-webkit-scrollbar-thumb {
     background: #31415f;
   }
-}
 
+  .tableTitleRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ratingFilter select {
+    width: 100%;
+  }
+}
