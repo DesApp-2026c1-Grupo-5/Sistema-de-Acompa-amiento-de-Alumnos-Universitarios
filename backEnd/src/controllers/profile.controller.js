@@ -274,6 +274,7 @@ const obtenerPerfilPorId = async (req, res, next) => {
         user: {
           initials: getInitials(estudianteData.nombre, estudianteData.apellido),
           name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+          activo: estudianteData.usuario.activo,
           foto_url: estudianteData.foto_url,
           privacidad,
         },
@@ -296,6 +297,7 @@ const obtenerPerfilPorId = async (req, res, next) => {
       user: {
         initials: getInitials(estudianteData.nombre, estudianteData.apellido),
         name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+        activo: estudianteData.usuario.activo,
         career,
         location: null,
         email: !esDueno && estudianteData.email_visible === false ? null : estudianteData.usuario.email,

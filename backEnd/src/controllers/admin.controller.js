@@ -180,6 +180,70 @@ const buscarEstudiantes = async (req, res) => {
   });
 };
 
+const cambiarEstadoEstudiante = async (req, res) => {
+  const estudianteId = Number(req.params.id);
+  const { activo } = req.body;
+
+  if (!Number.isInteger(estudianteId) || estudianteId <= 0) {
+    return res.status(400).json({
+      ok: false,
+      message: "El ID del estudiante no es válido",
+    });
+  }
+
+  if (typeof activo !== "boolean") {
+    return res.status(400).json({
+      ok: false,
+      message: "El campo activo debe ser booleano",
+    });
+  }
+
+  const estudianteData = await estudiante.findByPk(estudianteId, {
+    include: {
+      model: usuario,
+      attributes: ["id", "email", "tipo", "activo"],
+    },
+  });
+
+  if (!estudianteData) {
+    return res.status(404).json({
+      ok: false,
+      message: "Estudiante no encontrado",
+    });
+  }
+
+  if (!estudianteData.usuario) {
+    return res.status(404).json({
+      ok: false,
+      message: "La cuenta del estudiante no fue encontrada",
+    });
+  }
+
+  if (estudianteData.usuario.tipo !== "estudiante") {
+    return res.status(400).json({
+      ok: false,
+      message: "La cuenta indicada no pertenece a un estudiante",
+    });
+  }
+
+  await estudianteData.usuario.update({
+    activo,
+  });
+
+  return res.status(200).json({
+    ok: true,
+    message: activo
+      ? "Cuenta reactivada correctamente"
+      : "Cuenta suspendida correctamente",
+    data: {
+      estudiante_id: estudianteData.id,
+      usuario_id: estudianteData.usuario.id,
+      email: estudianteData.usuario.email,
+      activo: estudianteData.usuario.activo,
+    },
+  });
+};
+
 const eliminarAdmin = async (req, res) => {
   const { id } = req.params;
 
@@ -222,4 +286,5 @@ module.exports = {
   obtenerAdmins,
   eliminarAdmin,
   buscarEstudiantes,
+  cambiarEstadoEstudiante
 };

@@ -42,4 +42,11 @@ router.get(
   adminController.buscarEstudiantes
 );
 
+router.patch(
+  "/admin/estudiantes/:id/estado",
+  authMiddleware,
+  requireAdmin,
+  adminController.cambiarEstadoEstudiante
+);
+
 module.exports = router;
