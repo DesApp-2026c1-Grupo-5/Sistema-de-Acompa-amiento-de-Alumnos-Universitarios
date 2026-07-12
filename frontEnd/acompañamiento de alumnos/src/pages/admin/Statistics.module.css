@@ -20,45 +20,6 @@
   font-size: 14px;
 }
 
-.filtersCard {
-  min-height: 92px;
-  padding: 18px;
-
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  align-items: end;
-  gap: 14px;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-
-  background: #ffffff;
-}
-
-.filterGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filterGroup label {
-  color: #405a7a;
-  font-size: 12px;
-}
-
-.filterGroup select {
-  height: 32px;
-  padding: 0 12px;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 9px;
-
-  background: #ffffff;
-  color: #020617;
-
-  font-size: 13px;
-}
-
 .exportButton {
   height: 32px;
 
@@ -237,39 +198,6 @@
 
 .tableTitleRow h2 {
   margin: 0;
-}
-
-.ratingFilter {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ratingFilter label {
-  color: #405a7a;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.ratingFilter select {
-  min-width: 160px;
-  height: 32px;
-  padding: 0 10px;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 9px;
-
-  background: #ffffff;
-  color: #020617;
-
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.ratingFilter select:focus {
-  outline: none;
-  border-color: #08a8a8;
-  box-shadow: 0 0 0 2px rgba(8, 168, 168, 0.15);
 }
 
 .emptyChart {
@@ -797,24 +725,6 @@
   color: #ffffff;
 }
 
-/*FILTER*/
-
-:global(html.dark) .ratingFilter label {
-  color: #9db1ce;
-}
-
-:global(html.dark) .ratingFilter select,
-:global(html.dark) .ratingFilter select option {
-  background: #081226;
-  border-color: #31415f;
-  color: #ffffff;
-}
-
-:global(html.dark) .ratingFilter select:focus {
-  border-color: #22d3ee;
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
-}
-
 @media (max-width: 640px) {
   .card {
     overflow-x: auto;
@@ -851,7 +761,10 @@
     align-items: stretch;
   }
 
-  .ratingFilter select {
-    width: 100%;
-  }
+}
+
+.emptyText {
+  margin: 0;
+  color: #405a7a;
+  font-size: 13px;
 }
