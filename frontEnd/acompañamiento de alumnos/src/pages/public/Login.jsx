@@ -86,14 +86,23 @@ const Login = () => {
       const user = await login(email, password);
       navigate(redirectFor(user));
     } catch (err) {
-      if (err.status === 401) {
+      if (err.status === 403 || err.suspended) {
+        setLoginError(
+          err.message ||
+            "Tu cuenta está suspendida. Para más información contactate con ayuda@sivaunahur.com"
+        );
+        flagLoginFields([]);
+      } else if (err.status === 401) {
         setLoginError("Email o contraseña incorrectos.");
         flagLoginFields(["email", "password"]);
       } else if (err.status === 400 && err.details?.[0]) {
         setLoginError(err.details[0].message);
         flagLoginFields([err.details[0].field]);
       } else {
-        setLoginError(err.message || "No pudimos iniciar sesión, intentá de nuevo.");
+        setLoginError(
+          err.message ||
+            "No pudimos iniciar sesión, intentá de nuevo."
+        );
       }
     } finally {
       setLoadingLogin(false);
