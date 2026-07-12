@@ -14,6 +14,7 @@ import {
   createMaterial,
   voteMaterial,
   getMaterias,
+  downloadMaterial,
 } from '../../services/materialService';
 import styles from './MaterialRepositoryPage.module.css';
 
@@ -30,6 +31,8 @@ function MaterialRepositoryPage() {
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [detailMaterial, setDetailMaterial] = useState(null);
+  const [downloadingMaterialId, setDownloadingMaterialId] = useState(null);
+  const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => {
     getMaterias()
@@ -89,9 +92,41 @@ function MaterialRepositoryPage() {
     }
   };
 
-  const handleDownload = (material) => {
-    if (material.fileUrl) {
-      window.open(material.fileUrl, '_blank', 'noopener,noreferrer');
+  const handleDownload = async (material) => {
+    setDownloadError('');
+
+    if (!material.uploadedFile) {
+      const externalUrl = material.fileUrl || material.externalUrl;
+      if (externalUrl) {
+        window.open(externalUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        setDownloadError('Este material no tiene un archivo disponible.');
+      }
+      return;
+    }
+
+    setDownloadingMaterialId(material.id);
+    try {
+      const { blob, filename } = await downloadMaterial(material.id);
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download =
+        filename ||
+        (material.format && material.format !== 'file'
+          ? `${material.title}.${material.format}`
+          : material.title);
+      try {
+        document.body.appendChild(anchor);
+        anchor.click();
+      } finally {
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      }
+    } catch (err) {
+      setDownloadError(err.message || 'No pudimos descargar el archivo.');
+    } finally {
+      setDownloadingMaterialId(null);
     }
   };
 
@@ -140,6 +175,12 @@ function MaterialRepositoryPage() {
           />
         </section>
 
+        {downloadError && (
+          <p className={styles.downloadError} role="alert">
+            {downloadError}
+          </p>
+        )}
+
         <section className={styles.gridSection}>
           {loading ? (
             <p className={styles.statusText}>Cargando materiales…</p>
@@ -155,6 +196,7 @@ function MaterialRepositoryPage() {
                 onView={handleView}
                 onDownload={handleDownload}
                 onJoinDiscord={handleJoinDiscord}
+                downloadingMaterialId={downloadingMaterialId}
               />
               {totalPages > 1 && (
                 <div className={styles.paginationSection}>

@@ -240,6 +240,16 @@
   stroke: #00a8ad;
 }
 
+.downloadSpinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ===== Dark mode ===== */
 :global(.dark) .card {
   background: #1e293b;

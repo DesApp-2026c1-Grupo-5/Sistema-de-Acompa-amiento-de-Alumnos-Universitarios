@@ -59,6 +59,17 @@
   font-size: 15px;
 }
 
+.downloadError {
+  margin: -6px 0 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  background: var(--color-soft);
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 :global(.dark) .statusText {
   color: #cbd5e1;
 }

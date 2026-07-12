@@ -7,7 +7,7 @@ import {
   formatDate,
   calcRatio,
 } from '../../pages/student/materials/helpers';
-import { TYPE_LABELS } from '../../pages/student/materials/mockData';
+import { TYPE_LABELS } from '../../pages/student/materials/materialConstants';
 import styles from './MaterialDetailModal.module.css';
 
 function MaterialDetailModal({
