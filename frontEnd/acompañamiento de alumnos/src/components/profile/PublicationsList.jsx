@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, MessageCircle, BookOpen, CheckCircle2, TrendingUp } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, MessageCircle, BookOpen, CheckCircle2, TrendingUp, Trash2 } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import styles from './PublicationsList.module.css';
@@ -25,7 +26,26 @@ function EventBadge({ eventType, eventSubject }) {
   );
 }
 
-function PostHeader({ authorId, authorInitials, authorImage, authorName, date, eventType, eventSubject }) {
+function PostHeader({ postId, authorId, authorInitials, authorImage, authorName, date, eventType, eventSubject, canDelete, onDelete }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleDelete = () => {
+    setMenuOpen(false);
+    onDelete?.(postId);
+  };
+
   return (
     <header className={styles.header}>
       <Avatar initials={authorInitials} src={authorImage} size="md" />
@@ -42,9 +62,25 @@ function PostHeader({ authorId, authorInitials, authorImage, authorName, date, e
         <time className={styles.date}>{date}</time>
       </div>
 
-      <button type="button" className={styles.moreBtn} aria-label="Más opciones">
-        ...
-      </button>
+      <div className={styles.moreMenuWrapper} ref={menuRef}>
+        <button
+          type="button"
+          className={styles.moreBtn}
+          aria-label="Más opciones"
+          onClick={() => setMenuOpen((prev) => !prev)}
+        >
+          ...
+        </button>
+
+        {menuOpen && canDelete && (
+          <div className={styles.dropdownMenu}>
+            <button type="button" className={styles.dropdownItem} onClick={handleDelete}>
+              <Trash2 size={16} aria-hidden="true" />
+              <span>Eliminar</span>
+            </button>
+          </div>
+        )}
+      </div>
     </header>
   );
 }
@@ -98,7 +134,7 @@ function PostActions({
   );
 }
 
-function Publication({ post, userReaction, onLike, onDislike, onComment }) {
+function Publication({ post, userReaction, currentUserId, onLike, onDislike, onComment, onDelete }) {
   const {
     id,
     authorId,
@@ -113,10 +149,12 @@ function Publication({ post, userReaction, onLike, onDislike, onComment }) {
     eventType,
     eventSubject,
   } = post;
+  const canDelete = currentUserId && String(authorId) === String(currentUserId);
 
   return (
     <article className={styles.publication}>
       <PostHeader
+        postId={id}
         authorId={authorId}
         authorInitials={authorInitials}
         authorImage={authorImage}
@@ -124,6 +162,8 @@ function Publication({ post, userReaction, onLike, onDislike, onComment }) {
         date={date}
         eventType={eventType}
         eventSubject={eventSubject}
+        canDelete={canDelete}
+        onDelete={onDelete}
       />
 
       <p className={styles.content}>{content}</p>
@@ -145,9 +185,11 @@ function Publication({ post, userReaction, onLike, onDislike, onComment }) {
 function PublicationsList({
   publications,
   userReactions,
+  currentUserId,
   onLike,
   onDislike,
   onComment,
+  onDelete,
   title = 'Publicaciones',
   emptyMessage = 'No hay publicaciones',
 }) {
@@ -164,9 +206,11 @@ function PublicationsList({
               key={post.id}
               post={post}
               userReaction={userReactions?.[post.id] ?? null}
+              currentUserId={currentUserId}
               onLike={onLike}
               onDislike={onDislike}
               onComment={onComment}
+              onDelete={onDelete}
             />
           ))}
         </div>

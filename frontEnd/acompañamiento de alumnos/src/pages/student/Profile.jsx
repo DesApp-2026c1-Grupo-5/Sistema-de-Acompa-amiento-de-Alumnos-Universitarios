@@ -6,6 +6,7 @@ import ContactList from '../../components/profile/ContactList';
 import PendingRequests from '../../components/profile/PendingRequests';
 import PublicationsList from '../../components/profile/PublicationsList';
 import UserSearchModal from '../../components/profile/UserSearchModal';
+import ModalConfirmation from '../../components/common/ModalConfirmation';
 import Avatar from '../../components/common/Avatar';
 import ErrorState from '../../components/common/ErrorState';
 import { cambiarEstadoEstudianteAdmin } from '../../services/adminHomeService';
@@ -19,7 +20,7 @@ import {
   uploadBanner,
   deleteBanner,
 } from '../../services/profileService';
-import { votePost } from '../../services/postService';
+import { deletePost, votePost } from '../../services/postService';
 import { useAuth } from '../../context/useAuth';
 import styles from './Profile.module.css';
 
@@ -42,6 +43,8 @@ function Profile() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [changingAccountStatus, setChangingAccountStatus] = useState(false);
   const [accountStatusError, setAccountStatusError] = useState('');
+  const [postToDelete, setPostToDelete] = useState(null);
+  const [deletingPost, setDeletingPost] = useState(false);
 
   const ownId = user?.estudiante?.id;
   const isOwnProfile = !userId || String(userId) === String(ownId);
@@ -228,6 +231,24 @@ function Profile() {
     }
   };
 
+  const handleConfirmDeletePost = async () => {
+    if (!postToDelete) return;
+
+    setDeletingPost(true);
+    try {
+      await deletePost(postToDelete.id);
+      setProfile((prev) => ({
+        ...prev,
+        publications: prev.publications.filter((post) => post.id !== postToDelete.id),
+      }));
+      setPostToDelete(null);
+    } catch (err) {
+      setError(err.message || 'No se pudo eliminar la publicación.');
+    } finally {
+      setDeletingPost(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -311,8 +332,10 @@ function Profile() {
       <PublicationsList
         publications={profile.publications}
         userReactions={profile.userReactions}
+        currentUserId={ownId}
         onLike={(id) => handleVote(id, 'like')}
         onDislike={(id) => handleVote(id, 'dislike')}
+        onDelete={isOwnProfile ? (id) => setPostToDelete(profile.publications.find((post) => post.id === id)) : null}
       />
 
       {isOwnProfile && (
@@ -321,6 +344,15 @@ function Profile() {
           onClose={() => setSearchModalOpen(false)}
         />
       )}
+
+      <ModalConfirmation
+        open={!!postToDelete}
+        title="Eliminar publicación"
+        message="¿Querés eliminar esta publicación? Esta acción no se puede deshacer."
+        confirmText={deletingPost ? 'Eliminando...' : 'Eliminar'}
+        onConfirm={handleConfirmDeletePost}
+        onCancel={() => setPostToDelete(null)}
+      />
     </div>
   );
 }

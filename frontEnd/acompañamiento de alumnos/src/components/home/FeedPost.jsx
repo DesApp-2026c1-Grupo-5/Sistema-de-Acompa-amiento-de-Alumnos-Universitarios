@@ -4,6 +4,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Flag,
+  Trash2,
   BookOpen,
   CheckCircle2,
   TrendingUp,
@@ -36,7 +37,7 @@ function EventBadge({ eventType, eventSubject }) {
   );
 }
 
-function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUserId }) {
+function FeedPost({ post, userReaction, onLike, onDislike, onReport, onDelete, currentUserId }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -92,6 +93,13 @@ function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUser
     onReport?.(id);
   };
 
+  const handleDeleteClick = () => {
+    if (!isOwnPost) return;
+
+    setMenuOpen(false);
+    onDelete?.(id);
+  };
+
   return (
     <article className={styles.card}>
       <header className={styles.header}>
@@ -135,6 +143,16 @@ function FeedPost({ post, userReaction, onLike, onDislike, onReport, currentUser
                 <Flag size={16} aria-hidden="true" />
                 <span>{reportLabel}</span>
               </button>
+              {isOwnPost && (
+                <button
+                  type="button"
+                  className={styles.dropdownItem}
+                  onClick={handleDeleteClick}
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                  <span>Eliminar</span>
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -12,8 +12,12 @@ const actualizarPerfilSchema = Joi.object({
 }).min(1);
 
 const actualizarPrivacidadSchema = Joi.object({
-  privacidad: Joi.string().trim().valid("publico", "privado", "contactos").required(),
-});
+  privacidad: Joi.string().trim().valid("publico", "privado", "contactos").optional(),
+  email_visible: Joi.boolean().optional(),
+  pub_inscripciones: Joi.boolean().optional(),
+  pub_regularizaciones: Joi.boolean().optional(),
+  pub_aprobaciones: Joi.boolean().optional(),
+}).min(1);
 
 module.exports = {
   actualizarPerfilSchema,
