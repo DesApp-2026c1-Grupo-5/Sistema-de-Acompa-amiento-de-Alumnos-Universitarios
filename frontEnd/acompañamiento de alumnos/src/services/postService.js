@@ -9,3 +9,5 @@ export const createPost = (contenido) => api.post("/posts", { contenido });
 
 export const votePost = (postId, tipo) =>
   api.post(`/posts/${postId}/voto`, { tipo });
+
+export const deletePost = (postId) => api.delete(`/posts/${postId}`);

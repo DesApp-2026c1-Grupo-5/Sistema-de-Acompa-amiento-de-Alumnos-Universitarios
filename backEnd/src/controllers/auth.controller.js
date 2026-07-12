@@ -98,6 +98,7 @@ const register = async (req, res) => {
         pub_inscripciones: true,
         pub_regularizaciones: true,
         pub_aprobaciones: true,
+        email_visible: true,
       },
       { transaction: t }
     );

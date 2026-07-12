@@ -19,5 +19,7 @@ export const mapPostFromApi = (apiPost) => {
     dislikes: apiPost.dislikes ?? 0,
     miVoto: apiPost.mi_voto ?? null,
     miDenunciaPendiente: apiPost.mi_denuncia_pendiente ?? false,
+    eventType: apiPost.eventType ?? apiPost.event_type ?? null,
+    eventSubject: apiPost.eventSubject ?? apiPost.event_subject ?? null,
   };
 };

@@ -9,8 +9,9 @@ import CreatePostCard from '../../components/home/CreatePostCard';
 import FeedPost from '../../components/home/FeedPost';
 import UpcomingSessionsCard from '../../components/home/UpcomingSessionsCard';
 import SessionDetailModal from '../../components/sessions/SessionDetailModal';
+import ModalConfirmation from '../../components/common/ModalConfirmation';
 import { useAuth } from '../../context/useAuth';
-import { getPosts, createPost, votePost } from '../../services/postService';
+import { getPosts, createPost, votePost, deletePost } from '../../services/postService';
 import { getSessions, getSession } from '../../services/sessionService';
 import { getInitials, mapPostFromApi } from './home/mapPost';
 import { mapSessionFromApi } from './sessions/mapSession';
@@ -48,6 +49,8 @@ function HomeStudent() {
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState(null);
   const [detailSession, setDetailSession] = useState(null);
+  const [postToDelete, setPostToDelete] = useState(null);
+  const [deletingPost, setDeletingPost] = useState(false);
 
   const fetchPage = useCallback((pageNum) => {
     return getPosts({ page: pageNum, limit: PAGE_SIZE }).then((res) => {
@@ -175,6 +178,22 @@ function HomeStudent() {
   const handleLike = (postId) => handleReaction(postId, 'like');
   const handleDislike = (postId) => handleReaction(postId, 'dislike');
   const handleReport = (postId) => navigate(`/student/report-publication/${postId}`);
+  const handleConfirmDeletePost = async () => {
+    if (!postToDelete) return;
+
+    setDeletingPost(true);
+    setPublishError('');
+    try {
+      await deletePost(postToDelete.id);
+      setPublications((prev) => prev.filter((post) => post.id !== postToDelete.id));
+      setPostToDelete(null);
+    } catch (err) {
+      setPublishError(err.message || 'No pudimos eliminar la publicación.');
+    } finally {
+      setDeletingPost(false);
+    }
+  };
+
   const handleViewSessionDetails = async (sessionId) => {
     const target = mySessions.find((s) => s.id === sessionId);
     if (!target) return;
@@ -223,6 +242,7 @@ function HomeStudent() {
         onLike={handleLike}
         onDislike={handleDislike}
         onReport={handleReport}
+        onDelete={(id) => setPostToDelete(publications.find((item) => item.id === id))}
       />
     ));
   };
@@ -322,6 +342,15 @@ function HomeStudent() {
           onClose={() => setDetailSession(null)}
         />
       )}
+
+      <ModalConfirmation
+        open={!!postToDelete}
+        title="Eliminar publicación"
+        message="¿Querés eliminar esta publicación? Esta acción no se puede deshacer."
+        confirmText={deletingPost ? 'Eliminando...' : 'Eliminar'}
+        onConfirm={handleConfirmDeletePost}
+        onCancel={() => setPostToDelete(null)}
+      />
     </div>
   );
 }

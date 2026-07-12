@@ -24,6 +24,8 @@ const MONTHS = [
   "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
 ];
 
+const ESTADOS_APROBADOS = ["aprobada", "aprobado", "promocionada", "promotionada"];
+
 const countBuckets = (values, buckets) => {
   const counts = buckets.map(() => 0);
   for (const v of values) {
@@ -196,8 +198,9 @@ const computeMateriasPorCarrera = async () => {
     for (const plan of plain.planes || []) {
       for (const mat of plan.materias || []) {
         for (const em of mat.estado_materias || []) {
-          if (em.estado === "cursando") cursadas += 1;
-          if (em.estado === "aprobada") aprobadas += 1;
+          const estado = (em.estado || "").trim().toLowerCase();
+          if (estado === "cursando") cursadas += 1;
+          if (ESTADOS_APROBADOS.includes(estado)) aprobadas += 1;
         }
       }
     }
@@ -210,7 +213,7 @@ const computeMateriasPorCarrera = async () => {
   });
 };
 
-const computeTopMaterias = async (ratingOrder = "default") => {
+const computeTopMaterias = async () => {
   const rows = await material.findAll({
     attributes: [
       "materia_id",
@@ -313,12 +316,6 @@ const computeTopMaterias = async (ratingOrder = "default") => {
       rating,
     };
   });
-
-  if (ratingOrder === "asc") {
-    resultado.sort((a, b) => a.rating - b.rating);
-  } else if (ratingOrder === "desc") {
-    resultado.sort((a, b) => b.rating - a.rating);
-  }
 
   return resultado.map((item, index) => ({
     ...item,
@@ -705,14 +702,6 @@ const computeConexionesPromedio = async () => {
 };
 
 const getAdminStats = async (req, res) => {
-  const requestedRatingOrder =
-    req.query.ratingOrder;
-
-  const ratingOrder =
-    ["asc", "desc"].includes(requestedRatingOrder)
-      ? requestedRatingOrder
-      : "default";
-
   const ahora = new Date();
 
   const [
@@ -824,7 +813,7 @@ const getAdminStats = async (req, res) => {
       ]
     ),
     computeMateriasPorCarrera(),
-    computeTopMaterias(ratingOrder),
+    computeTopMaterias(),
     computeParticipantesPorSesion(),
     computeOcupacion(),
     computeCarrerasActivas(),
@@ -836,6 +825,10 @@ const getAdminStats = async (req, res) => {
 
   const promedio =
     Math.round(sesionesCreadas / 12);
+  const materiasAprobadasPorCarrera = materiasPorCarrera.map((item) => ({
+    career: item.career,
+    approved: item.aprobadas,
+  }));
 
   return res.status(200).json({
     ok: true,
@@ -851,6 +844,7 @@ const getAdminStats = async (req, res) => {
         materiasCursadasAlumno,
         materiasAprobadasAlumno,
         materiasPorCarrera,
+        materiasAprobadasPorCarrera,
         sesionesPeriodo: {
           total: sesionesCreadas,
           promedio,

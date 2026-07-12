@@ -37,7 +37,6 @@ export default function Statistics() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('uso');
-  const [ratingOrder, setRatingOrder] = useState('default');
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +45,7 @@ export default function Statistics() {
       try {
         setError(null);
 
-        const res = await getAdminStats(ratingOrder);
+        const res = await getAdminStats();
 
         if (cancelled) return;
 
@@ -66,7 +65,7 @@ export default function Statistics() {
     return () => {
       cancelled = true;
     };
-  }, [ratingOrder]);
+  }, []);
 
   if (error) {
     return <p className={styles.loading}>{error}</p>;
@@ -87,54 +86,6 @@ export default function Statistics() {
         <h1>Estadísticas y Reportes</h1>
         <p>Análisis del uso del sistema y comportamiento de usuarios</p>
       </header>
-
-      <section className={styles.filtersCard}>
-        <div className={styles.filterGroup}>
-          <label>Período</label>
-
-          <select>
-            <option>Últimos 7 días</option>
-            <option>Últimos 30 días</option>
-            <option>Último cuatrimestre</option>
-          </select>
-        </div>
-
-        <div className={styles.filterGroup}>
-          <label>Carrera</label>
-
-          <select>
-            <option>Todas las carreras</option>
-            <option>Lic. en Sistemas</option>
-            <option>Ing. en Sistemas</option>
-            <option>Lic. en Informática</option>
-            <option>Tecnicatura en Programación</option>
-          </select>
-        </div>
-
-        <div className={styles.filterGroup}>
-          <label>Plan de estudios</label>
-
-          <select>
-            <option>Todos los planes</option>
-            <option>Plan 2023</option>
-            <option>Plan 2020</option>
-            <option>Plan 2017</option>
-          </select>
-        </div>
-
-        <div className={styles.filterGroup}>
-          <label>Año académico</label>
-
-          <select>
-            <option>Todos</option>
-            <option>2026</option>
-            <option>2025</option>
-            <option>2024</option>
-            <option>2023</option>
-            <option>2022</option>
-          </select>
-        </div>
-      </section>
 
       <div className={styles.tabs}>
         <button
@@ -199,8 +150,6 @@ export default function Statistics() {
       {activeTab === 'uso' ? (
         <UsoSistema
           data={data.usoSistema}
-          ratingOrder={ratingOrder}
-          setRatingOrder={setRatingOrder}
         />
       ) : (
         <ReportesSociales
@@ -211,11 +160,7 @@ export default function Statistics() {
   );
 }
 
-function UsoSistema({
-  data,
-  ratingOrder,
-  setRatingOrder,
-}) {
+function UsoSistema({ data }) {
   const sesionesData = useMemo(
     () =>
       data.sesionesPeriodo.months.map(
@@ -256,6 +201,10 @@ function UsoSistema({
         items={data.materiasPorCarrera}
       />
 
+      <ApprovedCareerCard
+        items={data.materiasAprobadasPorCarrera || []}
+      />
+
       <MonthlyLineChart
         title="Sesiones de estudio creadas por período"
         data={sesionesData}
@@ -265,8 +214,6 @@ function UsoSistema({
 
       <TopMaterialsTable
         items={data.materiasConMasMateriales}
-        ratingOrder={ratingOrder}
-        setRatingOrder={setRatingOrder}
       />
 
       <div className={styles.twoColumns}>
@@ -561,43 +508,45 @@ function CareerSubjectsCard({ items }) {
   );
 }
 
-function TopMaterialsTable({
-  items,
-  ratingOrder,
-  setRatingOrder,
-}) {
+function ApprovedCareerCard({ items }) {
+  const maxApproved = Math.max(
+    1,
+    ...items.map((item) => item.approved)
+  );
+
+  return (
+    <section className={styles.card}>
+      <h2>Materias aprobadas por carrera</h2>
+
+      <div className={styles.careerList}>
+        {items.length > 0 ? items.map((item) => (
+          <div className={styles.careerRow} key={item.career}>
+            <h3>{item.career}</h3>
+
+            <div className={styles.barLine}>
+              <div
+                className={styles.barGreen}
+                style={{ width: `${(item.approved / maxApproved) * 100}%` }}
+              />
+
+              <strong>{item.approved}</strong>
+            </div>
+          </div>
+        )) : (
+          <p className={styles.emptyText}>No hay materias aprobadas registradas.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TopMaterialsTable({ items }) {
   return (
     <section className={styles.card}>
       <div className={styles.tableTitleRow}>
         <h2>
           Materias con más materiales compartidos
         </h2>
-
-        <div className={styles.ratingFilter}>
-          <label htmlFor="rating-order">
-            Ordenar valoración
-          </label>
-
-          <select
-            id="rating-order"
-            value={ratingOrder}
-            onChange={(event) =>
-              setRatingOrder(event.target.value)
-            }
-          >
-            <option value="default">
-              Orden original
-            </option>
-
-            <option value="desc">
-              Mayor a menor
-            </option>
-
-            <option value="asc">
-              Menor a mayor
-            </option>
-          </select>
-        </div>
       </div>
 
       <table className={styles.table}>

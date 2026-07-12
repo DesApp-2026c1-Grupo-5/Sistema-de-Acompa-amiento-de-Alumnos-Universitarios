@@ -14,6 +14,8 @@ router.get("/posts/:id", authMiddleware, postController.obtenerPostPorId);
 
 router.post("/posts", authMiddleware, validate(crearPostSchema), postController.crearPost);
 
+router.delete("/posts/:id", authMiddleware, validate(postIdParamSchema, "params"), postController.eliminarPost);
+
 router.post("/posts/:id/voto", authMiddleware, validate(postIdParamSchema, "params"), validate(votarPostSchema), votoPostController.votarPost);
 
 module.exports = router;

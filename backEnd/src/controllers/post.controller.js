@@ -150,8 +150,45 @@ const obtenerPostPorId = async (req, res, next) => {
   });
 };
 
+const eliminarPost = async (req, res, next) => {
+  const postId = Number(req.params.id);
+
+  if (!Number.isInteger(postId) || postId <= 0) {
+    const error = new Error("id de publicacion invalido");
+    error.statusCode = 400;
+    return next(error);
+  }
+
+  const miEstudianteId = await getMiEstudianteId(req);
+  if (!miEstudianteId) {
+    const error = new Error("Estudiante no encontrado");
+    error.statusCode = 404;
+    return next(error);
+  }
+
+  const postData = await post.findByPk(postId);
+  if (!postData) {
+    const error = new Error("Publicacion no encontrada");
+    error.statusCode = 404;
+    return next(error);
+  }
+
+  if (postData.estudiante_id !== miEstudianteId) {
+    const error = new Error("No tenés permisos para eliminar esta publicación");
+    error.statusCode = 403;
+    return next(error);
+  }
+
+  await voto_post.destroy({ where: { post_id: postId } });
+  await denuncia.destroy({ where: { post_id: postId } });
+  await postData.destroy();
+
+  return res.status(200).json({ ok: true, data: { id: postId } });
+};
+
 module.exports = {
   crearPost,
   obtenerPosts,
   obtenerPostPorId,
+  eliminarPost,
 };
