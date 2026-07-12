@@ -14,6 +14,8 @@ export const actualizarFinal = (id, payload) => api.patch(`/student/academic-sit
 
 export const crearActividad = (payload) => api.post("/student/academic-situation/credits", payload);
 
+export const actualizarActividad = (id, payload) => api.patch(`/student/academic-situation/credits/${id}`, payload);
+
 export const eliminarActividad = (id) => api.delete(`/student/academic-situation/credits/${id}`);
 
 export const importarExcel = (formData) => api.postFormData("/student/academic-situation/import-excel", formData);

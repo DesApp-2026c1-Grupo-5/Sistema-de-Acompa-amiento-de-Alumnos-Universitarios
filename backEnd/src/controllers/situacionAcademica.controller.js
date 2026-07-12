@@ -19,6 +19,7 @@ const {
 const APROBADA = ["aprobada", "aprobado", "promocionada", "promotionada"];
 const REGULAR = ["regular", "regularizada", "regularizado"];
 const CURSANDO = ["cursando"];
+const ACTIVIDAD_CREDITO_CONTABILIZABLE = ["aprobada"];
 
 const normalizar = (e) => (e || "").trim().toLowerCase();
 const esAprobada = (e) => APROBADA.includes(normalizar(e));
@@ -56,8 +57,8 @@ const buildStats = async (situacionId, plan) => {
   });
 
   const actividades = await actividad_credito.findAll({
-    where: { situacion_id: situacionId, estado: "aprobada" },
-    attributes: ["creditos"],
+    where: { situacion_id: situacionId },
+    attributes: ["creditos", "estado"],
     raw: true,
   });
 
@@ -88,9 +89,11 @@ const buildStats = async (situacionId, plan) => {
     }
   }
 
-  const creditsFromActividades = actividades.reduce(
-    (sum, a) => sum + (a.creditos || 0), 0
-  );
+  const creditsFromActividades = actividades.reduce((sum, a) => {
+    return ACTIVIDAD_CREDITO_CONTABILIZABLE.includes(normalizar(a.estado))
+      ? sum + (a.creditos || 0)
+      : sum;
+  }, 0);
   const creditsObtained = creditsFromMaterias + creditsFromActividades;
   const totalMaterias = planMaterias.length;
   const pending = Math.max(0, totalMaterias - approved - regularized - cursando);
@@ -388,6 +391,22 @@ const eliminarActividad = async (req, res, next) => {
   return res.status(200).json({ ok: true, data: { id: req.params.id } });
 };
 
+const actualizarActividad = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const actividad = await actividad_credito.findByPk(req.params.id);
+  if (!actividad) return next(buildError("Actividad no encontrada", 404));
+
+  const sit = await situacion_academica.findByPk(actividad.situacion_id, { raw: true });
+  if (!sit || sit.estudiante_id !== estudianteData.id) {
+    return next(buildError("No tenés permisos para modificar esta actividad", 403));
+  }
+
+  await actividad.update({ estado: req.body.estado });
+  return res.status(200).json({ ok: true, data: actividad });
+};
+
 const importarExcel = async (req, res, next) => {
   const estudianteData = await getEstudiante(req.user.sub);
   if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
@@ -632,6 +651,7 @@ module.exports = {
   eliminarFinal,
   actualizarFinal,
   crearActividad,
+  actualizarActividad,
   eliminarActividad,
   importarExcel,
   confirmarImportacion,

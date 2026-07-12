@@ -11,6 +11,7 @@ import {
   eliminarFinal,
   actualizarFinal,
   crearActividad,
+  actualizarActividad,
   eliminarActividad,
   importarExcel,
   confirmarImportacion,
@@ -191,8 +192,10 @@ function WizardPlan({ onCreated }) {
 
 export default function SituacionAcademica() {
   const [data, setData] = useState(null);
-  const [editando, setEditando] = useState(false);
+  const [editandoMaterias, setEditandoMaterias] = useState(false);
+  const [editandoActividades, setEditandoActividades] = useState(false);
   const [backupSubjects, setBackupSubjects] = useState(null);
+  const [backupActivities, setBackupActivities] = useState(null);
   const [mostrarCargaExcel, setMostrarCargaExcel] = useState(false);
   const [archivoExcel, setArchivoExcel] = useState(null);
   const [previewExcel, setPreviewExcel] = useState(null);
@@ -206,7 +209,7 @@ export default function SituacionAcademica() {
   const [cambiandoCarrera, setCambiandoCarrera] = useState(false);
   const [expandedMateria, setExpandedMateria] = useState(null);
   const [expandedActividad, setExpandedActividad] = useState(null);
-  const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '' });
+  const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
@@ -276,7 +279,8 @@ export default function SituacionAcademica() {
         fecha: s.fecha,
       }));
       await actualizarMaterias(materias);
-      setEditando(false);
+      setEditandoMaterias(false);
+      setBackupSubjects(null);
       await cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al guardar cambios');
@@ -285,12 +289,43 @@ export default function SituacionAcademica() {
     }
   };
 
+  const actualizarActividadLocal = (actividadId, campo, valor) => {
+    if (!data) return;
+    setData((prev) => ({
+      ...prev,
+      credit_activities: (prev.credit_activities || []).map((actividad) =>
+        actividad.id === actividadId ? { ...actividad, [campo]: valor } : actividad
+      ),
+    }));
+  };
+
+  const guardarCambiosActividades = async () => {
+    if (!data) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      await Promise.all(
+        (data.credit_activities || []).map((actividad) =>
+          actualizarActividad(actividad.id, { estado: actividad.estado || 'pendiente' })
+        )
+      );
+      setEditandoActividades(false);
+      setBackupActivities(null);
+      await cargarDatos();
+    } catch (err) {
+      setError(err.message || 'Error al guardar actividades');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleAgregarActividad = async () => {
-    const { descripcion, creditos, fecha } = formActividad;
+    const { descripcion, creditos, fecha, estado } = formActividad;
     if (!descripcion || !creditos || !fecha) return;
     try {
-      await crearActividad({ descripcion, creditos: Number(creditos), fecha });
-      setFormActividad({ descripcion: '', creditos: '', fecha: '' });
+      await crearActividad({ descripcion, creditos: Number(creditos), fecha, estado });
+      setFormActividad({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
       await cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al agregar actividad');
@@ -487,22 +522,22 @@ export default function SituacionAcademica() {
         <div className={styles.tableHeader}>
           <h2>Materias</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            {editando && (
+            {editandoMaterias && (
               <button type="button" className={styles.primaryButton} onClick={guardarCambios} disabled={saving}>
                 {saving ? 'Guardando...' : '💾 Guardar cambios'}
               </button>
             )}
             <button type="button" className={styles.updateButton} onClick={() => {
-              if (editando) {
+              if (editandoMaterias) {
                 setData((prev) => ({ ...prev, subjects: backupSubjects }));
                 setBackupSubjects(null);
-                setEditando(false);
+                setEditandoMaterias(false);
               } else {
                 setBackupSubjects(JSON.parse(JSON.stringify(data.subjects)));
-                setEditando(true);
+                setEditandoMaterias(true);
               }
             }}>
-              ✎ {editando ? 'Cancelar' : 'Editar'}
+              ✎ {editandoMaterias ? 'Cancelar' : 'Editar'}
             </button>
           </div>
         </div>
@@ -562,7 +597,7 @@ export default function SituacionAcademica() {
         {!mostrarCargaExcel && (
           <>
             <div className={styles.tableWrapper}>
-              <table className={`${styles.table} ${styles.materiasTable}${editando ? ' ' + styles.editingTable : ''}`}>
+              <table className={`${styles.table} ${styles.materiasTable}${editandoMaterias ? ' ' + styles.editingTable : ''}`}>
                 <thead>
                   <tr>
                     <th>Materia</th>
@@ -579,7 +614,7 @@ export default function SituacionAcademica() {
                     return (
                       <tr key={materia.materia_id} className={expandedMateria === materia.materia_id ? styles.expanded : ''}>
                         <td className={styles.nameCell} data-label="Materia">
-                          {editando ? (
+                          {editandoMaterias ? (
                             <input type="text" value={materia.name} readOnly />
                           ) : (
                             materia.name
@@ -594,7 +629,7 @@ export default function SituacionAcademica() {
                           </button>
                         </td>
                         <td className={styles.statusCell} data-label="Estado">
-                          {editando ? (
+                          {editandoMaterias ? (
                             <select value={materia.status} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'status', e.target.value)}>
                               {ESTADOS.map((est) => <option key={est} value={est}>{est}</option>)}
                             </select>
@@ -608,14 +643,14 @@ export default function SituacionAcademica() {
                           {materia.year_in_career ? `${materia.year_in_career}°` : '-'}
                         </td>
                         <td className={styles.semesterCell} data-label="Cuatrimestre">
-                          {editando ? (
+                          {editandoMaterias ? (
                             <input type="number" min="1" max="2" value={materia.academic_semester || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_semester', e.target.value ? Number(e.target.value) : null)} />
                           ) : (
                             materia.academic_semester ? `${materia.academic_semester}°` : '-'
                           )}
                         </td>
                         <td className={styles.gradeCell} data-label="Nota">
-                          {editando ? (
+                          {editandoMaterias ? (
                             <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'grade', e.target.value ? Number(e.target.value) : null)} />
                           ) : (
                             materia.grade ?? '-'
@@ -626,7 +661,7 @@ export default function SituacionAcademica() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             {materia.finals?.map((f) => (
                               <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
-                                {editando ? (
+                                {editandoMaterias ? (
                                   <>
                                     <input type="date" defaultValue={f.fecha?.split('T')[0]} style={{ width: 120, fontSize: 11 }}
                                       onChange={(e) => { f._fecha = e.target.value; }} />
@@ -651,7 +686,7 @@ export default function SituacionAcademica() {
                                 )}
                               </div>
                             ))}
-                            {editando && (
+                            {editandoMaterias && (
                               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                                 <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11 }} />
                                 <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11 }} placeholder="Nota" />
@@ -667,7 +702,7 @@ export default function SituacionAcademica() {
               </table>
             </div>
 
-            {editando && (
+            {editandoMaterias && (
               <p className={styles.hintText}>Los cambios se guardan al hacer clic en "Guardar cambios"</p>
             )}
           </>
@@ -677,6 +712,25 @@ export default function SituacionAcademica() {
       <section className={styles.tableCard} style={{ marginTop: 20 }}>
         <div className={styles.tableHeader}>
           <h2>Actividades con créditos</h2>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {editandoActividades && (
+              <button type="button" className={styles.primaryButton} onClick={guardarCambiosActividades} disabled={saving}>
+                {saving ? 'Guardando...' : '💾 Guardar actividades'}
+              </button>
+            )}
+            <button type="button" className={styles.updateButton} onClick={() => {
+              if (editandoActividades) {
+                setData((prev) => ({ ...prev, credit_activities: backupActivities }));
+                setBackupActivities(null);
+                setEditandoActividades(false);
+              } else {
+                setBackupActivities(JSON.parse(JSON.stringify(data.credit_activities || [])));
+                setEditandoActividades(true);
+              }
+            }}>
+              ✎ {editandoActividades ? 'Cancelar' : 'Editar actividades'}
+            </button>
+          </div>
         </div>
         {credit_activities?.length > 0 ? (
           <table className={`${styles.table} ${styles.actividadesTable}`}>
@@ -686,7 +740,7 @@ export default function SituacionAcademica() {
                 <th>Estado</th>
                 <th>Créditos</th>
                 <th>Fecha</th>
-                {editando && <th></th>}
+                {editandoActividades && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -704,13 +758,20 @@ export default function SituacionAcademica() {
                     </button>
                   </td>
                   <td className={styles.statusCell} data-label="Estado">
-                    <span className={`${styles.badge} ${styles[`badge${act.estado === 'aprobada' ? 'Aprobada' : 'Pendiente'}`] || ''}`}>
-                      {act.estado || 'pendiente'}
-                    </span>
+                    {editandoActividades ? (
+                      <select value={act.estado || 'pendiente'} onChange={(e) => actualizarActividadLocal(act.id, 'estado', e.target.value)}>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="aprobada">Aprobada</option>
+                      </select>
+                    ) : (
+                      <span className={`${styles.badge} ${styles[`badge${act.estado === 'aprobada' ? 'Aprobada' : 'Pendiente'}`] || ''}`}>
+                        {act.estado || 'pendiente'}
+                      </span>
+                    )}
                   </td>
                   <td className={styles.creditsCell} data-label="Créditos">{act.credits}</td>
                   <td className={styles.dateCell} data-label="Fecha">{act.date ? new Date(act.date).toLocaleDateString() : '-'}</td>
-                  {editando && (
+                  {editandoActividades && (
                     <td className={styles.actionsCell} data-label="Acciones"><button type="button" className={styles.smallBtn} onClick={() => handleEliminarActividad(act.id)}>✕</button></td>
                   )}
                 </tr>
@@ -720,7 +781,7 @@ export default function SituacionAcademica() {
         ) : (
           <p style={{ padding: 16, color: '#405a7a', fontSize: 13 }}>No hay actividades con créditos registradas.</p>
         )}
-        {editando && (
+        {editandoActividades && (
           <div className={styles.actividadForm}>
             <input type="text" placeholder="Descripción" value={formActividad.descripcion} onChange={(e) => setFormActividad((p) => ({ ...p, descripcion: e.target.value }))} />
             <select value={formActividad.estado || 'pendiente'} onChange={(e) => setFormActividad((p) => ({ ...p, estado: e.target.value }))}>
