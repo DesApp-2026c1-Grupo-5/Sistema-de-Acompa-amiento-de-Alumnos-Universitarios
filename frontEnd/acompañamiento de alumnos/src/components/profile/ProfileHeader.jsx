@@ -35,6 +35,9 @@ function ProfileHeader({
   onDeleteAvatar,
   onUploadBanner,
   onDeleteBanner,
+  isAdminView,
+  onToggleAccountStatus,
+  changingAccountStatus,
 }) {
   const { initials, name, career, location, contactsCount, email, academicStatus, privacidad, foto_url, banner_url, email_visible } = user;
   const isPublic = privacidad === 'publico';
@@ -221,6 +224,27 @@ function ProfileHeader({
               </span>
             </p>
           </div>
+
+          {isAdminView && onToggleAccountStatus && (
+            <div className={styles.adminActions}>
+              <button
+                type="button"
+                className={
+                  user.activo
+                    ? styles.suspendButton
+                    : styles.reactivateButton
+                }
+                onClick={onToggleAccountStatus}
+                disabled={changingAccountStatus}
+              >
+                {changingAccountStatus
+                  ? 'Procesando...'
+                  : user.activo
+                    ? 'Suspender cuenta'
+                    : 'Reactivar cuenta'}
+              </button>
+            </div>
+          )}
 
           {(onToggleVisibility || onEditProfile) && (
             <div className={styles.actions}>

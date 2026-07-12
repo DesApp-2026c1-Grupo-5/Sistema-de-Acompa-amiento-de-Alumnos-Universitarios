@@ -10,3 +10,12 @@ export const buscarEstudiantesAdmin = (
       query
     )}&page=${page}&limit=${limit}`
   );
+
+export const cambiarEstadoEstudianteAdmin = (
+  estudianteId,
+  activo
+) =>
+  api.patch(
+    `/admin/estudiantes/${estudianteId}/estado`,
+    { activo }
+  );

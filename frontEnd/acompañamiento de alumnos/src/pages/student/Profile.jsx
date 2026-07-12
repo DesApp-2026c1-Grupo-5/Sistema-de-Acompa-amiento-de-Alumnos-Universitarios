@@ -8,6 +8,7 @@ import PublicationsList from '../../components/profile/PublicationsList';
 import UserSearchModal from '../../components/profile/UserSearchModal';
 import Avatar from '../../components/common/Avatar';
 import ErrorState from '../../components/common/ErrorState';
+import { cambiarEstadoEstudianteAdmin } from '../../services/adminHomeService';
 import {
   getMyProfile,
   getProfileById,
@@ -34,10 +35,13 @@ const getStoredCareersText = () => {
 function Profile() {
   const { userId } = useParams();
   const { user, updateUser } = useAuth();
+  const isAdmin = user?.tipo === 'administrador';
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [changingAccountStatus, setChangingAccountStatus] = useState(false);
+  const [accountStatusError, setAccountStatusError] = useState('');
 
   const ownId = user?.estudiante?.id;
   const isOwnProfile = !userId || String(userId) === String(ownId);
@@ -180,6 +184,50 @@ function Profile() {
     }
   };
 
+  const handleToggleAccountStatus = async () => {
+    if (!isAdmin || !userId || !profile?.user) {
+      return;
+    }
+
+    const nextStatus = !profile.user.activo;
+
+    const confirmationMessage = nextStatus
+      ? '¿Querés reactivar esta cuenta? El estudiante podrá volver a ingresar.'
+      : '¿Querés suspender esta cuenta? El estudiante no podrá volver a ingresar.';
+
+    if (!window.confirm(confirmationMessage)) {
+      return;
+    }
+
+    setChangingAccountStatus(true);
+    setAccountStatusError('');
+
+    try {
+      const res = await cambiarEstadoEstudianteAdmin(
+        userId,
+        nextStatus
+      );
+
+      const updatedStatus =
+        res?.data?.activo ?? nextStatus;
+
+      setProfile((previousProfile) => ({
+        ...previousProfile,
+        user: {
+          ...previousProfile.user,
+          activo: updatedStatus,
+        },
+      }));
+    } catch (err) {
+      setAccountStatusError(
+        err.message ||
+          'No se pudo modificar el estado de la cuenta.'
+      );
+    } finally {
+      setChangingAccountStatus(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -222,6 +270,13 @@ function Profile() {
     <div className={styles.container}>
       <ProfileHeader
         user={profile.user}
+        isAdminView={isAdmin && !isOwnProfile}
+        onToggleAccountStatus={
+          isAdmin && !isOwnProfile
+            ? handleToggleAccountStatus
+            : null
+        }
+        changingAccountStatus={changingAccountStatus}
         onEditProfile={isOwnProfile ? handleEditProfile : null}
         onToggleVisibility={isOwnProfile ? handleToggleVisibility : null}
         onToggleEmail={isOwnProfile ? handleToggleEmail : null}
@@ -230,6 +285,12 @@ function Profile() {
         onUploadBanner={isOwnProfile ? handleUploadBanner : null}
         onDeleteBanner={isOwnProfile ? handleDeleteBanner : null}
       />
+
+      {accountStatusError && (
+        <p className={styles.accountStatusError}>
+          {accountStatusError}
+        </p>
+      )}
 
       <ContactList
         contacts={profile.contacts}
