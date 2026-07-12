@@ -95,10 +95,11 @@ const obtenerAdmins = async (req, res) => {
 
 const buscarEstudiantes = async (req, res) => {
   const q = (req.query.q || "").trim().toLowerCase();
-
-  if (q.length < 2) {
-    return res.json({ ok: true, data: [] });
-  }
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(
+    20,
+    Math.max(1, parseInt(req.query.limit, 10) || 5)
+  );
 
   const estudiantes = await estudiante.findAll({
     include: {
@@ -115,9 +116,23 @@ const buscarEstudiantes = async (req, res) => {
   const filtrados = estudiantes.filter((e) => {
     const plain = e.get({ plain: true });
 
-    const nombreCompleto = `${plain.nombre || ""} ${plain.apellido || ""}`.toLowerCase();
-    const nombreVisible = (plain.nombre_completo || "").toLowerCase();
-    const email = (plain.usuario?.email || "").toLowerCase();
+    const nombreCompleto = `${plain.nombre || ""} ${
+      plain.apellido || ""
+    }`
+      .trim()
+      .toLowerCase();
+
+    const nombreVisible = (
+      plain.nombre_completo || ""
+    ).toLowerCase();
+
+    const email = (
+      plain.usuario?.email || ""
+    ).toLowerCase();
+
+    if (!q) {
+      return true;
+    }
 
     return (
       nombreCompleto.includes(q) ||
@@ -126,7 +141,16 @@ const buscarEstudiantes = async (req, res) => {
     );
   });
 
-  const data = filtrados.slice(0, 10).map((e) => {
+  const total = filtrados.length;
+  const totalPages = Math.ceil(total / limit);
+  const offset = (page - 1) * limit;
+
+  const estudiantesPaginados = filtrados.slice(
+    offset,
+    offset + limit
+  );
+
+  const data = estudiantesPaginados.map((e) => {
     const plain = e.get({ plain: true });
 
     return {
@@ -134,7 +158,9 @@ const buscarEstudiantes = async (req, res) => {
       usuario_id: plain.usuario_id,
       nombre_completo:
         plain.nombre_completo ||
-        `${plain.nombre || ""} ${plain.apellido || ""}`.trim() ||
+        `${plain.nombre || ""} ${
+          plain.apellido || ""
+        }`.trim() ||
         "Estudiante sin nombre",
       email: plain.usuario?.email ?? "",
       activo: plain.usuario?.activo ?? false,
@@ -144,6 +170,13 @@ const buscarEstudiantes = async (req, res) => {
   return res.json({
     ok: true,
     data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasMore: page < totalPages,
+    },
   });
 };
 
