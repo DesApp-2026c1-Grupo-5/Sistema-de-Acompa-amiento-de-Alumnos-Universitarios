@@ -1,29 +1,12 @@
-export const MATERIAL_TYPES = {
-  FILE: 'file',
-  VIDEO: 'video',
-  LINK: 'link',
-  DRIVE: 'drive',
-  GITHUB: 'github',
-  DISCORD: 'discord',
-};
-
-export const TYPE_LABELS = {
-  file: 'Archivo',
-  video: 'Video',
-  link: 'Link',
-  drive: 'Drive',
-  github: 'GitHub',
-  discord: 'Discord',
-};
-
-export const TYPE_OPTIONS = [
-  { value: 'file', label: 'Archivo' },
-  { value: 'link', label: 'Link' },
-  { value: 'video', label: 'Video' },
-  { value: 'drive', label: 'Drive' },
-  { value: 'github', label: 'GitHub' },
-  { value: 'discord', label: 'Discord' },
-];
+export {
+  MATERIAL_TYPES,
+  TYPE_LABELS,
+  TYPE_OPTIONS,
+  ALLOWED_EXTENSIONS,
+  MAX_FILE_SIZE_MB,
+  MAX_FILE_SIZE_BYTES,
+  FILE_ACCEPT,
+} from './materialConstants';
 
 export const REPORT_REASONS = [
   { value: 'inappropriate', label: 'Contenido inapropiado' },
@@ -46,12 +29,6 @@ export const SUBJECTS = [
   'Matemática Discreta',
   'Análisis Matemático',
 ];
-
-export const ALLOWED_EXTENSIONS = [
-  'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'jpg', 'png', 'zip',
-];
-
-export const MAX_FILE_SIZE_MB = 25;
 
 export const initialMaterials = [
   {

@@ -2,7 +2,13 @@ import { Inbox } from 'lucide-react';
 import MaterialCard from './MaterialCard';
 import styles from './MaterialGrid.module.css';
 
-function MaterialGrid({ materials, onView, onDownload, onJoinDiscord }) {
+function MaterialGrid({
+  materials,
+  onView,
+  onDownload,
+  onJoinDiscord,
+  downloadingMaterialId,
+}) {
   if (!materials || materials.length === 0) {
     return (
       <div className={styles.empty}>
@@ -26,6 +32,7 @@ function MaterialGrid({ materials, onView, onDownload, onJoinDiscord }) {
           onView={onView}
           onDownload={onDownload}
           onJoinDiscord={onJoinDiscord}
+          isDownloading={downloadingMaterialId === material.id}
         />
       ))}
     </div>

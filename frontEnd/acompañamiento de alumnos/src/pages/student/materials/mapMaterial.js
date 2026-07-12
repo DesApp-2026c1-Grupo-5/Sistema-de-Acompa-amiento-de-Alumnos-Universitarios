@@ -3,6 +3,7 @@ import { initialsFromName } from "./helpers";
 export const mapMaterialFromApi = (m) => {
   const est = m.estudiante ?? {};
   const name = `${est.nombre ?? ""} ${est.apellido ?? ""}`.trim() || "Estudiante";
+  const uploadedFile = m.tipo === "file" && Boolean(m.archivo_subido);
 
   return {
     id: m.id,
@@ -11,8 +12,11 @@ export const mapMaterialFromApi = (m) => {
     description: m.descripcion ?? "",
     type: m.tipo,
     format: m.formato ?? m.tipo,
+    sizeBytes: m.size_bytes ?? null,
+    uploadedFile,
+    downloadUrl: m.download_url ?? null,
     externalUrl: m.url_o_path ?? "",
-    fileUrl: m.url_o_path ?? "",
+    fileUrl: uploadedFile ? "" : (m.url_o_path ?? ""),
     discordData:
       m.tipo === "discord"
         ? { serverName: m.discord_servidor, channelName: m.discord_canal }

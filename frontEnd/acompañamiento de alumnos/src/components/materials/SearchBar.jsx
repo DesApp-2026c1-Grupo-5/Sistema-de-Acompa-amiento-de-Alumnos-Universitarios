@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, Filter, Check } from 'lucide-react';
 import styles from './SearchBar.module.css';
-import { TYPE_OPTIONS } from '../../pages/student/materials/mockData';
+import { TYPE_OPTIONS } from '../../pages/student/materials/materialConstants';
 
 const FILTER_OPTIONS = [{ value: 'all', label: 'Todos los tipos' }, ...TYPE_OPTIONS];
 
