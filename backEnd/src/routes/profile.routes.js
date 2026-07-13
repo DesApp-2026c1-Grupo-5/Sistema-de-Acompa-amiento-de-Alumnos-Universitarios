@@ -15,7 +15,12 @@ const router = express.Router();
 router.get("/profile/me", authMiddleware, profileController.obtenerMiPerfil);
 router.get("/profile/:id/contactos", authMiddleware, profileController.obtenerContactos);
 router.get("/profile/:id", authMiddleware, profileController.obtenerPerfilPorId);
-router.put("/profile/me", authMiddleware, validate(actualizarPerfilSchema), profileController.actualizarMiPerfil);
+router.put(
+  "/profile/me",
+  authMiddleware,
+  validate(actualizarPerfilSchema, "body", { abortEarly: false, stripUnknown: false }),
+  profileController.actualizarMiPerfil
+);
 router.patch(
   "/profile/me/privacy",
   authMiddleware,

@@ -291,11 +291,25 @@
   gap: 16px;
 }
 
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .editLabel {
   font-size: 14px;
   font-weight: 600;
   color: #020617;
   margin-bottom: -8px;
+}
+
+.editField .editLabel {
+  margin-bottom: 0;
+}
+
+.required {
+  color: #dc2626;
 }
 
 :global(html.dark) .editLabel {
@@ -348,6 +362,49 @@
 .editTextarea:focus {
   border-color: #00bcd4;
   box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.15);
+}
+
+.invalidPulse {
+  animation: profileFieldError 2s ease;
+}
+
+@keyframes profileFieldError {
+  0%,
+  75% {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+  }
+
+  100% {
+    border-color: #e5e7eb;
+    box-shadow: none;
+  }
+}
+
+.editError {
+  color: #dc2626;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.submitError {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 8px;
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+:global(html.dark) .editError {
+  color: #fca5a5;
+}
+
+:global(html.dark) .submitError {
+  border-color: rgba(252, 165, 165, 0.45);
+  background: rgba(220, 38, 38, 0.16);
+  color: #fecaca;
 }
 
 :global(html.dark) .editTextarea {
@@ -444,7 +501,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: -8px;
 }
 
 .editCareerTag {

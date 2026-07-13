@@ -25,6 +25,23 @@ const formatDate = (value) => {
   return date.toISOString().split("T")[0];
 };
 
+const buildEditableProfile = (estudianteData) => ({
+  id: estudianteData.id,
+  nombre: estudianteData.nombre,
+  apellido: estudianteData.apellido,
+  name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+  bio: estudianteData.bio ?? null,
+  localidad: estudianteData.localidad ?? null,
+  location: estudianteData.localidad ?? null,
+  telefono: estudianteData.telefono ?? null,
+  phone: estudianteData.telefono ?? null,
+  fecha_nacimiento: estudianteData.fecha_nacimiento ?? null,
+  birthDate: estudianteData.fecha_nacimiento ?? null,
+  pub_inscripciones: estudianteData.pub_inscripciones,
+  pub_regularizaciones: estudianteData.pub_regularizaciones,
+  pub_aprobaciones: estudianteData.pub_aprobaciones,
+});
+
 const buildAcademicStatus = async (estudianteId) => {
   const aprobadas = await estado_materia.count({
     include: [
@@ -207,7 +224,9 @@ const obtenerMiPerfil = async (req, res, next) => {
         initials: getInitials(estudianteData.nombre, estudianteData.apellido),
         name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
         career,
-        location: null,
+        location: estudianteData.localidad ?? null,
+        phone: estudianteData.telefono ?? null,
+        birthDate: estudianteData.fecha_nacimiento ?? null,
         email: estudianteData.usuario.email,
         academicStatus,
         bio: estudianteData.bio,
@@ -299,7 +318,7 @@ const obtenerPerfilPorId = async (req, res, next) => {
         name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
         activo: estudianteData.usuario.activo,
         career,
-        location: null,
+        location: estudianteData.localidad ?? null,
         email: !esDueno && estudianteData.email_visible === false ? null : estudianteData.usuario.email,
         academicStatus,
         bio: estudianteData.bio,
@@ -399,17 +418,6 @@ const obtenerContactos = async (req, res) => {
 };
 
 const actualizarMiPerfil = async (req, res, next) => {
-  const {
-    nombre,
-    apellido,
-    foto_url,
-    bio,
-    privacidad,
-    pub_inscripciones,
-    pub_regularizaciones,
-    pub_aprobaciones,
-  } = req.body;
-
   const estudianteData = await estudiante.findOne({
     where: { usuario_id: req.user.sub },
   });
@@ -420,21 +428,30 @@ const actualizarMiPerfil = async (req, res, next) => {
     throw error;
   }
 
-  await estudianteData.update({
-    nombre: nombre ?? estudianteData.nombre,
-    apellido: apellido ?? estudianteData.apellido,
-    foto_url: foto_url ?? estudianteData.foto_url,
-    bio: bio ?? estudianteData.bio,
-    privacidad: privacidad ?? estudianteData.privacidad,
-    pub_inscripciones: pub_inscripciones ?? estudianteData.pub_inscripciones,
-    pub_regularizaciones:
-      pub_regularizaciones ?? estudianteData.pub_regularizaciones,
-    pub_aprobaciones: pub_aprobaciones ?? estudianteData.pub_aprobaciones,
-  });
+  const editableFields = [
+    "nombre",
+    "apellido",
+    "bio",
+    "localidad",
+    "telefono",
+    "fecha_nacimiento",
+    "pub_inscripciones",
+    "pub_regularizaciones",
+    "pub_aprobaciones",
+  ];
+  const changes = {};
+
+  for (const field of editableFields) {
+    if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+      changes[field] = req.body[field];
+    }
+  }
+
+  await estudianteData.update(changes);
 
   return res.status(200).json({
     ok: true,
-    data: estudianteData,
+    data: buildEditableProfile(estudianteData),
   });
 };
 
@@ -462,7 +479,13 @@ const actualizarPrivacidadMiPerfil = async (req, res) => {
 
   return res.status(200).json({
     ok: true,
-    data: estudianteData,
+    data: {
+      privacidad: estudianteData.privacidad,
+      email_visible: estudianteData.email_visible,
+      pub_inscripciones: estudianteData.pub_inscripciones,
+      pub_regularizaciones: estudianteData.pub_regularizaciones,
+      pub_aprobaciones: estudianteData.pub_aprobaciones,
+    },
   });
 };
 
@@ -485,7 +508,7 @@ const actualizarAvatarMiPerfil = async (req, res) => {
 
   return res.status(200).json({
     ok: true,
-    data: estudianteData,
+    data: { foto_url: estudianteData.foto_url },
   });
 };
 

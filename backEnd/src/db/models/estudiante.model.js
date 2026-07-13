@@ -72,6 +72,18 @@ module.exports = (sequelize, DataTypes) => {
     foto_url: DataTypes.STRING,
     banner_url: DataTypes.STRING,
     bio: DataTypes.TEXT,
+    localidad: {
+      type: DataTypes.STRING(120),
+      allowNull: true,
+    },
+    telefono: {
+      type: DataTypes.STRING(32),
+      allowNull: true,
+    },
+    fecha_nacimiento: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
     privacidad: DataTypes.STRING,
     pub_inscripciones: DataTypes.BOOLEAN,
     pub_regularizaciones: DataTypes.BOOLEAN,

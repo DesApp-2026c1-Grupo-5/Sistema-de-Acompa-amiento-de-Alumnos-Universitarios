@@ -77,6 +77,28 @@ const createPlanWithSubject = async ({ creditsRequired = 20, subjectCredits = 8 
   return { carrera, plan, materia };
 };
 
+const profileAgeBoundary = () => {
+  const argentinaDate = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(new Date());
+  const dateParts = Object.fromEntries(
+    argentinaDate.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, Number(value)])
+  );
+  const boundary = new Date(
+    Date.UTC(dateParts.year - 16, dateParts.month - 1, dateParts.day)
+  );
+  const younger = new Date(boundary);
+  younger.setUTCDate(younger.getUTCDate() + 1);
+
+  return {
+    boundary: boundary.toISOString().slice(0, 10),
+    younger: younger.toISOString().slice(0, 10),
+  };
+};
+
 const ensureTestDatabase = async () => {
   const database = process.env.DB_TEST_NAME;
   const client = new Client({
@@ -179,6 +201,225 @@ describe("integracion backend", () => {
       .expect(200);
 
     expect(res.body.data.user.email).toBeNull();
+  });
+
+  test("actualiza, conserva y limpia los campos editables del perfil", async () => {
+    const student = await registerStudent("editarperfil");
+
+    const updated = await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        nombre: "  Martina  ",
+        apellido: "  Gómez  ",
+        bio: "  Bio de prueba  ",
+        localidad: "  Hurlingham  ",
+        telefono: "  +54 (11) 4444-5555  ",
+        fecha_nacimiento: "2000-02-29",
+        pub_inscripciones: false,
+        pub_regularizaciones: false,
+        pub_aprobaciones: true,
+      })
+      .expect(200);
+
+    expect(updated.body.data).toEqual(
+      expect.objectContaining({
+        nombre: "Martina",
+        apellido: "Gómez",
+        name: "Martina Gómez",
+        bio: "Bio de prueba",
+        localidad: "Hurlingham",
+        location: "Hurlingham",
+        telefono: "+54 (11) 4444-5555",
+        phone: "+54 (11) 4444-5555",
+        fecha_nacimiento: "2000-02-29",
+        birthDate: "2000-02-29",
+        pub_inscripciones: false,
+        pub_regularizaciones: false,
+        pub_aprobaciones: true,
+      })
+    );
+
+    await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ pub_aprobaciones: false })
+      .expect(200);
+
+    let persisted = await db.estudiante.findOne({ where: { usuario_id: student.user.id } });
+    expect(persisted.localidad).toBe("Hurlingham");
+    expect(persisted.telefono).toBe("+54 (11) 4444-5555");
+    expect(persisted.fecha_nacimiento).toBe("2000-02-29");
+
+    const cleared = await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ bio: "  ", localidad: null, telefono: "", fecha_nacimiento: null })
+      .expect(200);
+
+    expect(cleared.body.data).toEqual(
+      expect.objectContaining({
+        bio: null,
+        localidad: null,
+        location: null,
+        telefono: null,
+        phone: null,
+        fecha_nacimiento: null,
+        birthDate: null,
+      })
+    );
+    persisted = await db.estudiante.findOne({ where: { usuario_id: student.user.id } });
+    expect(persisted.bio).toBeNull();
+    expect(persisted.localidad).toBeNull();
+    expect(persisted.telefono).toBeNull();
+    expect(persisted.fecha_nacimiento).toBeNull();
+  });
+
+  test("devuelve todos los errores del perfil y rechaza campos desconocidos", async () => {
+    const student = await registerStudent("erroresperfil");
+    const res = await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        nombre: "A",
+        apellido: "B",
+        telefono: "+54 abc",
+        fecha_nacimiento: "2010-02-30",
+        career: "No editable",
+        email_visible: false,
+      })
+      .expect(400);
+
+    const fields = res.body.details.map((detail) => detail.field);
+    expect(fields).toEqual(
+      expect.arrayContaining([
+        "nombre",
+        "apellido",
+        "telefono",
+        "fecha_nacimiento",
+        "career",
+        "email_visible",
+      ])
+    );
+    expect(res.body.details).toHaveLength(6);
+    expect(res.body.details.map((detail) => detail.message)).toEqual(
+      expect.arrayContaining([
+        "El nombre debe tener al menos 2 caracteres.",
+        "El apellido debe tener al menos 2 caracteres.",
+        "El teléfono solo puede contener dígitos, espacios, un + inicial, guiones y paréntesis.",
+        "La fecha de nacimiento debe ser una fecha real.",
+      ])
+    );
+  });
+
+  test("valida límites de biografía, localidad y cantidad de dígitos del teléfono", async () => {
+    const student = await registerStudent("limitesperfil");
+    const res = await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        bio: "b".repeat(501),
+        localidad: "l".repeat(121),
+        telefono: "123-4567",
+      })
+      .expect(400);
+
+    expect(res.body.details.map((detail) => detail.field)).toEqual(
+      expect.arrayContaining(["bio", "localidad", "telefono"])
+    );
+
+    const tooManyDigits = await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ telefono: "1234567890123456" })
+      .expect(400);
+    expect(tooManyDigits.body.details[0].message).toBe(
+      "El teléfono debe contener entre 8 y 15 dígitos."
+    );
+  });
+
+  test("acepta exactamente 16 años y rechaza una fecha un día menor", async () => {
+    const student = await registerStudent("edadperfil");
+    const { boundary, younger } = profileAgeBoundary();
+
+    await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ fecha_nacimiento: boundary })
+      .expect(200);
+
+    const rejected = await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ fecha_nacimiento: younger })
+      .expect(400);
+
+    expect(rejected.body.details).toEqual([
+      expect.objectContaining({ field: "fecha_nacimiento", message: "Debes tener al menos 16 años." }),
+    ]);
+  });
+
+  test("solo el GET propio expone teléfono y fecha de nacimiento", async () => {
+    const owner = await registerStudent("privacidadperfil");
+    const viewer = await registerStudent("visitaperfil");
+    const admin = await createAdmin("adminperfil");
+
+    await request(app)
+      .put("/api/profile/me")
+      .set("Authorization", `Bearer ${owner.token}`)
+      .send({
+        localidad: "Morón",
+        telefono: "+54 11 4444-5555",
+        fecha_nacimiento: "2000-01-15",
+      })
+      .expect(200);
+
+    const privacyUpdate = await request(app)
+      .patch("/api/profile/me/privacy")
+      .set("Authorization", `Bearer ${owner.token}`)
+      .send({ pub_inscripciones: false })
+      .expect(200);
+    expect(privacyUpdate.body.data).not.toHaveProperty("phone");
+    expect(privacyUpdate.body.data).not.toHaveProperty("telefono");
+    expect(privacyUpdate.body.data).not.toHaveProperty("birthDate");
+    expect(privacyUpdate.body.data).not.toHaveProperty("fecha_nacimiento");
+
+    const own = await request(app)
+      .get("/api/profile/me")
+      .set("Authorization", `Bearer ${owner.token}`)
+      .expect(200);
+    expect(own.body.data.user).toEqual(
+      expect.objectContaining({
+        location: "Morón",
+        phone: "+54 11 4444-5555",
+        birthDate: "2000-01-15",
+      })
+    );
+
+    for (const token of [owner.token, viewer.token, admin.token]) {
+      const profile = await request(app)
+        .get(`/api/profile/${owner.user.estudiante.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(profile.body.data.user.location).toBe("Morón");
+      expect(profile.body.data.user).not.toHaveProperty("phone");
+      expect(profile.body.data.user).not.toHaveProperty("birthDate");
+    }
+
+    await request(app)
+      .patch("/api/profile/me/privacy")
+      .set("Authorization", `Bearer ${owner.token}`)
+      .send({ privacidad: "privado" })
+      .expect(200);
+    const privateProfile = await request(app)
+      .get(`/api/profile/${owner.user.estudiante.id}`)
+      .set("Authorization", `Bearer ${viewer.token}`)
+      .expect(200);
+    expect(privateProfile.body.data.privado).toBe(true);
+    expect(privateProfile.body.data.user).not.toHaveProperty("location");
+    expect(privateProfile.body.data.user).not.toHaveProperty("phone");
+    expect(privateProfile.body.data.user).not.toHaveProperty("birthDate");
   });
 
   test("crea y elimina una publicacion propia", async () => {
