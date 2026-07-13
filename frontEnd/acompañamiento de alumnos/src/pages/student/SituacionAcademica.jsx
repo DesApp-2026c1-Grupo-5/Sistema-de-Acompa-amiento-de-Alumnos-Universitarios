@@ -644,7 +644,7 @@ export default function SituacionAcademica() {
                         </td>
                         <td className={styles.semesterCell} data-label="Cuatrimestre">
                           {editandoMaterias ? (
-                            <input type="number" min="1" max="2" value={materia.academic_semester || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_semester', e.target.value ? Number(e.target.value) : null)} />
+                            <input type="number" min="1" max="2" value={materia.academic_semester || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_semester', e.target.value ? Math.max(1, Math.min(2, Number(e.target.value))) : null)} />
                           ) : (
                             materia.academic_semester ? `${materia.academic_semester}°` : '-'
                           )}
@@ -800,7 +800,7 @@ export default function SituacionAcademica() {
               <option value="pendiente">Pendiente</option>
               <option value="aprobada">Aprobada</option>
             </select>
-            <input type="number" placeholder="Créditos" value={formActividad.creditos} onChange={(e) => setFormActividad((p) => ({ ...p, creditos: e.target.value }))} />
+            <input type="number" min="0" step="0.1" placeholder="Créditos" value={formActividad.creditos} onChange={(e) => setFormActividad((p) => ({ ...p, creditos: e.target.value ? Math.max(0, Number(e.target.value)) : '' }))} />
             <input type="date" value={formActividad.fecha} onChange={(e) => setFormActividad((p) => ({ ...p, fecha: e.target.value }))} />
             <button type="button" className={styles.primaryButton} onClick={handleAgregarActividad}>Agregar</button>
           </div>
