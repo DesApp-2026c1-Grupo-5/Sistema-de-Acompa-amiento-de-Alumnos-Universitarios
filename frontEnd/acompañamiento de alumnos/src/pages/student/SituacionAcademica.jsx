@@ -651,7 +651,19 @@ export default function SituacionAcademica() {
                         </td>
                         <td className={styles.gradeCell} data-label="Nota">
                           {editandoMaterias ? (
-                            <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'grade', e.target.value ? Math.max(0, Math.min(10, Number(e.target.value))) : null)} />
+                            <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => {
+                              const nota = e.target.value ? Math.max(0, Math.min(10, Number(e.target.value))) : null;
+                              actualizarMateriaLocal(materia.materia_id, 'grade', nota);
+                              if (nota !== null) {
+                                if (nota >= 7) {
+                                  actualizarMateriaLocal(materia.materia_id, 'status', 'aprobada');
+                                } else if (nota >= 4) {
+                                  actualizarMateriaLocal(materia.materia_id, 'status', 'regular');
+                                } else if (materia.status === 'aprobada' || materia.status === 'regular') {
+                                  actualizarMateriaLocal(materia.materia_id, 'status', 'pendiente');
+                                }
+                              }
+                            }} />
                           ) : (
                             materia.grade ?? '-'
                           )}
