@@ -9,7 +9,6 @@ import {
   actualizarMaterias,
   crearFinal,
   eliminarFinal,
-  actualizarFinal,
   crearActividad,
   actualizarActividad,
   eliminarActividad,
@@ -679,10 +678,6 @@ export default function SituacionAcademica() {
                                       onChange={(e) => { f._fecha = e.target.value; }} />
                                     <input type="number" min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
                                       onChange={(e) => { f._nota = Math.max(0, Math.min(10, Number(e.target.value) || 0)); }} />
-                                    <button type="button" className={styles.smallBtn} onClick={async () => {
-                                      await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: f._nota ?? f.nota });
-                                      await cargarDatos();
-                                    }}>💾</button>
                                     <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
                                   </>
                                 ) : (
