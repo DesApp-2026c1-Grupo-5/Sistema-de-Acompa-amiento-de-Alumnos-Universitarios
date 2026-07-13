@@ -556,10 +556,20 @@ const cambiarCarrera = async (req, res, next) => {
 
   await db.sequelize.transaction(async (t) => {
 
-    await final.destroy({
-      where: {},
+    const estadosSit = await estado_materia.findAll({
+      where: { situacion_id: situacion.id },
+      attributes: ["id"],
+      raw: true,
       transaction: t,
     });
+    const estadoIds = estadosSit.map((e) => e.id);
+
+    if (estadoIds.length > 0) {
+      await final.destroy({
+        where: { estado_materia_id: { [Op.in]: estadoIds } },
+        transaction: t,
+      });
+    }
 
     await estado_materia.destroy({
       where: {
