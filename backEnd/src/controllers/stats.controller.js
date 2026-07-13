@@ -197,7 +197,8 @@ const computeMateriasPorCarrera = async () => {
 
     for (const plan of plain.planes || []) {
       for (const mat of plan.materias || []) {
-        for (const em of mat.estado_materias || []) {
+        const estadosMateria = mat.estado_materias || mat.estado_materia || [];
+        for (const em of estadosMateria) {
           const estado = (em.estado || "").trim().toLowerCase();
           if (estado === "cursando") cursadas += 1;
           if (ESTADOS_APROBADOS.includes(estado)) aprobadas += 1;

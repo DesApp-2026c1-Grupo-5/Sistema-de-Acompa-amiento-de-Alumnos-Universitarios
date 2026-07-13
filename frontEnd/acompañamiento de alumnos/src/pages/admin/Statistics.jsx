@@ -197,13 +197,15 @@ function UsoSistema({ data }) {
         />
       </div>
 
-      <CareerSubjectsCard
-        items={data.materiasPorCarrera}
-      />
+      <div className={styles.twoColumns}>
+        <CareerSubjectsCard
+          items={data.materiasPorCarrera}
+        />
 
-      <ApprovedCareerCard
-        items={data.materiasAprobadasPorCarrera || []}
-      />
+        <ApprovedCareerCard
+          items={data.materiasAprobadasPorCarrera || []}
+        />
+      </div>
 
       <MonthlyLineChart
         title="Sesiones de estudio creadas por período"
@@ -443,13 +445,8 @@ function CareerSubjectsCard({ items }) {
     ...items.map((item) => item.cursadas)
   );
 
-  const maxAprobadas = Math.max(
-    1,
-    ...items.map((item) => item.aprobadas)
-  );
-
   return (
-    <section className={styles.card}>
+    <section className={`${styles.card} ${styles.scrollTableCard}`}>
       <h2>Materias cursadas por carrera</h2>
 
       <div className={styles.careerList}>
@@ -460,46 +457,13 @@ function CareerSubjectsCard({ items }) {
           >
             <h3>{item.career}</h3>
 
-            <div className={styles.careerBars}>
-              <div>
-                <span>Cursadas</span>
+            <div className={styles.barLine}>
+              <div
+                className={styles.barCyan}
+                style={{ width: `${(item.cursadas / maxCursadas) * 100}%` }}
+              />
 
-                <div className={styles.barLine}>
-                  <div
-                    className={styles.barCyan}
-                    style={{
-                      width: `${
-                        (item.cursadas /
-                          maxCursadas) *
-                        100
-                      }%`,
-                    }}
-                  />
-
-                  <strong>{item.cursadas}</strong>
-                </div>
-              </div>
-
-              <div>
-                <span>Aprobadas</span>
-
-                <div className={styles.barLine}>
-                  <div
-                    className={styles.barGreen}
-                    style={{
-                      width: `${
-                        (item.aprobadas /
-                          maxAprobadas) *
-                        100
-                      }%`,
-                    }}
-                  />
-
-                  <strong>
-                    {item.aprobadas}
-                  </strong>
-                </div>
-              </div>
+              <strong>{item.cursadas}</strong>
             </div>
           </div>
         ))}
@@ -515,7 +479,7 @@ function ApprovedCareerCard({ items }) {
   );
 
   return (
-    <section className={styles.card}>
+    <section className={`${styles.card} ${styles.scrollTableCard}`}>
       <h2>Materias aprobadas por carrera</h2>
 
       <div className={styles.careerList}>

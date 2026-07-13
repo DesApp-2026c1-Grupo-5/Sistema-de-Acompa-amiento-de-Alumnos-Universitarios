@@ -294,20 +294,6 @@
   font-weight: 500;
 }
 
-.careerBars {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-}
-
-.careerBars span {
-  display: block;
-  margin-bottom: 5px;
-
-  font-size: 11px;
-  color: #405a7a;
-}
-
 .barLine {
   display: flex;
   align-items: center;
@@ -543,11 +529,8 @@
 }
 
 @media (max-width: 900px) {
-
-  .filtersCard,
   .metricsGrid,
-  .twoColumns,
-  .careerBars {
+  .twoColumns {
     grid-template-columns: 1fr;
   }
 }
@@ -567,35 +550,6 @@
 
 :global(html.dark) .pageHeader p {
   color: #8aa0c2;
-}
-
-/* FILTERS */
-
-:global(html.dark) .filtersCard {
-  background: #1b2942;
-  border-color: #31415f;
-}
-
-:global(html.dark) .filterGroup label {
-  color: #9db1ce;
-}
-
-:global(html.dark) .filterGroup select {
-  background: #081226;
-  border-color: #31415f;
-  color: #ffffff;
-}
-
-:global(html.dark) .filterGroup select,
-:global(html.dark) .filterGroup select option {
-  background: #081226 !important;
-  color: #ffffff !important;
-}
-
-:global(html.dark) .filterGroup select:focus {
-  border-color: #22d3ee !important;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
 }
 
 /* TABS */
@@ -637,7 +591,6 @@
 
 :global(html.dark) .metricCard p,
 :global(html.dark) .distributionHeader span:last-child,
-:global(html.dark) .careerBars span,
 :global(html.dark) .table th,
 :global(html.dark) .chartLabels,
 :global(html.dark) .chartFooter,
