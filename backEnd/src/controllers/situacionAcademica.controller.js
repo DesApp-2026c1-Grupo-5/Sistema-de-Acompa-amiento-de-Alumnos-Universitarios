@@ -337,6 +337,13 @@ const crearFinal = async (req, res, next) => {
     aprobado,
   });
 
+  if (aprobado) {
+    await estado_materia.update(
+      { estado: "aprobada", nota, fecha: new Date(fecha) },
+      { where: { id: estado_materia_id } }
+    );
+  }
+
   return res.status(201).json({ ok: true, data: nuevo });
 };
 
@@ -516,6 +523,13 @@ const actualizarFinal = async (req, res, next) => {
     aprobado,
   });
 
+  if (aprobado) {
+    await estado_materia.update(
+      { estado: "aprobada", nota: f.nota, fecha: f.fecha },
+      { where: { id: f.estado_materia_id } }
+    );
+  }
+
   return res.status(200).json({ ok: true, data: f });
 };
 
@@ -542,10 +556,20 @@ const cambiarCarrera = async (req, res, next) => {
 
   await db.sequelize.transaction(async (t) => {
 
-    await final.destroy({
-      where: {},
+    const estadosSit = await estado_materia.findAll({
+      where: { situacion_id: situacion.id },
+      attributes: ["id"],
+      raw: true,
       transaction: t,
     });
+    const estadoIds = estadosSit.map((e) => e.id);
+
+    if (estadoIds.length > 0) {
+      await final.destroy({
+        where: { estado_materia_id: { [Op.in]: estadoIds } },
+        transaction: t,
+      });
+    }
 
     await estado_materia.destroy({
       where: {
