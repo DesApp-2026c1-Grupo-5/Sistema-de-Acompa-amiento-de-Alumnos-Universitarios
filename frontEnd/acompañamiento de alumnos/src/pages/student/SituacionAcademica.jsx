@@ -209,7 +209,9 @@ export default function SituacionAcademica() {
   const [cambiandoCarrera, setCambiandoCarrera] = useState(false);
   const [expandedMateria, setExpandedMateria] = useState(null);
   const [expandedActividad, setExpandedActividad] = useState(null);
+  const [finalErrors, setFinalErrors] = useState({});
   const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
+  const [activityErrors, setActivityErrors] = useState({});
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
@@ -322,7 +324,12 @@ export default function SituacionAcademica() {
 
   const handleAgregarActividad = async () => {
     const { descripcion, creditos, fecha, estado } = formActividad;
-    if (!descripcion || !creditos || !fecha) return;
+    const missing = { descripcion: !descripcion, creditos: !creditos, fecha: !fecha };
+    if (missing.descripcion || missing.creditos || missing.fecha) {
+      setActivityErrors(missing);
+      return;
+    }
+    setActivityErrors({});
     try {
       await crearActividad({ descripcion, creditos: Number(creditos), fecha, estado });
       setFormActividad({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
@@ -341,6 +348,17 @@ export default function SituacionAcademica() {
     }
   };
 
+  const tryAutoSaveFinal = (materiaId) => {
+    const fechaInput = document.getElementById(`fecha-${materiaId}`);
+    const notaInput = document.getElementById(`nota-${materiaId}`);
+    if (!fechaInput || !notaInput) return;
+    const fecha = fechaInput.value;
+    const nota = Number(notaInput.value);
+    if (fecha && !Number.isNaN(nota) && nota >= 0 && nota <= 10) {
+      handleAgregarFinal(materiaId);
+    }
+  };
+
   const handleAgregarFinal = async (materiaId) => {
     const fechaInput = document.getElementById(`fecha-${materiaId}`);
     const notaInput = document.getElementById(`nota-${materiaId}`);
@@ -349,11 +367,19 @@ export default function SituacionAcademica() {
 
     const fecha = fechaInput.value;
     const nota = Number(notaInput.value);
+    const missingFecha = !fecha;
+    const missingNota = Number.isNaN(nota) || nota < 0 || nota > 10;
 
-    if (!fecha || Number.isNaN(nota) || nota < 0 || nota > 10) {
-      setError('Completá la fecha y la nota (0-10)');
+    if (missingFecha || missingNota) {
+      setFinalErrors((prev) => ({ ...prev, [materiaId]: { fecha: missingFecha, nota: missingNota } }));
       return;
     }
+
+    setFinalErrors((prev) => {
+      const next = { ...prev };
+      delete next[materiaId];
+      return next;
+    });
 
     const materia = data.subjects.find((s) => s.materia_id === materiaId);
 
@@ -377,8 +403,8 @@ export default function SituacionAcademica() {
             estado: 'aprobada',
             anio: materia.academic_year,
             cuatrimestre: materia.academic_semester,
-            nota,
-            fecha,
+            nota: materia.grade,
+            fecha: materia.fecha,
           },
         ]);
       }
@@ -644,14 +670,26 @@ export default function SituacionAcademica() {
                         </td>
                         <td className={styles.semesterCell} data-label="Cuatrimestre">
                           {editandoMaterias ? (
-                            <input type="number" min="1" max="2" value={materia.academic_semester || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_semester', e.target.value ? Number(e.target.value) : null)} />
+                            <input type="number" min="1" max="2" value={materia.academic_semester || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_semester', e.target.value ? Math.max(1, Math.min(2, Number(e.target.value))) : null)} />
                           ) : (
                             materia.academic_semester ? `${materia.academic_semester}°` : '-'
                           )}
                         </td>
                         <td className={styles.gradeCell} data-label="Nota">
                           {editandoMaterias ? (
-                            <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'grade', e.target.value ? Number(e.target.value) : null)} />
+                            <input type="number" min="0" max="10" step="0.1" value={materia.grade ?? ''} onChange={(e) => {
+                              const nota = e.target.value ? Math.max(0, Math.min(10, Number(e.target.value))) : null;
+                              actualizarMateriaLocal(materia.materia_id, 'grade', nota);
+                              if (nota !== null) {
+                                if (nota >= 7) {
+                                  actualizarMateriaLocal(materia.materia_id, 'status', 'aprobada');
+                                } else if (nota >= 4) {
+                                  actualizarMateriaLocal(materia.materia_id, 'status', 'regular');
+                                } else if (materia.status === 'aprobada' || materia.status === 'regular') {
+                                  actualizarMateriaLocal(materia.materia_id, 'status', 'pendiente');
+                                }
+                              }
+                            }} />
                           ) : (
                             materia.grade ?? '-'
                           )}
@@ -664,13 +702,17 @@ export default function SituacionAcademica() {
                                 {editandoMaterias ? (
                                   <>
                                     <input type="date" defaultValue={f.fecha?.split('T')[0]} style={{ width: 120, fontSize: 11 }}
-                                      onChange={(e) => { f._fecha = e.target.value; }} />
+                                      onChange={async (e) => { f._fecha = e.target.value; await actualizarFinal(f.id, { fecha: e.target.value, nota: f._nota ?? f.nota }); await cargarDatos(); }} />
                                     <input type="number" min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
-                                      onChange={(e) => { f._nota = Number(e.target.value); }} />
-                                    <button type="button" className={styles.smallBtn} onClick={async () => {
-                                      await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: f._nota ?? f.nota });
-                                      await cargarDatos();
-                                    }}>💾</button>
+                                      onChange={(e) => { const v = Math.max(0, Math.min(10, Number(e.target.value) || 0)); e.target.value = v; f._nota = v; }}
+                                      onBlur={async () => {
+                                        const notaFinal = f._nota ?? f.nota;
+                                        await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: notaFinal });
+                                        if (notaFinal >= 4 && materia.status !== 'aprobada') {
+                                          await actualizarMaterias([{ materia_id: materia.materia_id, estado: 'aprobada', anio: materia.academic_year, cuatrimestre: materia.academic_semester, nota: materia.grade, fecha: materia.fecha }]);
+                                        }
+                                        await cargarDatos();
+                                      }} />
                                     <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
                                   </>
                                 ) : (
@@ -688,8 +730,8 @@ export default function SituacionAcademica() {
                             ))}
                             {editandoMaterias && (
                               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11 }} />
-                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11 }} placeholder="Nota" />
+                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11, ...(finalErrors[materia.materia_id]?.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} onChange={() => setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], fecha: false }; } return next; })} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
+                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11, ...(finalErrors[materia.materia_id]?.nota ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} placeholder="Nota" onChange={(e) => { e.target.value = Math.max(0, Math.min(10, Number(e.target.value) || 0)); setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], nota: false }; } return next; }); }} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
                                 <button type="button" className={styles.smallBtn} onClick={() => handleAgregarFinal(materia.materia_id)}>+</button>
                               </div>
                             )}
@@ -783,13 +825,13 @@ export default function SituacionAcademica() {
         )}
         {editandoActividades && (
           <div className={styles.actividadForm}>
-            <input type="text" placeholder="Descripción" value={formActividad.descripcion} onChange={(e) => setFormActividad((p) => ({ ...p, descripcion: e.target.value }))} />
+            <input type="text" placeholder="Descripción" value={formActividad.descripcion} onChange={(e) => { setFormActividad((p) => ({ ...p, descripcion: e.target.value })); setActivityErrors((p) => ({ ...p, descripcion: false })); }} style={activityErrors.descripcion ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}} />
             <select value={formActividad.estado || 'pendiente'} onChange={(e) => setFormActividad((p) => ({ ...p, estado: e.target.value }))}>
               <option value="pendiente">Pendiente</option>
               <option value="aprobada">Aprobada</option>
             </select>
-            <input type="number" placeholder="Créditos" value={formActividad.creditos} onChange={(e) => setFormActividad((p) => ({ ...p, creditos: e.target.value }))} />
-            <input type="date" value={formActividad.fecha} onChange={(e) => setFormActividad((p) => ({ ...p, fecha: e.target.value }))} />
+            <input type="number" min="0" step="0.1" placeholder="Créditos" value={formActividad.creditos} onChange={(e) => { setFormActividad((p) => ({ ...p, creditos: e.target.value ? Math.max(0, Number(e.target.value)) : '' })); setActivityErrors((p) => ({ ...p, creditos: false })); }} style={activityErrors.creditos ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}} />
+            <input type="date" max={new Date().toISOString().split('T')[0]} value={formActividad.fecha} onChange={(e) => { setFormActividad((p) => ({ ...p, fecha: e.target.value })); setActivityErrors((p) => ({ ...p, fecha: false })); }} style={activityErrors.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}} />
             <button type="button" className={styles.primaryButton} onClick={handleAgregarActividad}>Agregar</button>
           </div>
         )}

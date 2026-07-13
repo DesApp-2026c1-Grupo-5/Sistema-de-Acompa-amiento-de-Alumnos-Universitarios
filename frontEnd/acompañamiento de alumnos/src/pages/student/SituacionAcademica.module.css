@@ -928,6 +928,17 @@
   width: 130px;
 }
 
+.actividadForm select {
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #020617;
+  font-size: 12px;
+  outline: none;
+}
+
 :global(.dark) .wizardCard {
   background: #1e293b;
   border-color: #334155;
@@ -958,6 +969,12 @@
 }
 
 :global(.dark) .actividadForm input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+:global(.dark) .actividadForm select {
   background: #0f172a;
   border-color: #334155;
   color: #ffffff;
