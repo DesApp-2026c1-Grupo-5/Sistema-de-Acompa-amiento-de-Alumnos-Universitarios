@@ -342,6 +342,17 @@ export default function SituacionAcademica() {
     }
   };
 
+  const tryAutoSaveFinal = (materiaId) => {
+    const fechaInput = document.getElementById(`fecha-${materiaId}`);
+    const notaInput = document.getElementById(`nota-${materiaId}`);
+    if (!fechaInput || !notaInput) return;
+    const fecha = fechaInput.value;
+    const nota = Number(notaInput.value);
+    if (fecha && !Number.isNaN(nota) && nota >= 0 && nota <= 10) {
+      handleAgregarFinal(materiaId);
+    }
+  };
+
   const handleAgregarFinal = async (materiaId) => {
     const fechaInput = document.getElementById(`fecha-${materiaId}`);
     const notaInput = document.getElementById(`nota-${materiaId}`);
@@ -386,8 +397,8 @@ export default function SituacionAcademica() {
             estado: 'aprobada',
             anio: materia.academic_year,
             cuatrimestre: materia.academic_semester,
-            nota,
-            fecha,
+            nota: materia.grade,
+            fecha: materia.fecha,
           },
         ]);
       }
@@ -688,7 +699,14 @@ export default function SituacionAcademica() {
                                       onChange={async (e) => { f._fecha = e.target.value; await actualizarFinal(f.id, { fecha: e.target.value, nota: f._nota ?? f.nota }); await cargarDatos(); }} />
                                     <input type="number" min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
                                       onChange={(e) => { const v = Math.max(0, Math.min(10, Number(e.target.value) || 0)); e.target.value = v; f._nota = v; }}
-                                      onBlur={async () => { await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: f._nota ?? f.nota }); await cargarDatos(); }} />
+                                      onBlur={async () => {
+                                        const notaFinal = f._nota ?? f.nota;
+                                        await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: notaFinal });
+                                        if (notaFinal >= 4 && materia.status !== 'aprobada') {
+                                          await actualizarMaterias([{ materia_id: materia.materia_id, estado: 'aprobada', anio: materia.academic_year, cuatrimestre: materia.academic_semester, nota: materia.grade, fecha: materia.fecha }]);
+                                        }
+                                        await cargarDatos();
+                                      }} />
                                     <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
                                   </>
                                 ) : (
@@ -706,8 +724,8 @@ export default function SituacionAcademica() {
                             ))}
                             {editandoMaterias && (
                               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11, ...(finalErrors[materia.materia_id]?.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} onChange={() => setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], fecha: false }; } return next; })} />
-                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11, ...(finalErrors[materia.materia_id]?.nota ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} placeholder="Nota" onChange={(e) => { e.target.value = Math.max(0, Math.min(10, Number(e.target.value) || 0)); setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], nota: false }; } return next; }); }} />
+                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11, ...(finalErrors[materia.materia_id]?.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} onChange={() => setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], fecha: false }; } return next; })} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
+                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11, ...(finalErrors[materia.materia_id]?.nota ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} placeholder="Nota" onChange={(e) => { e.target.value = Math.max(0, Math.min(10, Number(e.target.value) || 0)); setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], nota: false }; } return next; }); }} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
                                 <button type="button" className={styles.smallBtn} onClick={() => handleAgregarFinal(materia.materia_id)}>+</button>
                               </div>
                             )}
