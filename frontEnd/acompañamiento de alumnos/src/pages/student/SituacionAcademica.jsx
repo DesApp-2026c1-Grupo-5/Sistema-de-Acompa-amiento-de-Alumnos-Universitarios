@@ -9,6 +9,7 @@ import {
   actualizarMaterias,
   crearFinal,
   eliminarFinal,
+  actualizarFinal,
   crearActividad,
   actualizarActividad,
   eliminarActividad,
@@ -208,6 +209,7 @@ export default function SituacionAcademica() {
   const [cambiandoCarrera, setCambiandoCarrera] = useState(false);
   const [expandedMateria, setExpandedMateria] = useState(null);
   const [expandedActividad, setExpandedActividad] = useState(null);
+  const [finalErrors, setFinalErrors] = useState({});
   const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
 
   const cargarDatos = useCallback(async () => {
@@ -348,11 +350,19 @@ export default function SituacionAcademica() {
 
     const fecha = fechaInput.value;
     const nota = Number(notaInput.value);
+    const missingFecha = !fecha;
+    const missingNota = Number.isNaN(nota) || nota < 0 || nota > 10;
 
-    if (!fecha || Number.isNaN(nota) || nota < 0 || nota > 10) {
-      setError('Completá la fecha y la nota (0-10)');
+    if (missingFecha || missingNota) {
+      setFinalErrors((prev) => ({ ...prev, [materiaId]: { fecha: missingFecha, nota: missingNota } }));
       return;
     }
+
+    setFinalErrors((prev) => {
+      const next = { ...prev };
+      delete next[materiaId];
+      return next;
+    });
 
     const materia = data.subjects.find((s) => s.materia_id === materiaId);
 
@@ -650,7 +660,7 @@ export default function SituacionAcademica() {
                         </td>
                         <td className={styles.gradeCell} data-label="Nota">
                           {editandoMaterias ? (
-                            <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => {
+                            <input type="number" min="0" max="10" step="0.1" value={materia.grade ?? ''} onChange={(e) => {
                               const nota = e.target.value ? Math.max(0, Math.min(10, Number(e.target.value))) : null;
                               actualizarMateriaLocal(materia.materia_id, 'grade', nota);
                               if (nota !== null) {
@@ -675,9 +685,10 @@ export default function SituacionAcademica() {
                                 {editandoMaterias ? (
                                   <>
                                     <input type="date" defaultValue={f.fecha?.split('T')[0]} style={{ width: 120, fontSize: 11 }}
-                                      onChange={(e) => { f._fecha = e.target.value; }} />
+                                      onChange={async (e) => { f._fecha = e.target.value; await actualizarFinal(f.id, { fecha: e.target.value, nota: f._nota ?? f.nota }); await cargarDatos(); }} />
                                     <input type="number" min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
-                                      onChange={(e) => { f._nota = Math.max(0, Math.min(10, Number(e.target.value) || 0)); }} />
+                                      onChange={(e) => { const v = Math.max(0, Math.min(10, Number(e.target.value) || 0)); e.target.value = v; f._nota = v; }}
+                                      onBlur={async () => { await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: f._nota ?? f.nota }); await cargarDatos(); }} />
                                     <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
                                   </>
                                 ) : (
@@ -695,8 +706,8 @@ export default function SituacionAcademica() {
                             ))}
                             {editandoMaterias && (
                               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11 }} />
-                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11 }} placeholder="Nota" />
+                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11, ...(finalErrors[materia.materia_id]?.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} onChange={() => setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], fecha: false }; } return next; })} />
+                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11, ...(finalErrors[materia.materia_id]?.nota ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} placeholder="Nota" onChange={(e) => { e.target.value = Math.max(0, Math.min(10, Number(e.target.value) || 0)); setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], nota: false }; } return next; }); }} />
                                 <button type="button" className={styles.smallBtn} onClick={() => handleAgregarFinal(materia.materia_id)}>+</button>
                               </div>
                             )}
