@@ -24,15 +24,6 @@ import { deletePost, votePost } from '../../services/postService';
 import { useAuth } from '../../context/useAuth';
 import styles from './Profile.module.css';
 
-const getStoredCareersText = () => {
-  try {
-    const careers = JSON.parse(localStorage.getItem('profileCareers') || '[]');
-    return careers.length > 0 ? careers.join(', ') : '';
-  } catch {
-    return '';
-  }
-};
-
 function Profile() {
   const { userId } = useParams();
   const { user, updateUser } = useAuth();
@@ -57,15 +48,7 @@ function Profile() {
     const fetch = isOwnProfile ? getMyProfile() : getProfileById(userId);
     fetch
       .then((res) => {
-        const storedCareer = getStoredCareersText();
-
-        setProfile({
-          ...res.data,
-          user: {
-            ...res.data.user,
-            career: storedCareer || res.data.user.career,
-          },
-        });
+        setProfile(res.data);
         if (isOwnProfile && (user?.estudiante?.foto_url ?? null) !== (res.data.user.foto_url ?? null)) {
           syncAuthFoto(res.data.user.foto_url);
         }
@@ -79,33 +62,37 @@ function Profile() {
     const fullName = (data.name ?? '').trim();
     const [nombre, ...resto] = fullName.split(/\s+/);
     const apellido = resto.join(' ');
-    const careersStr = (data.careers || []).join(', ');
 
-    localStorage.setItem('profileCareers', JSON.stringify(data.careers || []));
-    localStorage.setItem('autoPublishPrefs', JSON.stringify(data.autoPublish || {}));
-    localStorage.setItem('profileExtraData', JSON.stringify({
-      phone: data.phone || '',
-      birthDate: data.birthDate || '',
-    }));
-
-    await updateMyProfile({
+    const res = await updateMyProfile({
       nombre,
       apellido,
       bio: data.bio,
-      career: careersStr,
-      location: data.localidad,
+      localidad: data.localidad,
+      telefono: data.phone,
+      fecha_nacimiento: data.birthDate,
+      pub_inscripciones: data.autoPublish.enrollment,
+      pub_regularizaciones: data.autoPublish.regular,
+      pub_aprobaciones: data.autoPublish.approved,
     });
+
+    const updated = res.data;
 
     setProfile((prev) => ({
       ...prev,
       user: {
         ...prev.user,
-        name: fullName,
-        bio: data.bio,
-        career: careersStr,
-        location: data.localidad,
+        name: updated.name,
+        bio: updated.bio,
+        location: updated.location,
+        phone: updated.phone,
+        birthDate: updated.birthDate,
+        pub_inscripciones: updated.pub_inscripciones,
+        pub_regularizaciones: updated.pub_regularizaciones,
+        pub_aprobaciones: updated.pub_aprobaciones,
       },
     }));
+
+    return res;
   };
 
   const handleToggleVisibility = async () => {
@@ -330,7 +317,10 @@ function Profile() {
       )}
 
       <PublicationsList
-        publications={profile.publications}
+        publications={profile.publications.map((publication) => ({
+          ...publication,
+          authorImage: profile.user.foto_url,
+        }))}
         userReactions={profile.userReactions}
         currentUserId={ownId}
         onLike={(id) => handleVote(id, 'like')}
