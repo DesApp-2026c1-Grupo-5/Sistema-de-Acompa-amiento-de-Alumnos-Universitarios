@@ -337,6 +337,13 @@ const crearFinal = async (req, res, next) => {
     aprobado,
   });
 
+  if (aprobado) {
+    await estado_materia.update(
+      { estado: "aprobada", nota, fecha: new Date(fecha) },
+      { where: { id: estado_materia_id } }
+    );
+  }
+
   return res.status(201).json({ ok: true, data: nuevo });
 };
 
@@ -515,6 +522,13 @@ const actualizarFinal = async (req, res, next) => {
     nota: nota !== undefined ? nota : f.nota,
     aprobado,
   });
+
+  if (aprobado) {
+    await estado_materia.update(
+      { estado: "aprobada", nota: f.nota, fecha: f.fecha },
+      { where: { id: f.estado_materia_id } }
+    );
+  }
 
   return res.status(200).json({ ok: true, data: f });
 };
