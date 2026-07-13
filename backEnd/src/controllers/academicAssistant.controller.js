@@ -61,16 +61,23 @@ const buildFinals = async (situacionId) => {
 
   const finalRecords = await final.findAll({
     where: { estado_materia_id: { [Op.in]: regularEstadoIds } },
-    attributes: ["estado_materia_id"],
+    attributes: ["estado_materia_id", "aprobado"],
     raw: true,
   });
+
+  const aprobados = new Set(
+    finalRecords.filter((f) => f.aprobado).map((f) => f.estado_materia_id)
+  );
 
   const attemptCount = new Map();
   for (const f of finalRecords) {
     attemptCount.set(f.estado_materia_id, (attemptCount.get(f.estado_materia_id) || 0) + 1);
   }
 
-  const materiaIds = estadosRegulares.map((e) => e.materia_id);
+  const pendientes = estadosRegulares.filter((e) => !aprobados.has(e.id));
+  if (pendientes.length === 0) return [];
+
+  const materiaIds = pendientes.map((e) => e.materia_id);
   const materiasMap = {};
   if (materiaIds.length > 0) {
     const materias = await materia.findAll({
@@ -85,7 +92,7 @@ const buildFinals = async (situacionId) => {
 
   const ahora = new Date();
 
-  return estadosRegulares.map((e) => {
+  return pendientes.map((e) => {
     const fechaRegular = e.fecha ? new Date(e.fecha) : new Date();
     const expiracion = new Date(fechaRegular);
     expiracion.setFullYear(expiracion.getFullYear() + 2);
