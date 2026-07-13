@@ -144,7 +144,8 @@ const buildYearsAnalysis = (materias, estadoPorMateria) => {
 };
 
 const getAcademicAssistant = async (req, res, next) => {
-  const estudianteData = await estudiante.findOne({
+  try {
+    const estudianteData = await estudiante.findOne({
     where: { usuario_id: req.user.sub },
   });
 
@@ -299,6 +300,9 @@ const getAcademicAssistant = async (req, res, next) => {
       },
     },
   });
+  } catch (err) {
+    next(err);
+  }
 };
 
 const getPlanSubjects = async (req, res, next) => {
