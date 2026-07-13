@@ -211,6 +211,7 @@ export default function SituacionAcademica() {
   const [expandedActividad, setExpandedActividad] = useState(null);
   const [finalErrors, setFinalErrors] = useState({});
   const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
+  const [activityErrors, setActivityErrors] = useState({});
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
@@ -323,7 +324,12 @@ export default function SituacionAcademica() {
 
   const handleAgregarActividad = async () => {
     const { descripcion, creditos, fecha, estado } = formActividad;
-    if (!descripcion || !creditos || !fecha) return;
+    const missing = { descripcion: !descripcion, creditos: !creditos, fecha: !fecha };
+    if (missing.descripcion || missing.creditos || missing.fecha) {
+      setActivityErrors(missing);
+      return;
+    }
+    setActivityErrors({});
     try {
       await crearActividad({ descripcion, creditos: Number(creditos), fecha, estado });
       setFormActividad({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
@@ -819,13 +825,13 @@ export default function SituacionAcademica() {
         )}
         {editandoActividades && (
           <div className={styles.actividadForm}>
-            <input type="text" placeholder="Descripción" value={formActividad.descripcion} onChange={(e) => setFormActividad((p) => ({ ...p, descripcion: e.target.value }))} />
+            <input type="text" placeholder="Descripción" value={formActividad.descripcion} onChange={(e) => { setFormActividad((p) => ({ ...p, descripcion: e.target.value })); setActivityErrors((p) => ({ ...p, descripcion: false })); }} style={activityErrors.descripcion ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}} />
             <select value={formActividad.estado || 'pendiente'} onChange={(e) => setFormActividad((p) => ({ ...p, estado: e.target.value }))}>
               <option value="pendiente">Pendiente</option>
               <option value="aprobada">Aprobada</option>
             </select>
-            <input type="number" min="0" step="0.1" placeholder="Créditos" value={formActividad.creditos} onChange={(e) => setFormActividad((p) => ({ ...p, creditos: e.target.value ? Math.max(0, Number(e.target.value)) : '' }))} />
-            <input type="date" value={formActividad.fecha} onChange={(e) => setFormActividad((p) => ({ ...p, fecha: e.target.value }))} />
+            <input type="number" min="0" step="0.1" placeholder="Créditos" value={formActividad.creditos} onChange={(e) => { setFormActividad((p) => ({ ...p, creditos: e.target.value ? Math.max(0, Number(e.target.value)) : '' })); setActivityErrors((p) => ({ ...p, creditos: false })); }} style={activityErrors.creditos ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}} />
+            <input type="date" max={new Date().toISOString().split('T')[0]} value={formActividad.fecha} onChange={(e) => { setFormActividad((p) => ({ ...p, fecha: e.target.value })); setActivityErrors((p) => ({ ...p, fecha: false })); }} style={activityErrors.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}} />
             <button type="button" className={styles.primaryButton} onClick={handleAgregarActividad}>Agregar</button>
           </div>
         )}
