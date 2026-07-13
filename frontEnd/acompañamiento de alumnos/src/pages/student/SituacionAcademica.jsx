@@ -651,7 +651,7 @@ export default function SituacionAcademica() {
                         </td>
                         <td className={styles.gradeCell} data-label="Nota">
                           {editandoMaterias ? (
-                            <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'grade', e.target.value ? Number(e.target.value) : null)} />
+                            <input type="number" min="0" max="10" step="0.1" value={materia.grade || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'grade', e.target.value ? Math.max(0, Math.min(10, Number(e.target.value))) : null)} />
                           ) : (
                             materia.grade ?? '-'
                           )}
@@ -666,7 +666,7 @@ export default function SituacionAcademica() {
                                     <input type="date" defaultValue={f.fecha?.split('T')[0]} style={{ width: 120, fontSize: 11 }}
                                       onChange={(e) => { f._fecha = e.target.value; }} />
                                     <input type="number" min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
-                                      onChange={(e) => { f._nota = Number(e.target.value); }} />
+                                      onChange={(e) => { f._nota = Math.max(0, Math.min(10, Number(e.target.value) || 0)); }} />
                                     <button type="button" className={styles.smallBtn} onClick={async () => {
                                       await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: f._nota ?? f.nota });
                                       await cargarDatos();
