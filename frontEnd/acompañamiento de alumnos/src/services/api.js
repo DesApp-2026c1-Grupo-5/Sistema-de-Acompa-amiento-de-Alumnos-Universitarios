@@ -26,6 +26,7 @@ const request = async (path, { method = "GET", body, headers, includeJson = true
   if (!res.ok) {
     const err = new Error(data?.message || "Error de red");
     err.status = res.status;
+    err.code = data?.code;
     err.details = data?.details;
     throw err;
   }

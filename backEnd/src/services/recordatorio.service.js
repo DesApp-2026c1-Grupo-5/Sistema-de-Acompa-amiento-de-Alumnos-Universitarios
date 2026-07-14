@@ -34,7 +34,7 @@ const verificarRegularidades = async () => {
   const ahora = new Date();
 
   const estados = await estado_materia.findAll({
-    where: { estado: "regularizada" },
+    where: { estado: "regular" },
     include: [
       {
         model: materia,

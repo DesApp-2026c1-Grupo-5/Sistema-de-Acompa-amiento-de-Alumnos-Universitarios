@@ -101,21 +101,30 @@ function CareerForm({ onCancel, onCreated }) {
         .filter((m) => m.codigo !== codigo)
         .map((m) => ({
           ...m,
-          correlativas: (m.correlativas || []).filter((c) => c !== codigo),
+          correlativas: (m.correlativas || []).filter((c) => c.codigo !== codigo),
         }))
     );
   };
 
   const toggleCorrelativa = (codigo) => {
     setDraft((s) => {
-      const has = (s.correlativas || []).includes(codigo);
+      const has = (s.correlativas || []).some((c) => c.codigo === codigo);
       return {
         ...s,
         correlativas: has
-          ? s.correlativas.filter((c) => c !== codigo)
-          : [...(s.correlativas || []), codigo],
+          ? s.correlativas.filter((c) => c.codigo !== codigo)
+          : [...(s.correlativas || []), { codigo, tipo: 'cursar' }],
       };
     });
+  };
+
+  const setCorrelativaTipo = (codigo, tipo) => {
+    setDraft((s) => ({
+      ...s,
+      correlativas: (s.correlativas || []).map((c) =>
+        c.codigo === codigo ? { ...c, tipo } : c
+      ),
+    }));
   };
 
   const handleSubmit = async (event) => {
@@ -293,7 +302,10 @@ function CareerForm({ onCancel, onCreated }) {
                 </span>
                 {m.correlativas?.length > 0 && (
                   <span className={styles.materiaMeta}>
-                    Correlativas: {m.correlativas.join(', ')}
+                    Correlativas:{' '}
+                    {m.correlativas
+                      .map((c) => `${c.codigo} (${c.tipo === 'aprobar' ? 'aprobar' : 'cursar'})`)
+                      .join(', ')}
                   </span>
                 )}
               </div>
@@ -418,16 +430,34 @@ function CareerForm({ onCancel, onCreated }) {
               <div className={styles.field}>
                 <span>Correlativas (materias ya agregadas al plan)</span>
                 <div className={styles.correlativasGrid}>
-                  {materias.map((m) => (
-                    <label key={m.codigo} className={styles.checkbox}>
-                      <input
-                        type="checkbox"
-                        checked={(draft.correlativas || []).includes(m.codigo)}
-                        onChange={() => toggleCorrelativa(m.codigo)}
-                      />
-                      {m.codigo}
-                    </label>
-                  ))}
+                  {materias.map((m) => {
+                    const correlativa = (draft.correlativas || []).find(
+                      (c) => c.codigo === m.codigo
+                    );
+                    return (
+                      <div key={m.codigo} className={styles.correlativaOption}>
+                        <label className={styles.checkbox}>
+                          <input
+                            type="checkbox"
+                            checked={Boolean(correlativa)}
+                            onChange={() => toggleCorrelativa(m.codigo)}
+                          />
+                          {m.codigo}
+                        </label>
+                        {correlativa && (
+                          <select
+                            className={styles.correlativaType}
+                            value={correlativa.tipo}
+                            onChange={(e) => setCorrelativaTipo(m.codigo, e.target.value)}
+                            aria-label={`Tipo de correlativa ${m.codigo}`}
+                          >
+                            <option value="cursar">Para cursar</option>
+                            <option value="aprobar">Para aprobar</option>
+                          </select>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

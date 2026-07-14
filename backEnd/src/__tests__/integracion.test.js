@@ -5,6 +5,10 @@ const request = require("supertest");
 const app = require("../app");
 const db = require("../db/models");
 const { hashPassword } = require("../utils/password");
+const {
+  repararSituacionesAcademicas,
+} = require("../services/saneamientoAcademico.service");
+const academicIntegrityMigration = require("../db/migrations/20260714000000-enforce-academic-integrity");
 
 const PASSWORD = "Clave1234";
 
@@ -96,6 +100,18 @@ const createSubjectForPlan = (planId, name) =>
     es_unahur: false,
     creditos_otorga: 8,
   });
+
+const createCorrelatedSubjects = async (tipo = "aprobar") => {
+  const { plan, materia: requisito } = await createPlanWithSubject();
+  const dependiente = await createSubjectForPlan(plan.id, "Materia dependiente");
+  await db.correlatividad.create({
+    materia_id: dependiente.id,
+    materia_requisito_id: requisito.id,
+    tipo,
+  });
+
+  return { plan, requisito, dependiente };
+};
 
 const profileAgeBoundary = () => {
   const argentinaDate = new Intl.DateTimeFormat("en-US", {
@@ -688,6 +704,504 @@ describe("integracion backend", () => {
     currentSubjects.forEach((subject) => {
       expect(plannerSubjectIds).not.toContain(subject.id);
     });
+  });
+
+  test("tipo cursar exige correlativa regular o aprobada y evalua el lote completo", async () => {
+    const student = await registerStudent("correlativacursar");
+    const { plan, requisito, dependiente } = await createCorrelatedSubjects("cursar");
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const rejected = await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ materias: [{ materia_id: dependiente.id, estado: "cursando" }] })
+      .expect(409);
+
+    expect(rejected.body.code).toBe("CORRELATIVIDADES_INCUMPLIDAS");
+    expect(rejected.body.details.violations).toEqual([
+      expect.objectContaining({
+        materia_id: dependiente.id,
+        materia_requisito_id: requisito.id,
+        tipo: "cursar",
+        estado_requisito_proyectado: "pendiente",
+      }),
+    ]);
+
+    await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        materias: [
+          { materia_id: dependiente.id, estado: "cursando" },
+          { materia_id: requisito.id, estado: "regular" },
+        ],
+      })
+      .expect(200);
+
+    const states = await db.estado_materia.findAll({
+      where: { situacion_id: situation.body.data.id },
+      raw: true,
+    });
+    const bySubject = new Map(states.map((state) => [state.materia_id, state.estado]));
+    expect(bySubject.get(requisito.id)).toBe("regular");
+    expect(bySubject.get(dependiente.id)).toBe("cursando");
+  });
+
+  test("tipo aprobar rechaza correlativa regular y acepta aprobacion conjunta", async () => {
+    const student = await registerStudent("correlativaaprobar");
+    const { plan, requisito, dependiente } = await createCorrelatedSubjects("aprobar");
+    await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ materias: [{ materia_id: requisito.id, estado: "regular" }] })
+      .expect(200);
+
+    await request(app)
+      .post(`/api/materias/${dependiente.id}/inscribir`)
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({})
+      .expect(409);
+
+    await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        materias: [
+          { materia_id: dependiente.id, estado: "regular" },
+          { materia_id: requisito.id, estado: "aprobada" },
+        ],
+      })
+      .expect(200);
+  });
+
+  test("rechaza una regresion que invalida dependientes sin guardar cambios parciales", async () => {
+    const student = await registerStudent("regresioncorrelativa");
+    const { plan, requisito, dependiente } = await createCorrelatedSubjects("aprobar");
+    const independiente = await createSubjectForPlan(plan.id, "Materia independiente");
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        materias: [
+          { materia_id: requisito.id, estado: "aprobada" },
+          { materia_id: dependiente.id, estado: "cursando" },
+        ],
+      })
+      .expect(200);
+
+    await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        materias: [
+          { materia_id: requisito.id, estado: "pendiente" },
+          { materia_id: independiente.id, estado: "aprobada" },
+        ],
+      })
+      .expect(409);
+
+    const states = await db.estado_materia.findAll({
+      where: { situacion_id: situation.body.data.id },
+      raw: true,
+    });
+    const bySubject = new Map(states.map((state) => [state.materia_id, state.estado]));
+    expect(bySubject.get(requisito.id)).toBe("aprobada");
+    expect(bySubject.get(dependiente.id)).toBe("cursando");
+    expect(bySubject.get(independiente.id)).toBe("pendiente");
+  });
+
+  test("rechaza materias de otro plan", async () => {
+    const student = await registerStudent("materiaotroplan");
+    const { plan } = await createPlanWithSubject();
+    const { materia: materiaExterna } = await createPlanWithSubject();
+    await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const response = await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ materias: [{ materia_id: materiaExterna.id, estado: "cursando" }] })
+      .expect(400);
+
+    expect(response.body.code).toBe("MATERIA_FUERA_DEL_PLAN");
+  });
+
+  test("un final no puede aprobar una materia con correlativas incumplidas", async () => {
+    const student = await registerStudent("finalcorrelativa");
+    const { plan, dependiente } = await createCorrelatedSubjects("aprobar");
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+    const estado = await db.estado_materia.findOne({
+      where: { situacion_id: situation.body.data.id, materia_id: dependiente.id },
+    });
+
+    await request(app)
+      .post("/api/student/academic-situation/finals")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        estado_materia_id: estado.id,
+        fecha: "2026-07-12",
+        nota: 8,
+        aprobado: true,
+      })
+      .expect(409);
+
+    expect(await db.final.count({ where: { estado_materia_id: estado.id } })).toBe(0);
+    await estado.reload();
+    expect(estado.estado).toBe("pendiente");
+  });
+
+  test("eliminar el ultimo final aprobado respeta dependientes y revierte todo", async () => {
+    const student = await registerStudent("eliminarfinalcorrelativa");
+    const { plan, requisito, dependiente } = await createCorrelatedSubjects("aprobar");
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+    const estadoRequisito = await db.estado_materia.findOne({
+      where: { situacion_id: situation.body.data.id, materia_id: requisito.id },
+    });
+
+    const createdFinal = await request(app)
+      .post("/api/student/academic-situation/finals")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        estado_materia_id: estadoRequisito.id,
+        fecha: "2026-07-12",
+        nota: 8,
+        aprobado: true,
+      })
+      .expect(201);
+
+    const manualRegression = await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ materias: [{ materia_id: requisito.id, estado: "regular" }] })
+      .expect(409);
+    expect(manualRegression.body.code).toBe("FINAL_APROBADO_VIGENTE");
+
+    await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ materias: [{ materia_id: dependiente.id, estado: "cursando" }] })
+      .expect(200);
+
+    await request(app)
+      .delete(`/api/student/academic-situation/finals/${createdFinal.body.data.id}`)
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(409);
+
+    expect(await db.final.findByPk(createdFinal.body.data.id)).not.toBeNull();
+    await estadoRequisito.reload();
+    expect(estadoRequisito.estado).toBe("aprobada");
+  });
+
+  test("confirmar Excel revierte tambien los creditos ante una correlativa invalida", async () => {
+    const student = await registerStudent("excelcorrelativa");
+    const { plan, dependiente } = await createCorrelatedSubjects("aprobar");
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    await request(app)
+      .post("/api/student/academic-situation/confirm-excel")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        materias: [{ materia_id: dependiente.id, estado: "aprobada" }],
+        credit_activities: [{ descripcion: "Curso externo", creditos: 2 }],
+      })
+      .expect(409);
+
+    expect(
+      await db.actividad_credito.count({ where: { situacion_id: situation.body.data.id } })
+    ).toBe(0);
+  });
+
+  test("sanea en cascada, elimina evidencia y quita materias de otro plan", async () => {
+    const student = await registerStudent("saneamientocorrelativas");
+    const { plan, requisito, dependiente } = await createCorrelatedSubjects("aprobar");
+    const tercera = await createSubjectForPlan(plan.id, "Tercera materia");
+    await db.correlatividad.create({
+      materia_id: tercera.id,
+      materia_requisito_id: dependiente.id,
+      tipo: "aprobar",
+    });
+    const { materia: materiaExterna } = await createPlanWithSubject();
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const estados = await db.estado_materia.findAll({
+      where: { situacion_id: situation.body.data.id },
+    });
+    const bySubject = new Map(estados.map((state) => [state.materia_id, state]));
+    await bySubject.get(dependiente.id).update({
+      estado: "aprobada",
+      anio: 2025,
+      cuatrimestre: 1,
+      nota: 8,
+      fecha: new Date("2025-07-01"),
+    });
+    await bySubject.get(tercera.id).update({
+      estado: "aprobada",
+      anio: 2026,
+      cuatrimestre: 1,
+      nota: 9,
+      fecha: new Date("2026-07-01"),
+    });
+    await db.final.bulkCreate([
+      {
+        estado_materia_id: bySubject.get(dependiente.id).id,
+        fecha: new Date("2025-07-01"),
+        nota: 8,
+        aprobado: true,
+      },
+      {
+        estado_materia_id: bySubject.get(tercera.id).id,
+        fecha: new Date("2026-07-01"),
+        nota: 9,
+        aprobado: true,
+      },
+    ]);
+    const estadoExterno = await db.estado_materia.create({
+      situacion_id: situation.body.data.id,
+      materia_id: materiaExterna.id,
+      estado: "aprobada",
+      nota: 10,
+    });
+
+    const report = await repararSituacionesAcademicas();
+
+    expect(report.estados_fuera_del_plan_eliminados).toBe(1);
+    expect(report.materias_reseteadas).toBe(2);
+    expect(report.finales_eliminados).toBe(2);
+    expect(await db.estado_materia.findByPk(estadoExterno.id)).toBeNull();
+    for (const materiaId of [dependiente.id, tercera.id]) {
+      const state = await db.estado_materia.findOne({
+        where: { situacion_id: situation.body.data.id, materia_id: materiaId },
+      });
+      expect(state).toEqual(
+        expect.objectContaining({
+          estado: "pendiente",
+          anio: null,
+          cuatrimestre: null,
+          nota: null,
+          fecha: null,
+        })
+      );
+      expect(await db.final.count({ where: { estado_materia_id: state.id } })).toBe(0);
+    }
+    expect((await db.estado_materia.findOne({
+      where: { situacion_id: situation.body.data.id, materia_id: requisito.id },
+    })).estado).toBe("pendiente");
+  });
+
+  test("admin crea y consulta correlativas conservando su tipo", async () => {
+    const admin = await createAdmin("correlativasadmin");
+    const carrera = await db.carrera.create({
+      nombre: "Carrera correlativas",
+      titulo: "Titulo",
+      instituto: "Instituto",
+      duracion_anios: 4,
+    });
+
+    const created = await request(app)
+      .post(`/api/carreras/${carrera.id}/planes`)
+      .set("Authorization", `Bearer ${admin.token}`)
+      .send({
+        anio: 2027,
+        estado: "vigente",
+        creditos_requeridos: 20,
+        niveles_ingles_requeridos: 1,
+        materias: [
+          {
+            codigo: "MAT-1",
+            nombre: "Matematica I",
+            anio_cursada: 1,
+            modalidad: "Cuatrimestral",
+            es_optativa: false,
+            es_unahur: false,
+            creditos_otorga: 8,
+            correlativas: [],
+          },
+          {
+            codigo: "MAT-2",
+            nombre: "Matematica II",
+            anio_cursada: 1,
+            modalidad: "Cuatrimestral",
+            es_optativa: false,
+            es_unahur: false,
+            creditos_otorga: 8,
+            correlativas: [{ codigo: "MAT-1", tipo: "aprobar" }],
+          },
+        ],
+      })
+      .expect(201);
+
+    const fetched = await request(app)
+      .get(`/api/planes-estudio/${created.body.data.id}`)
+      .set("Authorization", `Bearer ${admin.token}`)
+      .expect(200);
+    const matematicaDos = fetched.body.data.materias.find(
+      (subject) => subject.codigo === "MAT-2"
+    );
+    expect(matematicaDos.correlativas).toEqual([
+      { codigo: "MAT-1", tipo: "aprobar" },
+    ]);
+  });
+
+  test("renombrar el codigo conserva la materia y bloquea bajas con trayectoria", async () => {
+    const admin = await createAdmin("renombremateria");
+    const student = await registerStudent("trayectoriamateria");
+    const { plan, materia } = await createPlanWithSubject();
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    await request(app)
+      .put(`/api/planes-estudio/${plan.id}`)
+      .set("Authorization", `Bearer ${admin.token}`)
+      .send({
+        estado: "vigente",
+        creditos_requeridos: plan.creditos_requeridos,
+        niveles_ingles_requeridos: plan.niveles_ingles_requeridos || 0,
+        materias_unahur: 0,
+        materias: [
+          {
+            id: materia.id,
+            codigo: "MAT-RENOMBRADA",
+            nombre: materia.nombre,
+            anio_cursada: materia.anio_cursada,
+            modalidad: materia.modalidad,
+            es_optativa: false,
+            es_unahur: false,
+            creditos_otorga: materia.creditos_otorga,
+            correlativas: [],
+          },
+        ],
+      })
+      .expect(200);
+
+    const renamed = await db.materia.findByPk(materia.id);
+    expect(renamed.codigo).toBe("MAT-RENOMBRADA");
+    expect(await db.estado_materia.count({
+      where: { situacion_id: situation.body.data.id, materia_id: materia.id },
+    })).toBe(1);
+
+    await request(app)
+      .put(`/api/planes-estudio/${plan.id}`)
+      .set("Authorization", `Bearer ${admin.token}`)
+      .send({
+        estado: "vigente",
+        creditos_requeridos: plan.creditos_requeridos,
+        niveles_ingles_requeridos: plan.niveles_ingles_requeridos || 0,
+        materias_unahur: 0,
+        materias: [],
+      })
+      .expect(409);
+    expect(await db.materia.findByPk(materia.id)).not.toBeNull();
+  });
+
+  test("endurecer una correlativa desde admin sanea la trayectoria existente", async () => {
+    const admin = await createAdmin("endurecercorrelativa");
+    const student = await registerStudent("saneamientoadmin");
+    const { plan, requisito, dependiente } = await createCorrelatedSubjects("cursar");
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+    await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        materias: [
+          { materia_id: requisito.id, estado: "regular" },
+          { materia_id: dependiente.id, estado: "cursando" },
+        ],
+      })
+      .expect(200);
+
+    await request(app)
+      .put(`/api/planes-estudio/${plan.id}/materias/${dependiente.id}`)
+      .set("Authorization", `Bearer ${admin.token}`)
+      .send({ correlativas: [{ codigo: requisito.codigo, tipo: "aprobar" }] })
+      .expect(200);
+
+    const estadoDependiente = await db.estado_materia.findOne({
+      where: { situacion_id: situation.body.data.id, materia_id: dependiente.id },
+    });
+    expect(estadoDependiente).toEqual(
+      expect.objectContaining({
+        estado: "pendiente",
+        anio: null,
+        cuatrimestre: null,
+        nota: null,
+        fecha: null,
+      })
+    );
+  });
+
+  test("la migracion de integridad academica es compatible con el esquema de modelos", async () => {
+    const queryInterface = db.sequelize.getQueryInterface();
+
+    const student = await registerStudent("migracionacademica");
+    const { plan, materia } = await createPlanWithSubject();
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+    await db.sequelize.query(
+      `UPDATE estado_materia SET estado = 'regularizada' WHERE situacion_id = :situacionId AND materia_id = :materiaId`,
+      { replacements: { situacionId: situation.body.data.id, materiaId: materia.id } }
+    );
+
+    await academicIntegrityMigration.up(queryInterface, db.Sequelize);
+
+    const estadoConstraints = await queryInterface.showConstraint("estado_materia");
+    const correlatividadConstraints = await queryInterface.showConstraint("correlatividads");
+    expect(estadoConstraints.map((item) => item.constraintName)).toContain(
+      "estado_materias_estado_valido"
+    );
+    expect(correlatividadConstraints.map((item) => item.constraintName)).toEqual(
+      expect.arrayContaining([
+        "correlatividads_tipo_valido",
+        "correlatividads_sin_autorreferencia",
+      ])
+    );
+    expect((await db.estado_materia.findOne({
+      where: { situacion_id: situation.body.data.id, materia_id: materia.id },
+    })).estado).toBe("regular");
   });
 
   test("crea actividad pendiente sin sumar creditos", async () => {

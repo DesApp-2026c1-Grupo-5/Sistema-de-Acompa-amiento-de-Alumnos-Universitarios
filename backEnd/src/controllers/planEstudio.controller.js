@@ -3,6 +3,7 @@ const {
   carrera,
   materia,
   correlatividad,
+  estado_materia,
   sequelize,
   Sequelize,
 } = require("../db/models");
@@ -10,6 +11,9 @@ const {
 const { Op } = Sequelize;
 
 const planEstudioService = require("../services/planEstudio.service");
+const {
+  repararSituacionesAcademicas,
+} = require("../services/saneamientoAcademico.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -38,7 +42,7 @@ const obtenerPlanFormateado = async (id) => {
           {
             model: correlatividad,
             as: "correlatividades",
-            attributes: ["materia_requisito_id"],
+            attributes: ["materia_requisito_id", "tipo"],
             include: [
               {
                 model: materia,
@@ -59,7 +63,11 @@ const obtenerPlanFormateado = async (id) => {
 
   const materiasFormatted = materias.map((m) => {
     const correlativas = (m.correlatividades || [])
-      .map((c) => c.requisito?.codigo)
+      .map((c) =>
+        c.requisito?.codigo
+          ? { codigo: c.requisito.codigo, tipo: c.tipo || "cursar" }
+          : null
+      )
       .filter(Boolean);
     return {
       id: m.id,
@@ -113,24 +121,11 @@ const crearPlan = async (req, res, next) => {
     return next(buildError("Carrera no encontrada", 404));
   }
 
-  if (materias.length > 0) {
-    const codigos = materias.map((m) => m.codigo);
-    const set = new Set(codigos);
-    if (set.size !== codigos.length) {
-      return next(buildError("Hay códigos de materia duplicados en el payload", 400));
-    }
-    for (const m of materias) {
-      for (const corr of m.correlativas || []) {
-        if (!set.has(corr)) {
-          return next(
-            buildError(
-              `La correlativa "${corr}" de la materia "${m.codigo}" no coincide con ninguna materia del plan`,
-              400
-            )
-          );
-        }
-      }
-    }
+  let materiasNormalizadas;
+  try {
+    materiasNormalizadas = planEstudioService.validarMateriasPayload(materias);
+  } catch (err) {
+    return next(err);
   }
 
   const nuevoPlan = await sequelize.transaction(async (t) => {
@@ -146,9 +141,9 @@ const crearPlan = async (req, res, next) => {
       { transaction: t }
     );
 
-    if (materias.length > 0) {
+    if (materiasNormalizadas.length > 0) {
       const materiasCreadas = [];
-      for (const m of materias) {
+      for (const m of materiasNormalizadas) {
         const nueva = await materia.create(
           {
             plan_id: plan.id,
@@ -167,13 +162,13 @@ const crearPlan = async (req, res, next) => {
       }
 
       const codigoToId = Object.fromEntries(materiasCreadas.map((m) => [m.codigo, m.id]));
-      for (const m of materias) {
-        for (const corrCodigo of m.correlativas || []) {
+      for (const m of materiasNormalizadas) {
+        for (const correlativa of m.correlativas || []) {
           await correlatividad.create(
             {
               materia_id: codigoToId[m.codigo],
-              materia_requisito_id: codigoToId[corrCodigo],
-              tipo: "cursar",
+              materia_requisito_id: codigoToId[correlativa.codigo],
+              tipo: correlativa.tipo,
             },
             { transaction: t }
           );
@@ -184,7 +179,7 @@ const crearPlan = async (req, res, next) => {
     return plan;
   });
 
-  if (materias.length > 0) {
+  if (materiasNormalizadas.length > 0) {
     const data = await obtenerPlanFormateado(nuevoPlan.id);
     return res.status(201).json({ ok: true, data });
   }
@@ -228,23 +223,11 @@ const actualizarPlanCompleto = async (req, res, next) => {
     materias = [],
   } = req.body;
 
-  // Validaciones cruzadas sobre materias y correlativas
-  const codigos = materias.map((m) => m.codigo);
-  const setCodigos = new Set(codigos);
-  if (setCodigos.size !== codigos.length) {
-    return next(buildError("Hay códigos de materia duplicados en el payload", 400));
-  }
-  for (const m of materias) {
-    for (const corr of m.correlativas || []) {
-      if (!setCodigos.has(corr)) {
-        return next(
-          buildError(
-            `La correlativa "${corr}" de la materia "${m.codigo}" no coincide con ninguna materia del plan`,
-            400
-          )
-        );
-      }
-    }
+  let materiasNormalizadas;
+  try {
+    materiasNormalizadas = planEstudioService.validarMateriasPayload(materias);
+  } catch (err) {
+    return next(err);
   }
 
   try {
@@ -268,12 +251,15 @@ const actualizarPlanCompleto = async (req, res, next) => {
 
       const existentes = plan.materias || [];
       const existentesByCodigo = new Map(existentes.map((m) => [m.codigo, m]));
+      const existentesById = new Map(existentes.map((m) => [Number(m.id), m]));
       const oldIds = existentes.map((m) => m.id);
 
-      // Upsert por código: actualizar las existentes, crear las nuevas
+      // El id estable evita que un cambio de código recree la materia y su trayectoria.
       const codigoToId = {};
-      for (const m of materias) {
+      const idsConservados = new Set();
+      for (const m of materiasNormalizadas) {
         const datos = {
+          codigo: m.codigo,
           nombre: m.nombre,
           anio_cursada: m.anio_cursada,
           tipo: m.es_optativa ? "optativa" : "obligatoria",
@@ -282,23 +268,43 @@ const actualizarPlanCompleto = async (req, res, next) => {
           es_unahur: m.es_unahur,
           creditos_otorga: m.creditos_otorga,
         };
-        const existente = existentesByCodigo.get(m.codigo);
+        const existente = m.id
+          ? existentesById.get(Number(m.id))
+          : existentesByCodigo.get(m.codigo);
+        if (m.id && !existente) {
+          throw buildError("La materia indicada no pertenece al plan de estudio", 400);
+        }
         if (existente) {
           await existente.update(datos, { transaction: t });
           codigoToId[m.codigo] = existente.id;
+          idsConservados.add(Number(existente.id));
         } else {
           const creada = await materia.create(
             { plan_id: id, codigo: m.codigo, ...datos },
             { transaction: t }
           );
           codigoToId[m.codigo] = creada.id;
+          idsConservados.add(Number(creada.id));
         }
       }
 
-      // Bajas: materias del plan cuyo código ya no está en el payload
+      // Bajas: materias del plan que ya no están en el payload.
       const removedIds = existentes
-        .filter((m) => !setCodigos.has(m.codigo))
+        .filter((m) => !idsConservados.has(Number(m.id)))
         .map((m) => m.id);
+
+      if (removedIds.length > 0) {
+        const estadosAsociados = await estado_materia.count({
+          where: { materia_id: { [Op.in]: removedIds } },
+          transaction: t,
+        });
+        if (estadosAsociados > 0) {
+          throw buildError(
+            "No se pueden eliminar materias con trayectoria académica asociada",
+            409
+          );
+        }
+      }
 
       // Limpiar correlatividades de todas las materias del plan (viejas ∪ nuevas)
       const allIds = [...new Set([...oldIds, ...Object.values(codigoToId)])];
@@ -322,18 +328,19 @@ const actualizarPlanCompleto = async (req, res, next) => {
       }
 
       // Recrear correlatividades desde el payload
-      for (const m of materias) {
-        for (const corrCodigo of m.correlativas || []) {
+      for (const m of materiasNormalizadas) {
+        for (const correlativa of m.correlativas || []) {
           await correlatividad.create(
             {
               materia_id: codigoToId[m.codigo],
-              materia_requisito_id: codigoToId[corrCodigo],
-              tipo: "cursar",
+              materia_requisito_id: codigoToId[correlativa.codigo],
+              tipo: correlativa.tipo,
             },
             { transaction: t }
           );
         }
       }
+      await repararSituacionesAcademicas({ planId: id, transaction: t });
     });
 
     const data = await obtenerPlanFormateado(id);

@@ -120,7 +120,7 @@ const parseExcel = (filePath) => {
     estado: String(row.estado || row.Estado || row.ESTADO || "").trim().toLowerCase(),
     anio: row.anio || row.Anio || row.ANIO || null,
     cuatrimestre: row.cuatrimestre || row.Cuatrimestre || row.CUATRIMESTRE || null,
-    nota: row.nota || row.Nota || row.NOTA || null,
+    nota: row.nota ?? row.Nota ?? row.NOTA ?? null,
   }));
 
   return rows;
@@ -134,6 +134,7 @@ const validarFilas = (rows, materiasDelPlan) => {
 
   const errors = [];
   const validRows = [];
+  const materiasVistas = new Set();
 
   for (const row of rows) {
     const rowErrors = [];
@@ -146,6 +147,10 @@ const validarFilas = (rows, materiasDelPlan) => {
     if (row.materia && !materiaMatch) {
       rowErrors.push(`La materia "${row.materia}" no existe en el plan de estudios`);
     }
+    if (materiaMatch && materiasVistas.has(materiaMatch.id)) {
+      rowErrors.push("La materia está duplicada en el archivo");
+    }
+    if (materiaMatch) materiasVistas.add(materiaMatch.id);
 
     if (!row.estado) {
       rowErrors.push("El estado es obligatorio");
@@ -182,7 +187,9 @@ const validarFilas = (rows, materiasDelPlan) => {
         estado: row.estado,
         anio: row.anio ? Number(row.anio) : null,
         cuatrimestre: row.cuatrimestre ? Number(row.cuatrimestre) : null,
-        nota: row.nota ? Number(row.nota) : null,
+        nota: row.nota !== null && row.nota !== undefined && row.nota !== ""
+          ? Number(row.nota)
+          : null,
       });
     }
   }
@@ -199,6 +206,7 @@ const validarFilasReporte = (rows, materiasDelPlan) => {
   const errors = [];
   const validRows = [];
   const creditActivities = [];
+  const materiasVistas = new Set();
 
   for (const row of rows) {
     if (row.esActividadCredito) {
@@ -215,6 +223,10 @@ const validarFilasReporte = (rows, materiasDelPlan) => {
     if (!materiaMatch) {
       rowErrors.push(`La materia "${row.nombreCompleto || row.materia}" no existe en el plan de estudios`);
     }
+    if (materiaMatch && materiasVistas.has(materiaMatch.id)) {
+      rowErrors.push("La materia está duplicada en el archivo");
+    }
+    if (materiaMatch) materiasVistas.add(materiaMatch.id);
 
     if (rowErrors.length > 0) {
       errors.push({ row: row.rowNumber, materia: row.materia, errors: rowErrors });
@@ -223,7 +235,7 @@ const validarFilasReporte = (rows, materiasDelPlan) => {
         materia_id: materiaMatch.id,
         estado: row.estado,
         anio: row.anio || null,
-        nota: row.nota || null,
+        nota: row.nota ?? null,
       });
     }
   }

@@ -19,11 +19,103 @@ import {
 import styles from './SituacionAcademica.module.css';
 
 const ESTADOS = ['pendiente', 'cursando', 'regular', 'aprobada'];
+const CAMPOS_MATERIA_EDITABLES = ['status', 'academic_year', 'academic_semester', 'grade', 'fecha'];
+const ESTADOS_REQUERIDOS = {
+  cursar: ['regular', 'aprobada'],
+  aprobar: ['aprobada'],
+};
 const ESTADOS_PLAN_SELECCIONABLES = ['vigente', 'transicion'];
 const ETIQUETAS_ESTADO_PLAN = {
   vigente: 'Vigente',
   transicion: 'En transición',
 };
+
+const normalizarEstado = (estado) => {
+  const value = String(estado || 'pendiente').trim().toLowerCase();
+  return ESTADOS.includes(value) ? value : 'pendiente';
+};
+
+const getEstadosRequeridos = (tipo) =>
+  ESTADOS_REQUERIDOS[String(tipo || '').trim().toLowerCase()] || [];
+
+const getEstadoCorrelativa = (correlativa, estadosPorMateria) =>
+  normalizarEstado(
+    estadosPorMateria.get(Number(correlativa.materia_requisito_id)) ?? correlativa.current_status
+  );
+
+const cumpleCorrelativas = (materia, estadosPorMateria) =>
+  (materia.correlatives || []).every((correlativa) =>
+    getEstadosRequeridos(correlativa.tipo).includes(
+      getEstadoCorrelativa(correlativa, estadosPorMateria)
+    )
+  );
+
+const obtenerIncumplimientosBorrador = (subjects = []) => {
+  const estadosPorMateria = new Map(
+    subjects.map((materia) => [Number(materia.materia_id), normalizarEstado(materia.status)])
+  );
+
+  return subjects.flatMap((materia) => {
+    if (normalizarEstado(materia.status) === 'pendiente') return [];
+
+    return (materia.correlatives || []).flatMap((correlativa) => {
+      const requiredStatuses = getEstadosRequeridos(correlativa.tipo);
+      const currentStatus = getEstadoCorrelativa(correlativa, estadosPorMateria);
+      if (requiredStatuses.includes(currentStatus)) return [];
+
+      return [{
+        materia_id: materia.materia_id,
+        materia: materia.name,
+        estado_proyectado: materia.status,
+        materia_requisito_id: correlativa.materia_requisito_id,
+        requisito: correlativa.name,
+        requisito_codigo: correlativa.code,
+        tipo: correlativa.tipo,
+        estado_requisito_proyectado: currentStatus,
+        estados_aceptados: requiredStatuses,
+      }];
+    });
+  });
+};
+
+const crearErrorAccion = (err, fallback) => ({
+  message: err?.message || fallback,
+  violations: Array.isArray(err?.details?.violations) ? err.details.violations : [],
+});
+
+const getMotivoIncumplimiento = (violation) => {
+  const materia = violation.materia || `Materia ${violation.materia_id}`;
+  const requisito = violation.requisito
+    || violation.requisito_codigo
+    || `Materia ${violation.materia_requisito_id}`;
+  const codigo = violation.requisito_codigo && violation.requisito
+    ? `${violation.requisito_codigo} · `
+    : '';
+  const requeridos = (violation.estados_aceptados || []).join(' o ') || 'habilitado';
+  const actual = normalizarEstado(violation.estado_requisito_proyectado);
+  const tipo = violation.tipo === 'aprobar' ? 'aprobar' : 'cursar';
+
+  return `${materia}: para ${tipo} requiere ${codigo}${requisito} en estado ${requeridos}; actualmente está ${actual}.`;
+};
+
+function ActionError({ error }) {
+  if (!error) return null;
+
+  return (
+    <div className={styles.actionError} role="alert">
+      <p>{error.message}</p>
+      {error.violations?.length > 0 && (
+        <ul>
+          {error.violations.map((violation, index) => (
+            <li key={`${violation.materia_id}-${violation.materia_requisito_id}-${index}`}>
+              {getMotivoIncumplimiento(violation)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function WizardPlan({ mode = 'create', currentPlanId, onCreated, onCancel }) {
   const [carreras, setCarreras] = useState([]);
@@ -251,7 +343,8 @@ export default function SituacionAcademica() {
   const [excelErrors, setExcelErrors] = useState([]);
   const inputExcelRef = useRef(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [sinSituacion, setSinSituacion] = useState(false);
   const [cambiandoCarrera, setCambiandoCarrera] = useState(false);
@@ -261,9 +354,9 @@ export default function SituacionAcademica() {
   const [formActividad, setFormActividad] = useState({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
   const [activityErrors, setActivityErrors] = useState({});
 
-  const cargarDatos = useCallback(async () => {
+  const cargarDatos = useCallback(async (syncSubjectsBackup = false) => {
     setLoading(true);
-    setError(null);
+    setLoadError(null);
     try {
       const res = await getSituacion();
       if (!res?.data) {
@@ -272,9 +365,12 @@ export default function SituacionAcademica() {
       } else {
         setSinSituacion(false);
         setData(res.data);
+        if (syncSubjectsBackup) {
+          setBackupSubjects(JSON.parse(JSON.stringify(res.data.subjects || [])));
+        }
       }
     } catch (err) {
-      setError(err.message || 'Error al cargar situación académica');
+      setLoadError(err.message || 'Error al cargar situación académica');
     } finally {
       setLoading(false);
     }
@@ -284,7 +380,7 @@ export default function SituacionAcademica() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      setError(null);
+      setLoadError(null);
       try {
         const res = await getSituacion();
         if (cancelled) return;
@@ -297,7 +393,7 @@ export default function SituacionAcademica() {
         }
       } catch (err) {
         if (cancelled) return;
-        setError(err.message || 'Error al cargar situación académica');
+        setLoadError(err.message || 'Error al cargar situación académica');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -317,10 +413,29 @@ export default function SituacionAcademica() {
 
   const guardarCambios = async () => {
     if (!data) return;
+    if (obtenerIncumplimientosBorrador(data.subjects).length > 0) return;
+
+    const snapshotPorMateria = new Map(
+      (backupSubjects || []).map((materia) => [Number(materia.materia_id), materia])
+    );
+    const materiasModificadas = data.subjects.filter((materia) => {
+      const snapshot = snapshotPorMateria.get(Number(materia.materia_id));
+      return !snapshot || CAMPOS_MATERIA_EDITABLES.some(
+        (campo) => (materia[campo] ?? null) !== (snapshot[campo] ?? null)
+      );
+    });
+
+    if (materiasModificadas.length === 0) {
+      setEditandoMaterias(false);
+      setBackupSubjects(null);
+      setActionError(null);
+      return;
+    }
+
     setSaving(true);
-    setError(null);
+    setActionError(null);
     try {
-      const materias = data.subjects.map((s) => ({
+      const materias = materiasModificadas.map((s) => ({
         materia_id: s.materia_id,
         estado: s.status,
         anio: s.academic_year,
@@ -333,7 +448,7 @@ export default function SituacionAcademica() {
       setBackupSubjects(null);
       await cargarDatos();
     } catch (err) {
-      setError(err.message || 'Error al guardar cambios');
+      setActionError(crearErrorAccion(err, 'Error al guardar cambios'));
     } finally {
       setSaving(false);
     }
@@ -353,7 +468,7 @@ export default function SituacionAcademica() {
     if (!data) return;
 
     setSaving(true);
-    setError(null);
+    setActionError(null);
     try {
       await Promise.all(
         (data.credit_activities || []).map((actividad) =>
@@ -364,7 +479,7 @@ export default function SituacionAcademica() {
       setBackupActivities(null);
       await cargarDatos();
     } catch (err) {
-      setError(err.message || 'Error al guardar actividades');
+      setActionError(crearErrorAccion(err, 'Error al guardar actividades'));
     } finally {
       setSaving(false);
     }
@@ -378,21 +493,23 @@ export default function SituacionAcademica() {
       return;
     }
     setActivityErrors({});
+    setActionError(null);
     try {
       await crearActividad({ descripcion, creditos: Number(creditos), fecha, estado });
       setFormActividad({ descripcion: '', creditos: '', fecha: '', estado: 'pendiente' });
       await cargarDatos();
     } catch (err) {
-      setError(err.message || 'Error al agregar actividad');
+      setActionError(crearErrorAccion(err, 'Error al agregar actividad'));
     }
   };
 
   const handleEliminarActividad = async (id) => {
+    setActionError(null);
     try {
       await eliminarActividad(id);
       await cargarDatos();
     } catch (err) {
-      setError(err.message || 'Error al eliminar actividad');
+      setActionError(crearErrorAccion(err, 'Error al eliminar actividad'));
     }
   };
 
@@ -401,6 +518,7 @@ export default function SituacionAcademica() {
     const notaInput = document.getElementById(`nota-${materiaId}`);
     if (!fechaInput || !notaInput) return;
     const fecha = fechaInput.value;
+    if (notaInput.value === '') return;
     const nota = Number(notaInput.value);
     if (fecha && !Number.isNaN(nota) && nota >= 0 && nota <= 10) {
       handleAgregarFinal(materiaId);
@@ -414,9 +532,10 @@ export default function SituacionAcademica() {
     if (!fechaInput || !notaInput) return;
 
     const fecha = fechaInput.value;
+    const notaRaw = notaInput.value;
     const nota = Number(notaInput.value);
     const missingFecha = !fecha;
-    const missingNota = Number.isNaN(nota) || nota < 0 || nota > 10;
+    const missingNota = notaRaw === '' || Number.isNaN(nota) || nota < 0 || nota > 10;
 
     if (missingFecha || missingNota) {
       setFinalErrors((prev) => ({ ...prev, [materiaId]: { fecha: missingFecha, nota: missingNota } }));
@@ -432,10 +551,11 @@ export default function SituacionAcademica() {
     const materia = data.subjects.find((s) => s.materia_id === materiaId);
 
     if (!materia?.estado_materia_id) {
-      setError('No se encontró el estado académico de esta materia');
+      setActionError({ message: 'No se encontró el estado académico de esta materia', violations: [] });
       return;
     }
 
+    setActionError(null);
     try {
       await crearFinal({
         estado_materia_id: materia.estado_materia_id,
@@ -444,32 +564,30 @@ export default function SituacionAcademica() {
         aprobado: nota >= 4,
       });
 
-      if (nota >= 4 && materia.status !== 'aprobada') {
-        await actualizarMaterias([
-          {
-            materia_id: materia.materia_id,
-            estado: 'aprobada',
-            anio: materia.academic_year,
-            cuatrimestre: materia.academic_semester,
-            nota: materia.grade,
-            fecha: materia.fecha,
-          },
-        ]);
-      }
-
-      await cargarDatos();
+      await cargarDatos(true);
     } catch (err) {
-      setError(err.message || 'Error al agregar final');
+      setActionError(crearErrorAccion(err, 'Error al agregar final'));
     }
   };
 
   const handleEliminarFinal = async (id) => {
     if (!confirm('¿Eliminar este final?')) return;
+    setActionError(null);
     try {
       await eliminarFinal(id);
-      await cargarDatos();
+      await cargarDatos(true);
     } catch (err) {
-      setError(err.message || 'Error al eliminar final');
+      setActionError(crearErrorAccion(err, 'Error al eliminar final'));
+    }
+  };
+
+  const handleActualizarFinal = async (finalId, fecha, nota) => {
+    setActionError(null);
+    try {
+      await actualizarFinal(finalId, { fecha, nota });
+      await cargarDatos(true);
+    } catch (err) {
+      setActionError(crearErrorAccion(err, 'Error al actualizar final'));
     }
   };
 
@@ -482,7 +600,7 @@ export default function SituacionAcademica() {
   const handleImportarExcel = async () => {
     if (!archivoExcel) return;
     setSaving(true);
-    setError(null);
+    setActionError(null);
     try {
       const fd = new FormData();
       fd.append('archivo', archivoExcel);
@@ -500,7 +618,7 @@ export default function SituacionAcademica() {
         await cargarDatos();
       }
     } catch (err) {
-      setError(err.message || 'Error al importar Excel');
+      setActionError(crearErrorAccion(err, 'Error al importar Excel'));
     } finally {
       setSaving(false);
     }
@@ -509,7 +627,7 @@ export default function SituacionAcademica() {
   const handleConfirmarExcel = async () => {
     if (!previewExcel) return;
     setSaving(true);
-    setError(null);
+    setActionError(null);
     try {
       await confirmarImportacion(previewExcel, creditActivitiesPreview);
       setPreviewExcel(null);
@@ -519,7 +637,7 @@ export default function SituacionAcademica() {
       setMostrarCargaExcel(false);
       await cargarDatos();
     } catch (err) {
-      setError(err.message || 'Error al confirmar importación');
+      setActionError(crearErrorAccion(err, 'Error al confirmar importación'));
     } finally {
       setSaving(false);
     }
@@ -541,11 +659,26 @@ export default function SituacionAcademica() {
 
   if (loading) return <p className={styles.loading}>Cargando situación académica...</p>;
 
-  if (error) return <p className={styles.loading}>{error}</p>;
+  if (loadError) return <p className={styles.loading}>{loadError}</p>;
 
   if (!data) return <p className={styles.loading}>No hay datos disponibles</p>;
 
   const { stats, subjects, credit_activities } = data;
+  const estadosPorMateria = new Map(
+    subjects.map((materia) => [Number(materia.materia_id), normalizarEstado(materia.status)])
+  );
+  const incumplimientosBorrador = editandoMaterias
+    ? obtenerIncumplimientosBorrador(subjects)
+    : [];
+  const snapshotPorMateria = new Map(
+    (backupSubjects || []).map((materia) => [Number(materia.materia_id), materia])
+  );
+  const hayCambiosMateriasSinGuardar = editandoMaterias && subjects.some((materia) => {
+    const snapshot = snapshotPorMateria.get(Number(materia.materia_id));
+    return snapshot && CAMPOS_MATERIA_EDITABLES.some(
+      (campo) => (materia[campo] ?? null) !== (snapshot[campo] ?? null)
+    );
+  });
 
   return (
     <section className={styles.page}>
@@ -600,7 +733,12 @@ export default function SituacionAcademica() {
           <h2>Materias</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             {editandoMaterias && (
-              <button type="button" className={styles.primaryButton} onClick={guardarCambios} disabled={saving}>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={guardarCambios}
+                disabled={saving || incumplimientosBorrador.length > 0}
+              >
                 {saving ? 'Guardando...' : '💾 Guardar cambios'}
               </button>
             )}
@@ -611,6 +749,7 @@ export default function SituacionAcademica() {
                 setEditandoMaterias(false);
               } else {
                 setBackupSubjects(JSON.parse(JSON.stringify(data.subjects)));
+                setActionError(null);
                 setEditandoMaterias(true);
               }
             }}>
@@ -619,7 +758,13 @@ export default function SituacionAcademica() {
           </div>
         </div>
 
-        {error && <p className={styles.errorText}>{error}</p>}
+        <ActionError error={actionError} />
+
+        {hayCambiosMateriasSinGuardar && (
+          <p className={styles.hintText}>
+            Guardá o cancelá los cambios de materias antes de modificar finales.
+          </p>
+        )}
 
         <div className={styles.actions}>
           <button type="button" className={!mostrarCargaExcel ? styles.primaryButton : styles.secondaryButton} onClick={() => setMostrarCargaExcel(false)}>
@@ -655,7 +800,7 @@ export default function SituacionAcademica() {
               </div>
             )}
 
-            {previewExcel && previewExcel.length > 0 && (
+            {previewExcel && (previewExcel.length > 0 || creditActivitiesPreview.length > 0) && (
               <div style={{ marginTop: 12 }}>
                 <p>
                   {previewExcel.length} materias válidas para importar
@@ -708,7 +853,15 @@ export default function SituacionAcademica() {
                         <td className={styles.statusCell} data-label="Estado">
                           {editandoMaterias ? (
                             <select value={materia.status} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'status', e.target.value)}>
-                              {ESTADOS.map((est) => <option key={est} value={est}>{est}</option>)}
+                              {ESTADOS.map((est) => (
+                                <option
+                                  key={est}
+                                  value={est}
+                                  disabled={est !== 'pendiente' && !cumpleCorrelativas(materia, estadosPorMateria)}
+                                >
+                                  {est}
+                                </option>
+                              ))}
                             </select>
                           ) : (
                             <span className={`${styles.badge} ${styles[`badge${materia.status.charAt(0).toUpperCase() + materia.status.slice(1)}`] || ''}`}>
@@ -752,19 +905,18 @@ export default function SituacionAcademica() {
                               <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
                                 {editandoMaterias ? (
                                   <>
-                                    <input type="date" defaultValue={f.fecha?.split('T')[0]} style={{ width: 120, fontSize: 11 }}
-                                      onChange={async (e) => { f._fecha = e.target.value; await actualizarFinal(f.id, { fecha: e.target.value, nota: f._nota ?? f.nota }); await cargarDatos(); }} />
-                                    <input type="number" min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
-                                      onChange={(e) => { const v = Math.max(0, Math.min(10, Number(e.target.value) || 0)); e.target.value = v; f._nota = v; }}
-                                      onBlur={async () => {
-                                        const notaFinal = f._nota ?? f.nota;
-                                        await actualizarFinal(f.id, { fecha: f._fecha || f.fecha, nota: notaFinal });
-                                        if (notaFinal >= 4 && materia.status !== 'aprobada') {
-                                          await actualizarMaterias([{ materia_id: materia.materia_id, estado: 'aprobada', anio: materia.academic_year, cuatrimestre: materia.academic_semester, nota: materia.grade, fecha: materia.fecha }]);
-                                        }
-                                        await cargarDatos();
+                                    <input type="date" disabled={hayCambiosMateriasSinGuardar || saving} defaultValue={f.fecha?.split('T')[0]} style={{ width: 120, fontSize: 11 }}
+                                      onChange={(e) => {
+                                        f._fecha = e.target.value;
+                                        handleActualizarFinal(f.id, e.target.value, f._nota ?? f.nota);
                                       }} />
-                                    <button type="button" className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
+                                    <input type="number" disabled={hayCambiosMateriasSinGuardar || saving} min="0" max="10" step="0.1" defaultValue={f.nota} style={{ width: 50, fontSize: 11 }}
+                                      onChange={(e) => { const v = Math.max(0, Math.min(10, Number(e.target.value) || 0)); e.target.value = v; f._nota = v; }}
+                                      onBlur={() => {
+                                        const notaFinal = f._nota ?? f.nota;
+                                        handleActualizarFinal(f.id, f._fecha || f.fecha, notaFinal);
+                                      }} />
+                                    <button type="button" disabled={hayCambiosMateriasSinGuardar || saving} className={styles.smallBtn} onClick={() => handleEliminarFinal(f.id)}>✕</button>
                                   </>
                                 ) : (
                                   <div className={styles.finalInfo}>
@@ -781,9 +933,9 @@ export default function SituacionAcademica() {
                             ))}
                             {editandoMaterias && (
                               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <input type="date" id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11, ...(finalErrors[materia.materia_id]?.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} onChange={() => setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], fecha: false }; } return next; })} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
-                                <input type="number" min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11, ...(finalErrors[materia.materia_id]?.nota ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} placeholder="Nota" onChange={(e) => { e.target.value = Math.max(0, Math.min(10, Number(e.target.value) || 0)); setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], nota: false }; } return next; }); }} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
-                                <button type="button" className={styles.smallBtn} onClick={() => handleAgregarFinal(materia.materia_id)}>+</button>
+                                <input type="date" disabled={hayCambiosMateriasSinGuardar || saving} id={`fecha-${materia.materia_id}`} style={{ width: 120, fontSize: 11, ...(finalErrors[materia.materia_id]?.fecha ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} onChange={() => setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], fecha: false }; } return next; })} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
+                                <input type="number" disabled={hayCambiosMateriasSinGuardar || saving} min="0" max="10" step="0.1" id={`nota-${materia.materia_id}`} style={{ width: 50, fontSize: 11, ...(finalErrors[materia.materia_id]?.nota ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}) }} placeholder="Nota" onChange={(e) => { e.target.value = Math.max(0, Math.min(10, Number(e.target.value) || 0)); setFinalErrors((prev) => { const next = { ...prev }; if (next[materia.materia_id]) { next[materia.materia_id] = { ...next[materia.materia_id], nota: false }; } return next; }); }} onBlur={() => tryAutoSaveFinal(materia.materia_id)} />
+                                <button type="button" disabled={hayCambiosMateriasSinGuardar || saving} className={styles.smallBtn} onClick={() => handleAgregarFinal(materia.materia_id)}>+</button>
                               </div>
                             )}
                           </div>
@@ -796,7 +948,9 @@ export default function SituacionAcademica() {
             </div>
 
             {editandoMaterias && (
-              <p className={styles.hintText}>Los cambios se guardan al hacer clic en "Guardar cambios"</p>
+              <p className={styles.hintText}>
+                Los estados y datos de cursada se guardan con este botón. Los finales se guardan inmediatamente.
+              </p>
             )}
           </>
         )}

@@ -1,5 +1,16 @@
 const Joi = require("joi");
 
+const correlativaSchema = Joi.alternatives().try(
+  Joi.object({
+    codigo: Joi.string().trim().max(20).required(),
+    tipo: Joi.string().valid("cursar", "aprobar").required(),
+  }),
+  Joi.string()
+    .trim()
+    .max(20)
+    .custom((codigo) => ({ codigo, tipo: "cursar" }))
+);
+
 const materiaSchema = Joi.object({
   codigo: Joi.string().trim().max(20).required(),
   nombre: Joi.string().trim().max(200).required(),
@@ -8,7 +19,10 @@ const materiaSchema = Joi.object({
   es_optativa: Joi.boolean().default(false),
   es_unahur: Joi.boolean().default(false),
   creditos_otorga: Joi.number().integer().min(0).max(50).required(),
-  correlativas: Joi.array().items(Joi.string().trim().max(20)).default([]),
+  correlativas: Joi.array()
+    .items(correlativaSchema)
+    .unique((a, b) => a.codigo === b.codigo)
+    .default([]),
 });
 
 const planSchema = Joi.object({

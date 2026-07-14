@@ -6,8 +6,12 @@ const {
   plan_estudio,
   materia,
   correlatividad,
+  estado_materia,
   Sequelize,
 } = db;
+const {
+  repararSituacionesAcademicas,
+} = require("./saneamientoAcademico.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -17,9 +21,78 @@ const buildError = (message, statusCode) => {
 
 const normalizarCodigo = (codigo) => (codigo || "").trim();
 
-const normalizarCorrelativas = (correlativas = []) => {
-  const values = correlativas.map(normalizarCodigo).filter(Boolean);
-  return [...new Set(values)];
+const normalizarCorrelativas = (correlativas = [], materiaCodigo = null) => {
+  const normalizadas = correlativas.map((correlativa) => {
+    if (typeof correlativa === "string") {
+      return { codigo: normalizarCodigo(correlativa), tipo: "cursar" };
+    }
+
+    const codigo = normalizarCodigo(correlativa?.codigo);
+    const tipo = correlativa?.tipo;
+    if (tipo !== "cursar" && tipo !== "aprobar") {
+      throw buildError(`Tipo de correlativa inválido para "${codigo}"`, 400);
+    }
+    return { codigo, tipo };
+  }).filter((correlativa) => correlativa.codigo);
+
+  const codigos = normalizadas.map((correlativa) => correlativa.codigo);
+  const duplicado = codigos.find((codigo, index) => codigos.indexOf(codigo) !== index);
+  if (duplicado) {
+    const contexto = materiaCodigo ? ` en la materia "${materiaCodigo}"` : "";
+    throw buildError(`La correlativa "${duplicado}" está duplicada${contexto}`, 400);
+  }
+
+  return normalizadas;
+};
+
+const validarMateriasPayload = (materias = []) => {
+  const codigos = materias.map((m) => normalizarCodigo(m.codigo));
+  const setCodigos = new Set(codigos);
+  if (setCodigos.size !== codigos.length) {
+    throw buildError("Hay códigos de materia duplicados en el payload", 400);
+  }
+  const ids = materias.map((m) => m.id).filter(Boolean).map(Number);
+  if (new Set(ids).size !== ids.length) {
+    throw buildError("Hay materias duplicadas en el payload", 400);
+  }
+
+  const normalizadas = materias.map((m, index) => ({
+    ...m,
+    codigo: codigos[index],
+    correlativas: normalizarCorrelativas(m.correlativas || [], codigos[index]),
+  }));
+
+  for (const m of normalizadas) {
+    for (const correlativa of m.correlativas) {
+      if (correlativa.codigo === m.codigo) {
+        throw buildError("Una materia no puede ser correlativa de sí misma", 400);
+      }
+      if (!setCodigos.has(correlativa.codigo)) {
+        throw buildError(
+          `La correlativa "${correlativa.codigo}" de la materia "${m.codigo}" no coincide con ninguna materia del plan`,
+          400
+        );
+      }
+    }
+  }
+
+  const graph = new Map(
+    normalizadas.map((m) => [m.codigo, m.correlativas.map((c) => c.codigo)])
+  );
+  const estado = new Map();
+  const visitar = (codigo) => {
+    if (estado.get(codigo) === 1) {
+      throw buildError(`Las correlativas forman un ciclo que incluye "${codigo}"`, 400);
+    }
+    if (estado.get(codigo) === 2) return;
+
+    estado.set(codigo, 1);
+    for (const requisito of graph.get(codigo) || []) visitar(requisito);
+    estado.set(codigo, 2);
+  };
+
+  for (const codigo of codigos) visitar(codigo);
+  return normalizadas;
 };
 
 const getMateriaInclude = () => [
@@ -47,7 +120,11 @@ const formatMateria = (m) => ({
   es_unahur: !!m.es_unahur,
   creditos_otorga: m.creditos_otorga ?? 0,
   correlativas: (m.correlatividades || [])
-    .map((c) => c.requisito?.codigo)
+    .map((c) =>
+      c.requisito?.codigo
+        ? { codigo: c.requisito.codigo, tipo: c.tipo || "cursar" }
+        : null
+    )
     .filter(Boolean),
 });
 
@@ -181,8 +258,9 @@ const assertCodigoDisponible = async (planId, codigo, excludeMateriaId = null, t
 };
 
 const resolveCorrelativas = async (planId, materiaId, correlativas, transaction) => {
-  const codigos = normalizarCorrelativas(correlativas);
-  if (codigos.length === 0) {
+  const normalizadas = normalizarCorrelativas(correlativas);
+  const codigos = normalizadas.map((correlativa) => correlativa.codigo);
+  if (normalizadas.length === 0) {
     return [];
   }
 
@@ -206,24 +284,66 @@ const resolveCorrelativas = async (planId, materiaId, correlativas, transaction)
     throw buildError(`La correlativa "${missing}" no existe en este plan`, 400);
   }
 
-  return materiasReferenciadas.map((m) => m.id);
+  const idsByCodigo = new Map(materiasReferenciadas.map((m) => [m.codigo, m.id]));
+  return normalizadas.map((correlativa) => ({
+    materiaRequisitoId: idsByCodigo.get(correlativa.codigo),
+    tipo: correlativa.tipo,
+  }));
 };
 
-const syncCorrelatividades = async (transaction, materiaId, correlativaIds) => {
+const syncCorrelatividades = async (transaction, materiaId, correlativas) => {
   await correlatividad.destroy({ where: { materia_id: materiaId }, transaction });
 
-  if (correlativaIds.length === 0) {
+  if (correlativas.length === 0) {
     return;
   }
 
   await correlatividad.bulkCreate(
-    correlativaIds.map((materiaRequisitoId) => ({
+    correlativas.map(({ materiaRequisitoId, tipo }) => ({
       materia_id: materiaId,
       materia_requisito_id: materiaRequisitoId,
-      tipo: "cursar",
+      tipo,
     })),
     { transaction }
   );
+};
+
+const assertPlanSinCiclos = async (planId, materiaId, correlativas, transaction) => {
+  const materiasPlan = await materia.findAll({
+    where: { plan_id: planId },
+    attributes: ["id"],
+    transaction,
+    raw: true,
+  });
+  const idsPlan = new Set(materiasPlan.map((item) => Number(item.id)));
+  const relaciones = await correlatividad.findAll({
+    where: { materia_id: { [Sequelize.Op.in]: [...idsPlan] } },
+    attributes: ["materia_id", "materia_requisito_id"],
+    transaction,
+    raw: true,
+  });
+  const graph = new Map([...idsPlan].map((id) => [id, []]));
+
+  for (const relacion of relaciones) {
+    if (Number(relacion.materia_id) === Number(materiaId)) continue;
+    graph.get(Number(relacion.materia_id))?.push(Number(relacion.materia_requisito_id));
+  }
+  graph.set(
+    Number(materiaId),
+    correlativas.map((item) => Number(item.materiaRequisitoId))
+  );
+
+  const estado = new Map();
+  const visitar = (id) => {
+    if (estado.get(id) === 1) {
+      throw buildError("Las correlativas no pueden formar ciclos", 400);
+    }
+    if (estado.get(id) === 2) return;
+    estado.set(id, 1);
+    for (const requisitoId of graph.get(id) || []) visitar(requisitoId);
+    estado.set(id, 2);
+  };
+  for (const id of idsPlan) visitar(id);
 };
 
 const agregarMateria = async (planId, payload) => {
@@ -251,13 +371,14 @@ const agregarMateria = async (planId, payload) => {
       { transaction }
     );
 
-    const correlativaIds = await resolveCorrelativas(
+    const correlativas = await resolveCorrelativas(
       planId,
       nuevaMateria.id,
       payload.correlativas || [],
       transaction
     );
-    await syncCorrelatividades(transaction, nuevaMateria.id, correlativaIds);
+    await assertPlanSinCiclos(planId, nuevaMateria.id, correlativas, transaction);
+    await syncCorrelatividades(transaction, nuevaMateria.id, correlativas);
 
     const materiaCompleta = await materia.findByPk(nuevaMateria.id, {
       include: getMateriaInclude(),
@@ -273,7 +394,7 @@ const agregarMateria = async (planId, payload) => {
 };
 
 const actualizarMateria = async (planId, materiaId, payload) => {
-  return sequelize.transaction(async (transaction) => {
+  const result = await sequelize.transaction(async (transaction) => {
     const { materiaExistente } = await getPlanMateriaContext(planId, materiaId, transaction);
 
     const nextCodigo = payload.codigo != null ? normalizarCodigo(payload.codigo) : materiaExistente.codigo;
@@ -301,13 +422,18 @@ const actualizarMateria = async (planId, materiaId, payload) => {
     );
 
     if (payload.correlativas) {
-      const correlativaIds = await resolveCorrelativas(
+      const correlativas = await resolveCorrelativas(
         planId,
         materiaId,
         payload.correlativas,
         transaction
       );
-      await syncCorrelatividades(transaction, materiaId, correlativaIds);
+      await assertPlanSinCiclos(planId, materiaId, correlativas, transaction);
+      await syncCorrelatividades(transaction, materiaId, correlativas);
+      await repararSituacionesAcademicas({
+        planId: Number(planId),
+        transaction,
+      });
     }
 
     const updated = await materia.findByPk(materiaId, {
@@ -321,11 +447,24 @@ const actualizarMateria = async (planId, materiaId, payload) => {
 
     return formatMateria(updated.get({ plain: true }));
   });
+
+  return result;
 };
 
 const eliminarMateria = async (planId, materiaId) => {
   return sequelize.transaction(async (transaction) => {
     const { materiaExistente } = await getPlanMateriaContext(planId, materiaId, transaction);
+
+    const estadosAsociados = await estado_materia.count({
+      where: { materia_id: materiaId },
+      transaction,
+    });
+    if (estadosAsociados > 0) {
+      throw buildError(
+        "No se puede eliminar una materia con trayectoria académica asociada",
+        409
+      );
+    }
 
     await correlatividad.destroy({
       where: {
@@ -344,6 +483,7 @@ const eliminarMateria = async (planId, materiaId) => {
 };
 
 module.exports = {
+  validarMateriasPayload,
   getPlanById,
   crearPlan,
   actualizarPlan,

@@ -254,6 +254,30 @@
   width: 250px;
 }
 
+.actionError {
+  margin: -12px 0 20px;
+  padding: 11px 13px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.actionError p {
+  margin: 0;
+}
+
+.actionError ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.actionError li + li {
+  margin-top: 3px;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -754,6 +778,14 @@
 :global(.dark-mode) .table input::placeholder,
 :global([data-theme='dark']) .table input::placeholder {
   color: #94a3b8;
+}
+
+:global(.dark) .actionError,
+:global(.dark-mode) .actionError,
+:global([data-theme='dark']) .actionError {
+  border-color: #7f1d1d;
+  background: rgb(127 29 29 / 20%);
+  color: #fca5a5;
 }
 
 .excelUploadBox {
