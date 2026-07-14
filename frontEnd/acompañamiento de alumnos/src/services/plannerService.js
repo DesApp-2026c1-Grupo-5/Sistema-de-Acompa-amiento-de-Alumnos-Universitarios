@@ -24,7 +24,11 @@ export async function getCareerSubjects() {
     simulatorSubjects: simulatorSubjects.map(mapSubject),
     currentPlan,
     planningBlocked: !!res?.data?.planningBlocked,
-    unplannableSubjects: res?.data?.unplannableSubjects ?? [],
+    unplannableSubjects: (res?.data?.unplannableSubjects ?? []).map((subject) => ({
+      ...subject,
+      id: Number(subject.id),
+      reasons: subject.reasons ?? [],
+    })),
     materiasNombres: res?.data?.materiasNombres ?? {},
     summary: res?.data?.summary ?? null,
   };

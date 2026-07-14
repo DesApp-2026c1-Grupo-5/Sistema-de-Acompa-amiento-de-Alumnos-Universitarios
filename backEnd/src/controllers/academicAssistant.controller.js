@@ -481,6 +481,7 @@ const getPlanSubjects = async (req, res, next) => {
     const currentPlan = [];
     const materiasPlanificadas = new Set();
     const materiasDisponibles = [...materiasPendientes];
+    const estadosProyectables = new Set(["aprobada", "regular", "cursando"]);
 
     let anioActual = 1;
     let cuatrimestreActual = 1;
@@ -505,10 +506,8 @@ const getPlanSubjects = async (req, res, next) => {
 
         const cumpleCorrelativas = materiaActual.correlativeRequirements.every(
           (requirement) =>
-            cumpleCorrelatividad(
-              requirement.type,
-              estadoPorMateria.get(requirement.subjectId)
-            ) || materiasPlanificadas.has(requirement.subjectId)
+            estadosProyectables.has(requirement.currentStatus) ||
+            materiasPlanificadas.has(requirement.subjectId)
         );
 
         if (!cumpleCorrelativas) continue;
@@ -557,18 +556,57 @@ const getPlanSubjects = async (req, res, next) => {
       materiasNombres[m.id] = m.nombre;
     }
 
+    const materiasDelPlanIds = new Set(materias.map((item) => Number(item.id)));
+    const materiasPendientesIds = new Set(
+      materiasPendientes.map((item) => Number(item.id))
+    );
+    const unplannableSubjects = materiasDisponibles.map((subject) => {
+      const reasons = [];
+      if (subject.hours > 20) {
+        reasons.push({
+          code: "HOUR_LIMIT",
+          message: `Requiere ${subject.hours}hs y supera el máximo de 20hs por cuatrimestre`,
+        });
+      }
+
+      for (const requirement of subject.correlativeRequirements) {
+        if (
+          estadosProyectables.has(requirement.currentStatus) ||
+          materiasPlanificadas.has(requirement.subjectId)
+        ) {
+          continue;
+        }
+
+        const requisitoId = Number(requirement.subjectId);
+        reasons.push({
+          code: materiasDelPlanIds.has(requisitoId)
+            ? "PENDING_PREREQUISITE"
+            : "MISSING_PREREQUISITE",
+          requirementId: requisitoId,
+          requirementName: materiasNombres[requisitoId] || null,
+          requirementType: requirement.type,
+          message: materiasPendientesIds.has(requisitoId)
+            ? `La correlativa ${materiasNombres[requisitoId] || requisitoId} debe ubicarse en un cuatrimestre anterior`
+            : `No se puede proyectar la correlativa ${materiasNombres[requisitoId] || requisitoId}`,
+        });
+      }
+
+      return {
+        id: subject.id,
+        name: subject.name,
+        correlativeRequirements: subject.correlativeRequirements,
+        reasons,
+      };
+    });
+
     return res.status(200).json({
       ok: true,
       data: {
         subjects: materiasPendientes,
         simulatorSubjects,
         currentPlan,
-        planningBlocked: materiasDisponibles.length > 0,
-        unplannableSubjects: materiasDisponibles.map((subject) => ({
-          id: subject.id,
-          name: subject.name,
-          correlativeRequirements: subject.correlativeRequirements,
-        })),
+        planningBlocked: unplannableSubjects.length > 0,
+        unplannableSubjects,
         materiasNombres,
         summary: {
           totalSubjects: materias.length,
