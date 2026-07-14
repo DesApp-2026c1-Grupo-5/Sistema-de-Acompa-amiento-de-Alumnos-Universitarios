@@ -82,6 +82,21 @@ const createPlanWithSubject = async ({
   return { carrera, plan, materia };
 };
 
+const createSubjectForPlan = (planId, name) =>
+  db.materia.create({
+    plan_id: planId,
+    codigo: `MAT-${Date.now()}-${Math.random()}`,
+    nombre: name,
+    anio_cursada: 1,
+    cuatrimestre: 1,
+    tipo: "obligatoria",
+    modalidad: "Cuatrimestral",
+    carga_horaria_semanal: 4,
+    es_optativa: false,
+    es_unahur: false,
+    creditos_otorga: 8,
+  });
+
 const profileAgeBoundary = () => {
   const argentinaDate = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Argentina/Buenos_Aires",
@@ -595,6 +610,83 @@ describe("integracion backend", () => {
     expect(res.body.data.availability).toEqual({
       canUse: true,
       reason: null,
+    });
+  });
+
+  test("el simulador lista las materias cursando sin mezclar regulares ni pendientes", async () => {
+    const student = await registerStudent("simuladorcursando");
+    const { plan, materia: pendingSubject } = await createPlanWithSubject();
+    const currentSubjects = await Promise.all([
+      createSubjectForPlan(plan.id, "Cursando uno"),
+      createSubjectForPlan(plan.id, "Cursando dos"),
+      createSubjectForPlan(plan.id, "Cursando tres"),
+    ]);
+    const regularSubject = await createSubjectForPlan(plan.id, "Materia regular");
+
+    await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const update = await request(app)
+      .patch("/api/student/academic-situation/subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({
+        materias: [
+          ...currentSubjects.map((subject) => ({
+            materia_id: subject.id,
+            estado: "cursando",
+          })),
+          { materia_id: regularSubject.id, estado: "regular" },
+        ],
+      })
+      .expect(200);
+
+    expect(update.body.data.every((result) => result.success)).toBe(true);
+
+    const assistant = await request(app)
+      .get("/api/student/academic-assistant")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+
+    expect(assistant.body.data.studentStatus.inProgressIds).toEqual(
+      expect.arrayContaining(currentSubjects.map((subject) => subject.id))
+    );
+    expect(assistant.body.data.studentStatus.inProgressIds).toHaveLength(3);
+    expect(assistant.body.data.studentStatus.regularizedIds).toEqual([
+      regularSubject.id,
+    ]);
+
+    const planSubjects = await request(app)
+      .get("/api/student/academic-assistant/plan-subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+
+    const simulatorCurrentSubjects = planSubjects.body.data.simulatorSubjects
+      .filter((subject) => subject.status === "cursando");
+    expect(simulatorCurrentSubjects).toEqual(
+      expect.arrayContaining(
+        currentSubjects.map((subject) =>
+          expect.objectContaining({ id: subject.id, name: subject.nombre })
+        )
+      )
+    );
+    expect(simulatorCurrentSubjects).toHaveLength(3);
+    expect(planSubjects.body.data.simulatorSubjects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: regularSubject.id, status: "regular" }),
+        expect.objectContaining({ id: pendingSubject.id, status: "pendiente" }),
+      ])
+    );
+
+    const plannerSubjectIds = planSubjects.body.data.subjects.map(
+      (subject) => subject.id
+    );
+    expect(plannerSubjectIds).toContain(pendingSubject.id);
+    expect(plannerSubjectIds).not.toContain(regularSubject.id);
+    currentSubjects.forEach((subject) => {
+      expect(plannerSubjectIds).not.toContain(subject.id);
     });
   });
 

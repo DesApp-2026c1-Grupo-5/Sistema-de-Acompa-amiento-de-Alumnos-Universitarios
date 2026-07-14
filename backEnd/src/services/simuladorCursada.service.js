@@ -17,6 +17,18 @@ const mapearArea = (m) => {
   }
 };
 
+const mapearMateria = (m) => ({
+  id: Number(m.id),
+  year: m.anio_cursada,
+  area: mapearArea(m),
+  name: m.nombre,
+  correlatives: (m.correlatividades || []).map((c) =>
+    Number(c.materia_requisito_id)
+  ),
+  cuatrimestre: m.cuatrimestre,
+  hours: m.carga_horaria_semanal || 6,
+});
+
 const obtenerMateriasConCorrelativas = async (planId) => {
   const materias = await materia.findAll({
     where: { plan_id: planId },
@@ -35,16 +47,8 @@ const obtenerMateriasConCorrelativas = async (planId) => {
   });
 
   return {
-    subjects: materias.map((m) => ({
-      id: m.id,
-      year: m.anio_cursada,
-      area: mapearArea(m),
-      name: m.nombre,
-      correlatives: (m.correlatividades || []).map((c) => c.materia_requisito_id),
-      cuatrimestre: m.cuatrimestre,
-      hours: m.carga_horaria_semanal,
-    })),
+    subjects: materias.map(mapearMateria),
   };
 };
 
-module.exports = { obtenerMateriasConCorrelativas };
+module.exports = { mapearMateria, obtenerMateriasConCorrelativas };

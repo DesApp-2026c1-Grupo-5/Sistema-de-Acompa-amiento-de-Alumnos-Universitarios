@@ -10,7 +10,7 @@ const {
   oferta_academica,
   final,
 } = require("../db/models");
-const { obtenerMateriasConCorrelativas } = require("../services/simuladorCursada.service");
+const { mapearMateria } = require("../services/simuladorCursada.service");
 
 const APROBADA = ["aprobada", "aprobado", "promocionada", "promotionada"];
 const REGULAR = ["regular", "regularizada", "regularizado"];
@@ -20,6 +20,12 @@ const normalizar = (estado) => (estado || "").trim().toLowerCase();
 const esAprobada = (e) => APROBADA.includes(normalizar(e));
 const esRegular = (e) => REGULAR.includes(normalizar(e));
 const esCursando = (e) => CURSANDO.includes(normalizar(e));
+const getCanonicalSubjectStatus = (estado) => {
+  if (esAprobada(estado)) return "aprobada";
+  if (esRegular(estado)) return "regular";
+  if (esCursando(estado)) return "cursando";
+  return "pendiente";
+};
 
 const emptyPayload = {
   progress: { percentage: 0, label: "Avance de carrera" },
@@ -34,7 +40,7 @@ const emptyPayload = {
   subjects: [],
   finals: [],
   years: [],
-  studentStatus: { approvedIds: [], inProgressIds: [] },
+  studentStatus: { approvedIds: [], regularizedIds: [], inProgressIds: [] },
 };
 
 const unavailablePayload = (reason) => ({
@@ -219,9 +225,13 @@ const getAcademicAssistant = async (req, res, next) => {
     estados.filter((e) => esAprobada(e.estado)).map((e) => e.materia_id)
   );
 
-  const inProgressIds = estados
-    .filter((e) => esCursando(e.estado) || esRegular(e.estado))
-    .map((e) => e.materia_id);
+  const regularizedIds = new Set(
+    estados.filter((e) => esRegular(e.estado)).map((e) => Number(e.materia_id))
+  );
+
+  const inProgressIds = new Set(
+    estados.filter((e) => esCursando(e.estado)).map((e) => Number(e.materia_id))
+  );
 
   let approved = 0;
   let regularized = 0;
@@ -311,7 +321,8 @@ const getAcademicAssistant = async (req, res, next) => {
       years: yearsData,
       studentStatus: {
         approvedIds: Array.from(aprobadasIds),
-        inProgressIds,
+        regularizedIds: Array.from(regularizedIds),
+        inProgressIds: Array.from(inProgressIds),
       },
     },
   });
@@ -331,6 +342,7 @@ const getPlanSubjects = async (req, res, next) => {
         ok: true,
         data: {
           subjects: [],
+          simulatorSubjects: [],
           currentPlan: [],
         },
       });
@@ -343,6 +355,7 @@ const getPlanSubjects = async (req, res, next) => {
         ok: true,
         data: {
           subjects: [],
+          simulatorSubjects: [],
           currentPlan: [],
         },
       });
@@ -369,6 +382,7 @@ const getPlanSubjects = async (req, res, next) => {
         ok: true,
         data: {
           subjects: [],
+          simulatorSubjects: [],
           currentPlan: [],
         },
       });
@@ -385,6 +399,19 @@ const getPlanSubjects = async (req, res, next) => {
     );
 
     const materias = plan.materias || [];
+
+    const simulatorSubjects = materias
+      .map((m) => ({
+        ...mapearMateria(m),
+        status: getCanonicalSubjectStatus(estadoPorMateria.get(m.id)),
+      }))
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        if (a.cuatrimestre !== b.cuatrimestre) {
+          return a.cuatrimestre - b.cuatrimestre;
+        }
+        return a.name.localeCompare(b.name);
+      });
 
     const aprobadasIds = new Set(
       estados
@@ -545,6 +572,7 @@ const getPlanSubjects = async (req, res, next) => {
       ok: true,
       data: {
         subjects: materiasPendientes,
+        simulatorSubjects,
         currentPlan,
         materiasNombres,
         summary: {
