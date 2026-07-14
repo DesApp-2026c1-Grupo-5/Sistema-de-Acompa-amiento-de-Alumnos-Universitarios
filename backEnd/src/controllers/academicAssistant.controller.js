@@ -37,6 +37,11 @@ const emptyPayload = {
   studentStatus: { approvedIds: [], inProgressIds: [] },
 };
 
+const unavailablePayload = (reason) => ({
+  ...emptyPayload,
+  availability: { canUse: false, reason },
+});
+
 const getSituacionActiva = (estudianteId) =>
   situacion_academica.findOne({
     where: { estudiante_id: estudianteId },
@@ -150,12 +155,18 @@ const getAcademicAssistant = async (req, res, next) => {
   });
 
   if (!estudianteData) {
-    return res.status(200).json({ ok: true, data: emptyPayload });
+    return res.status(200).json({
+      ok: true,
+      data: unavailablePayload("NO_STUDENT_PROFILE"),
+    });
   }
 
   const situacion = await getSituacionActiva(estudianteData.id);
   if (!situacion) {
-    return res.status(200).json({ ok: true, data: emptyPayload });
+    return res.status(200).json({
+      ok: true,
+      data: unavailablePayload("NO_ACADEMIC_SITUATION"),
+    });
   }
 
   const plan = await plan_estudio.findByPk(situacion.plan_id, {
@@ -179,7 +190,10 @@ const getAcademicAssistant = async (req, res, next) => {
   });
 
   if (!plan) {
-    return res.status(200).json({ ok: true, data: emptyPayload });
+    return res.status(200).json({
+      ok: true,
+      data: unavailablePayload("PLAN_NOT_FOUND"),
+    });
   }
 
   const materias = plan.materias || [];
@@ -282,6 +296,7 @@ const getAcademicAssistant = async (req, res, next) => {
   return res.status(200).json({
     ok: true,
     data: {
+      availability: { canUse: true, reason: null },
       progress: { percentage, label: "Avance de carrera" },
       stats: {
         approved,

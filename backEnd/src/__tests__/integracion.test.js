@@ -563,6 +563,41 @@ describe("integracion backend", () => {
     expect(statesAfter).toBe(statesBefore);
   });
 
+  test("indica que el asistente no está disponible sin situación académica", async () => {
+    const student = await registerStudent("asistentesinsituacion");
+
+    const res = await request(app)
+      .get("/api/student/academic-assistant")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+
+    expect(res.body.data.availability).toEqual({
+      canUse: false,
+      reason: "NO_ACADEMIC_SITUATION",
+    });
+  });
+
+  test("habilita el asistente después de asociar una carrera y plan", async () => {
+    const student = await registerStudent("asistenteconsituacion");
+    const { plan } = await createPlanWithSubject();
+
+    await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const res = await request(app)
+      .get("/api/student/academic-assistant")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+
+    expect(res.body.data.availability).toEqual({
+      canUse: true,
+      reason: null,
+    });
+  });
+
   test("crea actividad pendiente sin sumar creditos", async () => {
     const student = await registerStudent("creditospendientes");
     const { plan } = await createPlanWithSubject({ creditsRequired: 10 });
