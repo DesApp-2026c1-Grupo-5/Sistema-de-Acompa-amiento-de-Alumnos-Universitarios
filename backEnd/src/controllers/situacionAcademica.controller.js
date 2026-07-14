@@ -20,11 +20,14 @@ const APROBADA = ["aprobada", "aprobado", "promocionada", "promotionada"];
 const REGULAR = ["regular", "regularizada", "regularizado"];
 const CURSANDO = ["cursando"];
 const ACTIVIDAD_CREDITO_CONTABILIZABLE = ["aprobada"];
+const ESTADOS_PLAN_SELECCIONABLES = ["vigente", "transicion"];
 
 const normalizar = (e) => (e || "").trim().toLowerCase();
 const esAprobada = (e) => APROBADA.includes(normalizar(e));
 const esRegular = (e) => REGULAR.includes(normalizar(e));
 const esCursando = (e) => CURSANDO.includes(normalizar(e));
+const esPlanSeleccionable = (plan) =>
+  ESTADOS_PLAN_SELECCIONABLES.includes(normalizar(plan?.estado));
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -192,6 +195,9 @@ const crearSituacion = async (req, res, next) => {
     include: [{ model: materia, as: "materias", attributes: ["id"] }],
   });
   if (!plan) return next(buildError("Plan de estudio no encontrado", 404));
+  if (!esPlanSeleccionable(plan)) {
+    return next(buildError("El plan de estudio no está disponible para nuevas inscripciones", 400));
+  }
 
   const situacion = await db.sequelize.transaction(async (t) => {
     const sit = await situacion_academica.create(
@@ -552,6 +558,12 @@ const cambiarCarrera = async (req, res, next) => {
 
   if (!plan) {
     return next(buildError("Plan no encontrado", 404));
+  }
+  if (!esPlanSeleccionable(plan)) {
+    return next(buildError("El plan de estudio no está disponible para nuevas inscripciones", 400));
+  }
+  if (Number(situacion.plan_id) === Number(plan_id)) {
+    return next(buildError("Ya estás asociado a este plan de estudio", 409));
   }
 
   await db.sequelize.transaction(async (t) => {
