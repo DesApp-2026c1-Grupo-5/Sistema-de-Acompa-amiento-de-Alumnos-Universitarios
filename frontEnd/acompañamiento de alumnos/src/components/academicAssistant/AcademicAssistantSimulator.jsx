@@ -22,31 +22,42 @@ function AreaBadge({ area }) {
   return <span className={`${styles.areaBadge} ${cls}`}>{area}</span>;
 }
 
-function AcademicAssistantSimulator({ approvedIds = [], inProgressIds = [] }) {
+function AcademicAssistantSimulator({ approvedIds = [] }) {
   const [allSubjects, setAllSubjects] = useState([]);
+  const [simulatorSubjects, setSimulatorSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [checkedIds, setCheckedIds] = useState(() => new Set(inProgressIds));
+  const [checkedIds, setCheckedIds] = useState(new Set());
   const [simulated, setSimulated] = useState(false);
 
   useEffect(() => {
     getCareerSubjects()
-      .then((data) => setAllSubjects(data.subjects))
+      .then((data) => {
+        const currentSubjects = data.simulatorSubjects.filter(
+          (subject) => subject.status === 'cursando'
+        );
+        setAllSubjects(data.subjects);
+        setSimulatorSubjects(data.simulatorSubjects);
+        setCheckedIds(new Set(currentSubjects.map((subject) => subject.id)));
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
-  const approvedSet = useMemo(() => new Set(approvedIds), [approvedIds]);
+  const approvedSet = useMemo(
+    () => new Set(approvedIds.map(Number)),
+    [approvedIds]
+  );
 
   const subjectMap = useMemo(() => {
     const map = {};
-    for (const s of allSubjects) map[s.id] = s;
+    for (const subject of simulatorSubjects) map[subject.id] = subject;
     return map;
-  }, [allSubjects]);
+  }, [simulatorSubjects]);
 
   const inProgressSubjects = useMemo(
-    () => allSubjects.filter((s) => inProgressIds.includes(s.id)),
-    [allSubjects, inProgressIds],
+    () => simulatorSubjects.filter((subject) => subject.status === 'cursando'),
+    [simulatorSubjects]
   );
 
   const availableFrom = useCallback(
@@ -70,7 +81,7 @@ function AcademicAssistantSimulator({ approvedIds = [], inProgressIds = [] }) {
   const unlockedBySubject = useMemo(() => {
     if (!simulated) return {};
 
-    const hypotheticalSet = new Set([...approvedIds, ...checkedIds]);
+    const hypotheticalSet = new Set([...approvedSet, ...checkedIds]);
     const result = {};
 
     for (const checkedId of checkedIds) {
@@ -89,7 +100,7 @@ function AcademicAssistantSimulator({ approvedIds = [], inProgressIds = [] }) {
     }
 
     return result;
-  }, [simulated, allSubjects, approvedIds, checkedIds, approvedSet, currentAvailableIds]);
+  }, [simulated, allSubjects, checkedIds, approvedSet, currentAvailableIds]);
 
   const totalNewlyUnlocked = useMemo(
     () => {
@@ -166,7 +177,7 @@ function AcademicAssistantSimulator({ approvedIds = [], inProgressIds = [] }) {
             <GraduationCap size={16} /> {approvedIds.length} aprobadas
           </span>
           <span>
-            <BookOpen size={16} /> {inProgressIds.length} en curso
+            <BookOpen size={16} /> {inProgressSubjects.length} en curso
           </span>
         </div>
 
@@ -213,7 +224,7 @@ function AcademicAssistantSimulator({ approvedIds = [], inProgressIds = [] }) {
 
             {totalNewlyUnlocked > 0 ? (
               <p className={styles.resultsSummary}>
-                Si regularizás las materias seleccionadas, se desbloquean{' '}
+                Si aprobás las materias seleccionadas, se desbloquean{' '}
                 {totalNewlyUnlocked}{' '}
                 {totalNewlyUnlocked === 1
                   ? 'materia nueva'

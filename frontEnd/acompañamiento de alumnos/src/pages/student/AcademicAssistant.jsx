@@ -106,7 +106,6 @@ function AcademicAssistant() {
 
       <AcademicAssistantSimulator
         approvedIds={academic?.studentStatus?.approvedIds ?? []}
-        inProgressIds={academic?.studentStatus?.inProgressIds ?? []}
       />
 
       <AcademicAssistantPlanner
