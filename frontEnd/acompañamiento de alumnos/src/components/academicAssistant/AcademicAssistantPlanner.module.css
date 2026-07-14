@@ -723,3 +723,27 @@
   font-size: 14px;
   font-weight: 600;
 }
+
+.blockedMessage {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--text-h);
+  font-size: 13px;
+}
+
+.blockedMessage strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.blockedMessage ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.blockedMessage li + li {
+  margin-top: 4px;
+}

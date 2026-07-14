@@ -23,6 +23,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const [mensaje, setMensaje] = useState(null);
   const [planesGuardados, setPlanesGuardados] = useState([]);
   const [planningBlocked, setPlanningBlocked] = useState(false);
+  const [blockedSubjects, setBlockedSubjects] = useState([]);
   const [activePlanTab, setActivePlanTab] = useState('nuevo');
   const dragSource = useRef(null);
   const labelInputRef = useRef(null);
@@ -47,9 +48,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const corrSatisfecha = (requirement, earlierIds) => {
     if (earlierIds.has(Number(requirement.subjectId))) return true;
     const status = requirement.currentStatus || 'pendiente';
-    return requirement.type === 'cursar'
-      ? status === 'regular' || status === 'aprobada'
-      : status === 'aprobada';
+    return ['aprobada', 'regular', 'cursando'].includes(status);
   };
 
   function filterSubjects(subjects) {
@@ -81,6 +80,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
         setAllSubjects(subjects);
         setMateriasNombres(data.materiasNombres || {});
         setPlanningBlocked(!!data.planningBlocked);
+        setBlockedSubjects(data.unplannableSubjects || []);
         setPlan(currentPlan);
       })
       .catch((err) => setError(err.message))
@@ -217,6 +217,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
     let yearCursor = 1;
     let cuatriCursor = 1;
     let iterationGuard = 0;
+    let blocked = [];
 
     const advanceCursor = () => {
       if (cuatriCursor === 1) {
@@ -265,7 +266,34 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
       if (group.subjects.length > 0) {
         for (const sub of group.subjects) placedIds.add(sub.id);
         newPlan.push(group);
-      } else if (remaining.length > 0) break;
+      } else if (remaining.length > 0) {
+        const remainingIds = new Set(remaining.map((subject) => Number(subject.id)));
+        blocked = remaining.map((subject) => {
+          const reasons = [];
+          if (subject.hours > classHours) {
+            reasons.push({
+              code: 'HOUR_LIMIT',
+              message: `Requiere ${subject.hours}hs y supera el máximo de ${classHours}hs por cuatrimestre`,
+            });
+          }
+          for (const requirement of requirementsFor(subject)) {
+            if (corrSatisfecha(requirement, placedIds)) continue;
+            const requirementId = Number(requirement.subjectId);
+            reasons.push({
+              code: remainingIds.has(requirementId)
+                ? 'PENDING_PREREQUISITE'
+                : 'MISSING_PREREQUISITE',
+              requirementId,
+              requirementName: materiasNombres[requirementId] || subjectNameMap[requirementId],
+              message: remainingIds.has(requirementId)
+                ? `La correlativa ${materiasNombres[requirementId] || subjectNameMap[requirementId] || requirementId} debe ubicarse en un cuatrimestre anterior`
+                : `No se puede proyectar la correlativa ${materiasNombres[requirementId] || subjectNameMap[requirementId] || requirementId}`,
+            });
+          }
+          return { id: subject.id, name: subject.name, reasons };
+        });
+        break;
+      }
 
       advanceCursor();
     }
@@ -287,6 +315,8 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
     }
 
     setPlan(newPlan);
+    setBlockedSubjects(blocked);
+    setPlanningBlocked(blocked.length > 0);
   };
 
   const fixedTotalHours = plan.reduce(
@@ -481,9 +511,19 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
             {mensaje}
           </div>
         )}
-        {planningBlocked && plan.length === 0 && (
-          <div className={styles.mensaje}>
-            Hay materias que no pueden planificarse hasta cumplir sus correlativas.
+        {planningBlocked && activePlanTab === 'nuevo' && (
+          <div className={styles.blockedMessage} role="alert">
+            <strong>Hay materias que todavía no pueden ubicarse en el plan:</strong>
+            <ul>
+              {blockedSubjects.map((subject) => (
+                <li key={subject.id}>
+                  <span>{subject.name}</span>
+                  {subject.reasons?.length > 0 && (
+                    <>: {subject.reasons.map((reason) => reason.message).join('. ')}</>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

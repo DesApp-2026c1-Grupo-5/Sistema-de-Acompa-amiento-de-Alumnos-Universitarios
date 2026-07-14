@@ -815,6 +815,18 @@ describe("integracion backend", () => {
       .send({ materias: [{ materia_id: requisito.id, estado: "regular" }] })
       .expect(200);
 
+    const projectedPlan = await request(app)
+      .get("/api/student/academic-assistant/plan-subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+    expect(
+      projectedPlan.body.data.currentPlan.flatMap((group) =>
+        group.subjects.map((subject) => subject.id)
+      )
+    ).toContain(dependiente.id);
+    expect(projectedPlan.body.data.planningBlocked).toBe(false);
+    expect(projectedPlan.body.data.unplannableSubjects).toEqual([]);
+
     await request(app)
       .post(`/api/materias/${dependiente.id}/inscribir`)
       .set("Authorization", `Bearer ${student.token}`)
@@ -831,6 +843,82 @@ describe("integracion backend", () => {
         ],
       })
       .expect(200);
+  });
+
+  test("planifica completa una cadena de correlativas pendientes", async () => {
+    const student = await registerStudent("cadenaplanificador");
+    const { plan, materia: primera } = await createPlanWithSubject();
+    const segunda = await createSubjectForPlan(plan.id, "Segunda de la cadena");
+    const tercera = await createSubjectForPlan(plan.id, "Tercera de la cadena");
+    await db.correlatividad.bulkCreate([
+      {
+        materia_id: segunda.id,
+        materia_requisito_id: primera.id,
+        tipo: "aprobar",
+      },
+      {
+        materia_id: tercera.id,
+        materia_requisito_id: segunda.id,
+        tipo: "aprobar",
+      },
+    ]);
+    await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const response = await request(app)
+      .get("/api/student/academic-assistant/plan-subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+    const groups = response.body.data.currentPlan;
+    const flattened = groups.flatMap((group) =>
+      group.subjects.map((subject) => subject.id)
+    );
+
+    expect(flattened).toEqual([primera.id, segunda.id, tercera.id]);
+    expect(response.body.data.planningBlocked).toBe(false);
+    expect(response.body.data.unplannableSubjects).toEqual([]);
+  });
+
+  test("reporta todas las materias de un ciclo como no planificables", async () => {
+    const student = await registerStudent("cicloplanificador");
+    const { plan, materia: primera } = await createPlanWithSubject();
+    const segunda = await createSubjectForPlan(plan.id, "Segunda materia cíclica");
+    await db.correlatividad.bulkCreate([
+      {
+        materia_id: primera.id,
+        materia_requisito_id: segunda.id,
+        tipo: "aprobar",
+      },
+      {
+        materia_id: segunda.id,
+        materia_requisito_id: primera.id,
+        tipo: "aprobar",
+      },
+    ]);
+    await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const response = await request(app)
+      .get("/api/student/academic-assistant/plan-subjects")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+
+    expect(response.body.data.currentPlan).toEqual([]);
+    expect(response.body.data.planningBlocked).toBe(true);
+    expect(
+      response.body.data.unplannableSubjects.map((subject) => subject.id).sort()
+    ).toEqual([primera.id, segunda.id].sort());
+    expect(
+      response.body.data.unplannableSubjects.every(
+        (subject) => subject.reasons.length > 0
+      )
+    ).toBe(true);
   });
 
   test("rechaza una regresion que invalida dependientes sin guardar cambios parciales", async () => {
