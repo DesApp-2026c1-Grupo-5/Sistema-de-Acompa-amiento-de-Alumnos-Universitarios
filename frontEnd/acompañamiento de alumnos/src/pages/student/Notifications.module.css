@@ -16,14 +16,14 @@
 
 .header h1 {
   margin: 0 0 6px;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: #020617 !important;
 }
 
 .header p {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: #405a7a !important;
 }
 
@@ -31,7 +31,7 @@
   border: none;
   background: transparent;
   color: #020617 !important;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 
@@ -52,7 +52,7 @@
 
 .filtersCard h2 {
   margin: 0 0 18px;
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 700;
   color: #020617;
 }
@@ -66,7 +66,7 @@
 .filterLabel {
   display: block;
   margin-bottom: 8px;
-  font-size: 12px;
+  font-size: 14px;
   color: #405a7a !important;
 }
 
@@ -86,7 +86,7 @@
   background: #ffffff;
   color: #020617 !important;
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 
   cursor: pointer;
@@ -169,7 +169,7 @@
 
 .notificationTitleRow h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: #020617 !important;
 }
@@ -183,13 +183,13 @@
   display: inline-flex;
   align-items: center;
 
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .notificationContent p {
   margin: 0 0 14px;
-  font-size: 12px;
+  font-size: 14px;
   color: #405a7a !important;
 }
 
@@ -198,7 +198,7 @@
   align-items: center;
   gap: 5px;
 
-  font-size: 11px;
+  font-size: 13px;
   color: #405a7a !important;
 }
 
@@ -216,7 +216,7 @@
   border: none;
   border-radius: 9px;
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 
   cursor: pointer;
@@ -264,7 +264,7 @@
 
 .readLabel {
   color: #64748b !important;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 
   display: inline-flex;
@@ -309,13 +309,13 @@
 
 .emptyCard h2 {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: 17px;
   color: #020617;
 }
 
 .emptyCard p {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #405a7a;
 }
 
