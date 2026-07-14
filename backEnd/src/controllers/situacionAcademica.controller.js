@@ -169,7 +169,11 @@ const buildSubjectDetail = async (situacionId, planId) => {
         ],
       },
     ],
-    order: [["anio_cursada", "ASC"]],
+    order: [
+      ["anio_cursada", "ASC"],
+      ["cuatrimestre", "ASC"],
+      ["nombre", "ASC"],
+    ],
   });
 
   const estados = await estado_materia.findAll({
@@ -206,6 +210,7 @@ const buildSubjectDetail = async (situacionId, planId) => {
       name: m.nombre,
       code: m.codigo,
       year_in_career: m.anio_cursada,
+      semester_in_plan: m.cuatrimestre,
       modalidad: m.modalidad,
       type: m.tipo,
       is_unahur: m.es_unahur,

@@ -507,6 +507,55 @@ describe("integracion backend", () => {
     expect(situation.plan_id).toBe(plan.id);
   });
 
+  test("ordena las materias de la situacion por año y cuatrimestre", async () => {
+    const student = await registerStudent("ordensituacion");
+    const { plan, materia: segundoSegundo } = await createPlanWithSubject();
+    await segundoSegundo.update({
+      nombre: "Segundo año segundo cuatrimestre",
+      anio_cursada: 2,
+      cuatrimestre: 2,
+    });
+    const primeroSegundo = await createSubjectForPlan(
+      plan.id,
+      "Primer año segundo cuatrimestre"
+    );
+    await primeroSegundo.update({ anio_cursada: 1, cuatrimestre: 2 });
+    const segundoPrimero = await createSubjectForPlan(
+      plan.id,
+      "Segundo año primer cuatrimestre"
+    );
+    await segundoPrimero.update({ anio_cursada: 2, cuatrimestre: 1 });
+    const primeroPrimero = await createSubjectForPlan(
+      plan.id,
+      "Primer año primer cuatrimestre"
+    );
+    await primeroPrimero.update({ anio_cursada: 1, cuatrimestre: 1 });
+
+    await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const response = await request(app)
+      .get("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+
+    expect(response.body.data.subjects.map((subject) => subject.materia_id)).toEqual([
+      primeroPrimero.id,
+      primeroSegundo.id,
+      segundoPrimero.id,
+      segundoSegundo.id,
+    ]);
+    expect(response.body.data.subjects.map((subject) => subject.semester_in_plan)).toEqual([
+      1,
+      2,
+      1,
+      2,
+    ]);
+  });
+
   test("lista carreras con el nombre y estado de sus planes", async () => {
     const student = await registerStudent("listadocarreras");
     const { carrera, plan } = await createPlanWithSubject({ planName: "Plan 2026" });

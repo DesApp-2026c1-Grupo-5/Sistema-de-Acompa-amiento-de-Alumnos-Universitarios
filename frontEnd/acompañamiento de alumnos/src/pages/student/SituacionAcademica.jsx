@@ -19,7 +19,7 @@ import {
 import styles from './SituacionAcademica.module.css';
 
 const ESTADOS = ['pendiente', 'cursando', 'regular', 'aprobada'];
-const CAMPOS_MATERIA_EDITABLES = ['status', 'academic_year', 'academic_semester', 'grade', 'fecha'];
+const CAMPOS_MATERIA_EDITABLES = ['status', 'academic_year', 'grade', 'fecha'];
 const ESTADOS_REQUERIDOS = {
   cursar: ['regular', 'aprobada'],
   aprobar: ['aprobada'],
@@ -873,11 +873,7 @@ export default function SituacionAcademica() {
                           {materia.year_in_career ? `${materia.year_in_career}°` : '-'}
                         </td>
                         <td className={styles.semesterCell} data-label="Cuatrimestre">
-                          {editandoMaterias ? (
-                            <input type="number" min="1" max="2" value={materia.academic_semester || ''} onChange={(e) => actualizarMateriaLocal(materia.materia_id, 'academic_semester', e.target.value ? Math.max(1, Math.min(2, Number(e.target.value))) : null)} />
-                          ) : (
-                            materia.academic_semester ? `${materia.academic_semester}°` : '-'
-                          )}
+                          {materia.semester_in_plan ? `${materia.semester_in_plan}°` : '-'}
                         </td>
                         <td className={styles.gradeCell} data-label="Nota">
                           {editandoMaterias ? (
