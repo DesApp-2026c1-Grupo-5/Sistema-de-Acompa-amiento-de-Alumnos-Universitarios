@@ -24,10 +24,37 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   correlatividad.init({
-    tipo: DataTypes.STRING
+    materia_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    materia_requisito_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    tipo: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isIn: [['cursar', 'aprobar']],
+        noAutorreferencia(value) {
+          if (Number(this.materia_id) === Number(this.materia_requisito_id)) {
+            throw new Error('Una materia no puede ser correlativa de sí misma');
+          }
+          return value;
+        },
+      },
+    },
   }, {
     sequelize,
     modelName: 'correlatividad',
+    indexes: [
+      {
+        unique: true,
+        fields: ['materia_id', 'materia_requisito_id'],
+        name: 'correlatividads_materia_requisito_unique',
+      },
+    ],
   });
   return correlatividad;
 };

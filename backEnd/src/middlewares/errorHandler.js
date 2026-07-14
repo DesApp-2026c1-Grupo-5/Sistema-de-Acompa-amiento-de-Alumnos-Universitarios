@@ -30,6 +30,10 @@ const errorHandler = (err, req, res, next) => {
     message,
   };
 
+  if (err.statusCode && err.code) {
+    response.code = err.code;
+  }
+
   if (err.details) {
     response.details = err.details;
   }

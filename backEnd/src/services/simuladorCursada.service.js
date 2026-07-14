@@ -25,6 +25,10 @@ const mapearMateria = (m) => ({
   correlatives: (m.correlatividades || []).map((c) =>
     Number(c.materia_requisito_id)
   ),
+  correlativeRequirements: (m.correlatividades || []).map((c) => ({
+    subjectId: Number(c.materia_requisito_id),
+    type: c.tipo,
+  })),
   cuatrimestre: m.cuatrimestre,
   hours: m.carga_horaria_semanal || 6,
 });
@@ -36,7 +40,7 @@ const obtenerMateriasConCorrelativas = async (planId) => {
       {
         model: correlatividad,
         as: "correlatividades",
-        attributes: ["materia_requisito_id"],
+        attributes: ["materia_requisito_id", "tipo"],
       },
     ],
     order: [

@@ -256,8 +256,8 @@ async function seed() {
       mk(sitFacu.id,  matProg1.id,  "aprobada", 2024, 2, 8, new Date("2024-12-10")),
       mk(sitFacu.id,  matBD.id,     "cursando", 2026, 1),
       mk(sitFacu.id,  matPOO.id,    "cursando", 2026, 1),
-      // Lara (TPI): 2 aprobadas, 1 regular, 1 cursando
-      mk(sitLara.id,  matAlgo.id,   "regular",  2024, 2, 7, new Date("2024-12-10")),
+      // Lara (TPI): 3 aprobadas, 1 cursando
+      mk(sitLara.id,  matAlgo.id,   "aprobada", 2024, 2, 7, new Date("2024-12-10")),
       mk(sitLara.id,  matMat1.id,   "aprobada", 2024, 2, 6, new Date("2024-12-10")),
       mk(sitLara.id,  matProg1.id,  "aprobada", 2024, 2, 8, new Date("2024-12-10")),
       mk(sitLara.id,  matBD.id,     "cursando", 2026, 1),
@@ -276,27 +276,25 @@ async function seed() {
       mk(sitMateo.id, matBD.id,     "aprobada", 2024, 1, 8,  new Date("2024-07-20")),
       mk(sitMateo.id, matPOO.id,    "regular",  2024, 2, 6,  new Date("2024-12-12")),
       mk(sitMateo.id, matAlgo2.id,  "cursando", 2026, 1),
-      // Valen (TPI): 6 aprobadas, 1 cursando
+      // Valen (TPI): 6 aprobadas, 1 regular, 1 cursando
       mk(sitValen.id, matAlgo.id,   "aprobada", 2022, 1, 9,  new Date("2022-07-10")),
       mk(sitValen.id, matMat1.id,   "aprobada", 2022, 1, 8,  new Date("2022-07-10")),
       mk(sitValen.id, matProg1.id,  "aprobada", 2022, 2, 9,  new Date("2022-12-15")),
       mk(sitValen.id, matBD.id,     "aprobada", 2023, 1, 8,  new Date("2023-07-20")),
       mk(sitValen.id, matPOO.id,    "aprobada", 2023, 2, 9,  new Date("2023-12-12")),
       mk(sitValen.id, matAlgo2.id,  "aprobada", 2024, 1, 8,  new Date("2024-07-15")),
+      mk(sitValen.id, matNEL.id,    "regular",  2024, 2, 6,  new Date("2024-12-12")),
       mk(sitValen.id, matWeb.id,    "cursando", 2026, 1),
       // Tomas (TPI): 1 cursando — recién empieza
-      mk(sitTomas.id, matAlgo.id,   "cursando", 2026, 1),
       mk(sitTomas.id, matMat1.id,   "cursando", 2026, 1),
       // Diego (Lic SI): 2 aprobadas, 1 cursando
       mk(sitDiego.id, matRedes.id,  "aprobada", 2024, 2, 8,  new Date("2024-12-20")),
       mk(sitDiego.id, matSO.id,     "aprobada", 2024, 1, 7,  new Date("2024-07-25")),
       mk(sitDiego.id, matArq.id,    "cursando", 2026, 1),
-      // Julia (Lic SI): 5 aprobadas, 1 cursando
+      // Julia (Lic SI): 3 aprobadas, 1 cursando
       mk(sitJulia.id, matRedes.id,  "aprobada", 2023, 1, 9,  new Date("2023-07-15")),
       mk(sitJulia.id, matSO.id,     "aprobada", 2023, 2, 8,  new Date("2023-12-10")),
       mk(sitJulia.id, matArq.id,    "aprobada", 2023, 2, 9,  new Date("2023-12-10")),
-      mk(sitJulia.id, matBD.id,     "aprobada", 2024, 1, 8,  new Date("2024-07-20")),
-      mk(sitJulia.id, matPOO.id,    "aprobada", 2024, 2, 9,  new Date("2024-12-15")),
       mk(sitJulia.id, matIA.id,     "cursando", 2026, 1),
       // Ana (Lic SI): 3 aprobadas, 1 cursando
       mk(sitAna.id,   matRedes.id,  "aprobada", 2023, 2, 7,  new Date("2023-12-10")),

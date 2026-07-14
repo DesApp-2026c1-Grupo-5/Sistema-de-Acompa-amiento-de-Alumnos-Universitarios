@@ -26,7 +26,22 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   estado_materia.init({
-    estado: DataTypes.STRING,
+    situacion_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    materia_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    estado: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'pendiente',
+      validate: {
+        isIn: [['pendiente', 'cursando', 'regular', 'aprobada']],
+      },
+    },
     anio: DataTypes.INTEGER,
     cuatrimestre: DataTypes.INTEGER,
     nota: DataTypes.FLOAT,
@@ -34,6 +49,13 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'estado_materia',
+    indexes: [
+      {
+        unique: true,
+        fields: ['situacion_id', 'materia_id'],
+        name: 'estado_materias_situacion_materia_unique',
+      },
+    ],
   });
   return estado_materia;
 };

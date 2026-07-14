@@ -1,6 +1,14 @@
 const { Op } = require("sequelize");
 const db = require("../db/models");
-const { registrarAccionAcademica } = require("../services/publicacionAcademica.service");
+const {
+  actualizarEstadosMaterias,
+  validarEstadosMaterias,
+} = require("../services/publicacionAcademica.service");
+const {
+  cumpleCorrelatividad,
+  estadosAceptadosPara,
+  normalizarEstadoMateria,
+} = require("../services/correlatividadAcademica.service");
 const { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo } = require("../services/excelImport.service");
 const planCursadaService = require("../services/planCursada.service");
 
@@ -35,6 +43,43 @@ const buildError = (message, statusCode) => {
   return error;
 };
 
+const sincronizarEstadoConFinales = async ({
+  usuarioId,
+  estadoMateriaData,
+  transaction,
+  volverARegular = false,
+}) => {
+  const finalAprobado = await final.findOne({
+    where: {
+      estado_materia_id: estadoMateriaData.id,
+      aprobado: true,
+    },
+    order: [["fecha", "DESC"], ["id", "DESC"]],
+    transaction,
+  });
+
+  if (finalAprobado) {
+    await actualizarEstadosMaterias(
+      usuarioId,
+      [
+        {
+          materia_id: estadoMateriaData.materia_id,
+          estado: "aprobada",
+          nota: finalAprobado.nota,
+          fecha: finalAprobado.fecha,
+        },
+      ],
+      { transaction }
+    );
+  } else if (volverARegular) {
+    await actualizarEstadosMaterias(
+      usuarioId,
+      [{ materia_id: estadoMateriaData.materia_id, estado: "regular" }],
+      { transaction }
+    );
+  }
+};
+
 const getEstudiante = async (usuarioId) =>
   estudiante.findOne({ where: { usuario_id: usuarioId } });
 
@@ -43,14 +88,6 @@ const getSituacionActiva = async (estudianteId) =>
     where: { estudiante_id: estudianteId },
     order: [["fecha_inicio", "DESC"], ["createdAt", "DESC"], ["id", "DESC"]],
   });
-
-const getEstudianteIdFromEstadoMateria = async (estadoMateriaId) => {
-  const em = await estado_materia.findByPk(estadoMateriaId, { raw: true });
-  if (!em) return null;
-  const sit = await situacion_academica.findByPk(em.situacion_id, { raw: true });
-  if (!sit) return null;
-  return sit.estudiante_id;
-};
 
 const buildStats = async (situacionId, plan) => {
   const estados = await estado_materia.findAll({
@@ -123,9 +160,20 @@ const buildSubjectDetail = async (situacionId, planId) => {
         model: correlatividad,
         as: "correlatividades",
         attributes: ["materia_id", "materia_requisito_id", "tipo"],
+        include: [
+          {
+            model: materia,
+            as: "requisito",
+            attributes: ["id", "codigo", "nombre"],
+          },
+        ],
       },
     ],
-    order: [["anio_cursada", "ASC"]],
+    order: [
+      ["anio_cursada", "ASC"],
+      ["cuatrimestre", "ASC"],
+      ["nombre", "ASC"],
+    ],
   });
 
   const estados = await estado_materia.findAll({
@@ -162,6 +210,7 @@ const buildSubjectDetail = async (situacionId, planId) => {
       name: m.nombre,
       code: m.codigo,
       year_in_career: m.anio_cursada,
+      semester_in_plan: m.cuatrimestre,
       modalidad: m.modalidad,
       type: m.tipo,
       is_unahur: m.es_unahur,
@@ -169,6 +218,16 @@ const buildSubjectDetail = async (situacionId, planId) => {
       correlatives: (m.correlatividades || []).map((c) => ({
         materia_requisito_id: c.materia_requisito_id,
         tipo: c.tipo,
+        code: c.requisito?.codigo || null,
+        name: c.requisito?.nombre || null,
+        current_status: normalizarEstadoMateria(
+          estadoPorMateria.get(c.materia_requisito_id)?.estado
+        ),
+        required_statuses: estadosAceptadosPara(c.tipo),
+        fulfilled: cumpleCorrelatividad(
+          c.tipo,
+          estadoPorMateria.get(c.materia_requisito_id)?.estado
+        ),
       })),
       status: em.estado || "pendiente",
       grade: em.nota ?? null,
@@ -273,45 +332,6 @@ const obtenerSituacion = async (req, res, next) => {
   });
 };
 
-const processMateriasBatch = async (situacionId, usuarioSub, items) => {
-  const results = [];
-
-  for (const item of items) {
-    try {
-      if (item.estado === "pendiente") {
-        const [em] = await estado_materia.findOrCreate({
-          where: { situacion_id: situacionId, materia_id: item.materia_id },
-          defaults: { estado: "pendiente" },
-        });
-        await em.update({
-          estado: "pendiente",
-          anio: item.anio ?? em.anio,
-          cuatrimestre: item.cuatrimestre ?? em.cuatrimestre,
-          nota: item.nota ?? em.nota,
-          fecha: item.fecha ? new Date(item.fecha) : em.fecha,
-        });
-        results.push({ materia_id: item.materia_id, success: true, tipo: "materia" });
-        continue;
-      }
-
-      if (item.estado === "cursando" || item.estado === "regular" || item.estado === "aprobada") {
-        const accionMap = { cursando: "inscripcion", regular: "regularizacion", aprobada: "aprobacion" };
-        const result = await registrarAccionAcademica(
-          usuarioSub,
-          item.materia_id,
-          accionMap[item.estado],
-          { anio: item.anio, cuatrimestre: item.cuatrimestre, nota: item.nota, fecha: item.fecha }
-        );
-        results.push({ materia_id: item.materia_id, success: true, tipo: "materia", data: result });
-      }
-    } catch (err) {
-      results.push({ materia_id: item.materia_id, success: false, tipo: "materia", error: err.message });
-    }
-  }
-
-  return results;
-};
-
 const actualizarMaterias = async (req, res, next) => {
   const estudianteData = await getEstudiante(req.user.sub);
   if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
@@ -319,53 +339,90 @@ const actualizarMaterias = async (req, res, next) => {
   const situacion = await getSituacionActiva(estudianteData.id);
   if (!situacion) return next(buildError("Situación académica no encontrada", 404));
 
-  const results = await processMateriasBatch(situacion.id, req.user.sub, req.body.materias || []);
+  const results = await actualizarEstadosMaterias(req.user.sub, req.body.materias || []);
 
   return res.status(200).json({ ok: true, data: results });
 };
 
 const crearFinal = async (req, res, next) => {
-  const { estado_materia_id, fecha, nota, aprobado } = req.body;
+  const { estado_materia_id, fecha, nota } = req.body;
+  const aprobado = Number(nota) >= 4;
 
-  const estudianteData = await getEstudiante(req.user.sub);
-  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+  const nuevo = await db.sequelize.transaction(async (transaction) => {
+    const estudianteData = await estudiante.findOne({
+      where: { usuario_id: req.user.sub },
+      transaction,
+    });
+    if (!estudianteData) throw buildError("Estudiante no encontrado", 404);
 
-  const estudianteId = await getEstudianteIdFromEstadoMateria(estado_materia_id);
-  if (!estudianteId) return next(buildError("Estado de materia no encontrado", 404));
-  if (estudianteId !== estudianteData.id) {
-    return next(buildError("No tenés permisos sobre esta materia", 403));
-  }
+    const estadoMateriaData = await estado_materia.findByPk(estado_materia_id, {
+      transaction,
+    });
+    if (!estadoMateriaData) throw buildError("Estado de materia no encontrado", 404);
 
-  const nuevo = await final.create({
-    estado_materia_id,
-    fecha: new Date(fecha),
-    nota,
-    aprobado,
-  });
+    const situacion = await situacion_academica.findByPk(estadoMateriaData.situacion_id, {
+      transaction,
+    });
+    if (!situacion || situacion.estudiante_id !== estudianteData.id) {
+      throw buildError("No tenés permisos sobre esta materia", 403);
+    }
 
-  if (aprobado) {
-    await estado_materia.update(
-      { estado: "aprobada", nota, fecha: new Date(fecha) },
-      { where: { id: estado_materia_id } }
+    await situacion.reload({ transaction, lock: transaction.LOCK.UPDATE });
+
+    const nuevoFinal = await final.create(
+      { estado_materia_id, fecha: new Date(fecha), nota, aprobado },
+      { transaction }
     );
-  }
+    if (aprobado) {
+      await sincronizarEstadoConFinales({
+        usuarioId: req.user.sub,
+        estadoMateriaData,
+        transaction,
+      });
+    }
+    return nuevoFinal;
+  });
 
   return res.status(201).json({ ok: true, data: nuevo });
 };
 
 const eliminarFinal = async (req, res, next) => {
-  const estudianteData = await getEstudiante(req.user.sub);
-  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+  await db.sequelize.transaction(async (transaction) => {
+    const estudianteData = await estudiante.findOne({
+      where: { usuario_id: req.user.sub },
+      transaction,
+    });
+    if (!estudianteData) throw buildError("Estudiante no encontrado", 404);
 
-  const f = await final.findByPk(req.params.id, { raw: true });
-  if (!f) return next(buildError("Final no encontrado", 404));
+    const f = await final.findByPk(req.params.id, { transaction });
+    if (!f) throw buildError("Final no encontrado", 404);
 
-  const estudianteId = await getEstudianteIdFromEstadoMateria(f.estado_materia_id);
-  if (!estudianteId || estudianteId !== estudianteData.id) {
-    return next(buildError("No tenés permisos para eliminar este final", 403));
-  }
+    const estadoMateriaData = await estado_materia.findByPk(f.estado_materia_id, {
+      transaction,
+    });
+    const situacion = estadoMateriaData
+      ? await situacion_academica.findByPk(estadoMateriaData.situacion_id, { transaction })
+      : null;
+    if (!situacion || situacion.estudiante_id !== estudianteData.id) {
+      throw buildError("No tenés permisos para eliminar este final", 403);
+    }
 
-  await final.destroy({ where: { id: req.params.id } });
+    await situacion.reload({ transaction, lock: transaction.LOCK.UPDATE });
+    await f.reload({ transaction, lock: transaction.LOCK.UPDATE });
+
+    if (f.aprobado) {
+      await f.destroy({ transaction });
+      await sincronizarEstadoConFinales({
+        usuarioId: req.user.sub,
+        estadoMateriaData,
+        transaction,
+        volverARegular: true,
+      });
+    } else {
+      await f.destroy({ transaction });
+    }
+  });
+
   return res.status(200).json({ ok: true, data: { id: req.params.id } });
 };
 
@@ -427,13 +484,14 @@ const importarExcel = async (req, res, next) => {
   const situacion = await getSituacionActiva(estudianteData.id);
   if (!situacion) return next(buildError("Situación académica no encontrada. Creá una primero.", 400));
 
-  let rows;
+  const filePath = req.file.path;
   try {
-    rows = parseExcel(req.file.path);
-  } catch (err) {
-    limpiarArchivo(req.file.path);
-    return next(buildError(err.message, 400));
-  }
+    let rows;
+    try {
+      rows = parseExcel(filePath);
+    } catch (err) {
+      return next(buildError(err.message, 400));
+    }
 
   const esReporte = rows.length > 0 && "esActividadCredito" in rows[0];
 
@@ -457,20 +515,62 @@ const importarExcel = async (req, res, next) => {
     creditActivities = [];
   }
 
-  limpiarArchivo(req.file.path);
+  let preview = validRows;
+  const correlativasReportadas = new Set();
 
-  return res.status(200).json({
-    ok: true,
-    data: {
-      total: rows.length,
-      validos: validRows.length,
-      creditos: creditActivities.length,
-      errores: errors.length,
-      errors,
-      preview: validRows,
-      creditActivities,
-    },
-  });
+  while (preview.length > 0) {
+    try {
+      await validarEstadosMaterias(req.user.sub, preview);
+      break;
+    } catch (err) {
+      if (err.code !== "CORRELATIVIDADES_INCUMPLIDAS") throw err;
+
+      const idsInvalidos = new Set(
+        (err.details?.violations || []).map((violation) => Number(violation.materia_id))
+      );
+      const removidos = preview.filter((item) => idsInvalidos.has(Number(item.materia_id)));
+      if (removidos.length === 0) throw err;
+
+      for (const item of removidos) {
+        if (correlativasReportadas.has(item.materia_id)) continue;
+        correlativasReportadas.add(item.materia_id);
+        const planMateria = planMaterias.find((m) => Number(m.id) === Number(item.materia_id));
+        const row = rows.find(
+          (candidate) =>
+            candidate.materia?.toLowerCase().trim() === planMateria?.nombre?.toLowerCase().trim()
+        );
+        const faltantes = (err.details?.violations || [])
+          .filter((violation) => Number(violation.materia_id) === Number(item.materia_id))
+          .map(
+            (violation) =>
+              `${violation.requisito || violation.requisito_codigo || "Correlativa"} debe estar ${violation.estados_aceptados.join(" o ")}`
+          );
+        errors.push({
+          row: row?.rowNumber || "-",
+          materia: planMateria?.nombre || item.materia_id,
+          errors: faltantes,
+        });
+      }
+
+      preview = preview.filter((item) => !idsInvalidos.has(Number(item.materia_id)));
+    }
+  }
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        total: rows.length,
+        validos: preview.length,
+        creditos: creditActivities.length,
+        errores: errors.length,
+        errors,
+        preview,
+        creditActivities,
+      },
+    });
+  } finally {
+    limpiarArchivo(filePath);
+  }
 };
 
 const confirmarImportacion = async (req, res, next) => {
@@ -480,63 +580,86 @@ const confirmarImportacion = async (req, res, next) => {
   const situacion = await getSituacionActiva(estudianteData.id);
   if (!situacion) return next(buildError("Situación académica no encontrada", 404));
 
-  const { materias, credit_activities } = req.body;
-  const results = [];
+  const { materias = [], credit_activities = [] } = req.body;
+  const results = await db.sequelize.transaction(async (transaction) => {
+    const transactionResults = materias.length
+      ? await actualizarEstadosMaterias(req.user.sub, materias, { transaction })
+      : [];
 
-  if (materias && Array.isArray(materias) && materias.length > 0) {
-    const materiaResults = await processMateriasBatch(situacion.id, req.user.sub, materias);
-    results.push(...materiaResults);
-  }
-
-  if (credit_activities && Array.isArray(credit_activities) && credit_activities.length > 0) {
     for (const act of credit_activities) {
-      try {
-        const actividad = await actividad_credito.create({
+      const actividad = await actividad_credito.create(
+        {
           situacion_id: situacion.id,
           descripcion: act.descripcion,
           creditos: act.creditos,
           fecha: new Date(),
           estado: "aprobada",
-        });
-        results.push({ id: actividad.id, tipo: "credito", descripcion: act.descripcion, creditos: act.creditos });
-      } catch (err) {
-        results.push({ descripcion: act.descripcion, tipo: "credito", success: false, error: err.message });
-      }
+        },
+        { transaction }
+      );
+      transactionResults.push({
+        id: actividad.id,
+        tipo: "credito",
+        success: true,
+        descripcion: act.descripcion,
+        creditos: act.creditos,
+      });
     }
-  }
+
+    return transactionResults;
+  });
 
   return res.status(200).json({ ok: true, data: results });
 };
 
 const actualizarFinal = async (req, res, next) => {
-  const estudianteData = await getEstudiante(req.user.sub);
-  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+  const updated = await db.sequelize.transaction(async (transaction) => {
+    const estudianteData = await estudiante.findOne({
+      where: { usuario_id: req.user.sub },
+      transaction,
+    });
+    if (!estudianteData) throw buildError("Estudiante no encontrado", 404);
 
-  const f = await final.findByPk(req.params.id);
-  if (!f) return next(buildError("Final no encontrado", 404));
+    const f = await final.findByPk(req.params.id, { transaction });
+    if (!f) throw buildError("Final no encontrado", 404);
 
-  const estudianteId = await getEstudianteIdFromEstadoMateria(f.estado_materia_id);
-  if (!estudianteId || estudianteId !== estudianteData.id) {
-    return next(buildError("No tenés permisos para modificar este final", 403));
-  }
+    const estadoMateriaData = await estado_materia.findByPk(f.estado_materia_id, {
+      transaction,
+    });
+    const situacion = estadoMateriaData
+      ? await situacion_academica.findByPk(estadoMateriaData.situacion_id, { transaction })
+      : null;
+    if (!situacion || situacion.estudiante_id !== estudianteData.id) {
+      throw buildError("No tenés permisos para modificar este final", 403);
+    }
 
-  const { fecha, nota } = req.body;
-  const aprobado = nota !== undefined ? Number(nota) >= 4 : f.aprobado;
+    await situacion.reload({ transaction, lock: transaction.LOCK.UPDATE });
+    await f.reload({ transaction, lock: transaction.LOCK.UPDATE });
 
-  await f.update({
-    fecha: fecha ? new Date(fecha) : f.fecha,
-    nota: nota !== undefined ? nota : f.nota,
-    aprobado,
+    const { fecha, nota } = req.body;
+    const notaSiguiente = nota !== undefined ? Number(nota) : Number(f.nota);
+    const aprobadoAntes = !!f.aprobado;
+    const aprobado = notaSiguiente >= 4;
+    const fechaSiguiente = fecha ? new Date(fecha) : f.fecha;
+
+    await f.update(
+      { fecha: fechaSiguiente, nota: notaSiguiente, aprobado },
+      { transaction }
+    );
+
+    if (aprobado || aprobadoAntes) {
+      await sincronizarEstadoConFinales({
+        usuarioId: req.user.sub,
+        estadoMateriaData,
+        transaction,
+        volverARegular: true,
+      });
+    }
+
+    return f;
   });
 
-  if (aprobado) {
-    await estado_materia.update(
-      { estado: "aprobada", nota: f.nota, fecha: f.fecha },
-      { where: { id: f.estado_materia_id } }
-    );
-  }
-
-  return res.status(200).json({ ok: true, data: f });
+  return res.status(200).json({ ok: true, data: updated });
 };
 
 const cambiarCarrera = async (req, res, next) => {

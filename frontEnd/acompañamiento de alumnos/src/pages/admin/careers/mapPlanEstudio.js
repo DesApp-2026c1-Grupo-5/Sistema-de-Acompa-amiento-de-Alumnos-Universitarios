@@ -6,6 +6,18 @@ const ESTADO_TO_API = {
   Discontinuado: "discontinuado",
 };
 
+const normalizeCorrelativa = (correlativa) => {
+  const codigo = typeof correlativa === "string" ? correlativa : correlativa?.codigo;
+  if (!codigo) return null;
+  return {
+    codigo,
+    tipo: correlativa?.tipo === "aprobar" ? "aprobar" : "cursar",
+  };
+};
+
+const normalizeCorrelativas = (correlativas = []) =>
+  correlativas.map(normalizeCorrelativa).filter(Boolean);
+
 export const mapPlanEstudioFromApi = (p) => ({
   id: p.id,
   careerId: p.carrera_id,
@@ -32,7 +44,7 @@ export const mapPlanEstudioFromApi = (p) => ({
     semester: m.modalidad ?? "Cuatrimestral",
     type: m.es_optativa ? "Optativa" : "Obligatoria",
     esUnahur: m.es_unahur ?? false,
-    correlatives: m.correlativas ?? [],
+    correlatives: normalizeCorrelativas(m.correlativas),
     credits: m.creditos_otorga ?? 0,
   })),
 });
@@ -43,6 +55,7 @@ export const mapPlanEstudioToApi = (plan) => ({
   niveles_ingles_requeridos: plan.conditions.englishLevel ?? 0,
   materias_unahur: plan.conditions.unahurSubjects ?? 0,
   materias: (plan.subjects ?? []).map((s) => ({
+    id: s.id,
     codigo: s.code,
     nombre: s.name,
     anio_cursada: s.year,
@@ -50,6 +63,6 @@ export const mapPlanEstudioToApi = (plan) => ({
     es_optativa: s.type === "Optativa",
     es_unahur: s.esUnahur ?? false,
     creditos_otorga: s.credits ?? 0,
-    correlativas: s.correlatives ?? [],
+    correlativas: normalizeCorrelativas(s.correlatives),
   })),
 });

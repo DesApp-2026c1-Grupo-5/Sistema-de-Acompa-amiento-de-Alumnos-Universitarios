@@ -11,6 +11,7 @@ const {
   final,
 } = require("../db/models");
 const { mapearMateria } = require("../services/simuladorCursada.service");
+const { cumpleCorrelatividad } = require("../services/correlatividadAcademica.service");
 
 const APROBADA = ["aprobada", "aprobado", "promocionada", "promotionada"];
 const REGULAR = ["regular", "regularizada", "regularizado"];
@@ -276,7 +277,7 @@ const getAcademicAssistant = async (req, res, next) => {
 
     const correlativas = m.correlatividades || [];
     const cumpleTodas = correlativas.every((c) =>
-      aprobadasIds.has(c.materia_requisito_id)
+      cumpleCorrelatividad(c.tipo, estadoPorMateria.get(c.materia_requisito_id))
     );
 
     if (!cumpleTodas) continue;
@@ -431,11 +432,6 @@ const getPlanSubjects = async (req, res, next) => {
         .map((estado) => estado.materia_id)
     );
 
-    const materiasHabilitantes = new Set([
-      ...aprobadasIds,
-      ...regularizadasIds,
-    ]);
-
     const materiasPendientes = materias
       .filter((m) => {
         const estado = estadoPorMateria.get(m.id);
@@ -450,6 +446,13 @@ const getPlanSubjects = async (req, res, next) => {
         const correlativas = (m.correlatividades || []).map(
           (c) => c.materia_requisito_id
         );
+        const correlativeRequirements = (m.correlatividades || []).map((c) => ({
+          subjectId: c.materia_requisito_id,
+          type: c.tipo,
+          currentStatus: getCanonicalSubjectStatus(
+            estadoPorMateria.get(c.materia_requisito_id)
+          ),
+        }));
 
         return {
           id: m.id,
@@ -460,9 +463,10 @@ const getPlanSubjects = async (req, res, next) => {
             m.cuatrimestre_cursada ||
             (m.anio_cursada % 2 === 0 ? 2 : 1),
           type: m.modalidad || "Cuatrimestral",
-          hours: m.horas_semanales || m.carga_horaria || 6,
+          hours: m.carga_horaria_semanal || 6,
           credits: m.creditos_otorga || 0,
           correlatives: correlativas,
+          correlativeRequirements,
           status: "pendiente",
           approved: aprobadasIds.has(m.id),
           regularized: regularizadasIds.has(m.id),
@@ -473,8 +477,6 @@ const getPlanSubjects = async (req, res, next) => {
         if (a.year !== b.year) return a.year - b.year;
         return a.cuatrimestre - b.cuatrimestre;
       });
-
-    const pendientesIds = new Set(materiasPendientes.map((m) => m.id));
 
     const currentPlan = [];
     const materiasPlanificadas = new Set();
@@ -496,15 +498,17 @@ const getPlanSubjects = async (req, res, next) => {
 
       let horasGrupo = 0;
       let huboMateriaAgregada = false;
+      const materiasAgregadasGrupo = [];
 
       for (let i = 0; i < materiasDisponibles.length; i += 1) {
         const materiaActual = materiasDisponibles[i];
 
-        const cumpleCorrelativas = materiaActual.correlatives.every(
-          (correlativaId) =>
-            materiasHabilitantes.has(correlativaId) ||
-            materiasPlanificadas.has(correlativaId) ||
-            !pendientesIds.has(correlativaId)
+        const cumpleCorrelativas = materiaActual.correlativeRequirements.every(
+          (requirement) =>
+            cumpleCorrelatividad(
+              requirement.type,
+              estadoPorMateria.get(requirement.subjectId)
+            ) || materiasPlanificadas.has(requirement.subjectId)
         );
 
         if (!cumpleCorrelativas) continue;
@@ -516,11 +520,12 @@ const getPlanSubjects = async (req, res, next) => {
           name: materiaActual.name,
           hours: materiaActual.hours,
           correlatives: materiaActual.correlatives,
+          correlativeRequirements: materiaActual.correlativeRequirements,
           extraHours: 0,
         });
 
         horasGrupo += materiaActual.hours;
-        materiasPlanificadas.add(materiaActual.id);
+        materiasAgregadasGrupo.push(materiaActual.id);
         materiasDisponibles.splice(i, 1);
         i -= 1;
         huboMateriaAgregada = true;
@@ -528,6 +533,7 @@ const getPlanSubjects = async (req, res, next) => {
 
       if (grupo.subjects.length > 0) {
         currentPlan.push(grupo);
+        materiasAgregadasGrupo.forEach((id) => materiasPlanificadas.add(id));
       }
 
       if (cuatrimestreActual === 1) {
@@ -538,24 +544,7 @@ const getPlanSubjects = async (req, res, next) => {
       }
 
       if (!huboMateriaAgregada && materiasDisponibles.length > 0) {
-        const materiaForzada = materiasDisponibles.shift();
-
-        currentPlan.push({
-          year: anioActual,
-          cuatrimestre: cuatrimestreActual,
-          label: `Año ${anioActual} - Cuatrimestre ${cuatrimestreActual}`,
-          subjects: [
-            {
-              id: materiaForzada.id,
-              name: materiaForzada.name,
-              hours: materiaForzada.hours,
-              correlatives: materiaForzada.correlatives,
-              extraHours: 0,
-            },
-          ],
-        });
-
-        materiasPlanificadas.add(materiaForzada.id);
+        break;
       }
     }
 
@@ -574,6 +563,12 @@ const getPlanSubjects = async (req, res, next) => {
         subjects: materiasPendientes,
         simulatorSubjects,
         currentPlan,
+        planningBlocked: materiasDisponibles.length > 0,
+        unplannableSubjects: materiasDisponibles.map((subject) => ({
+          id: subject.id,
+          name: subject.name,
+          correlativeRequirements: subject.correlativeRequirements,
+        })),
         materiasNombres,
         summary: {
           totalSubjects: materias.length,

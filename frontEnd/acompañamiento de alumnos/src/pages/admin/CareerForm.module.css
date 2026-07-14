@@ -215,9 +215,32 @@
 }
 
 .correlativasGrid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 10px;
+}
+
+.correlativaOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--bg, #ffffff);
+}
+
+.correlativaType {
+  min-width: 104px;
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 6px;
+  background: var(--bg, #ffffff);
+  color: var(--text-h, #020617);
+  font-size: 12px;
 }
 
 .draftActions {

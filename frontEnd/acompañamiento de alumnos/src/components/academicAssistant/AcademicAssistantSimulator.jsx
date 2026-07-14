@@ -49,6 +49,28 @@ function AcademicAssistantSimulator({ approvedIds = [] }) {
     [approvedIds]
   );
 
+  const requirementsFor = useCallback(
+    (subject) => subject.correlativeRequirements?.length
+      ? subject.correlativeRequirements
+      : (subject.correlatives || []).map((subjectId) => ({
+          subjectId,
+          type: 'aprobar',
+          currentStatus: approvedSet.has(subjectId) ? 'aprobada' : 'pendiente',
+        })),
+    [approvedSet],
+  );
+
+  const requirementMet = useCallback(
+    (requirement, hypotheticalApproved) => {
+      if (hypotheticalApproved.has(Number(requirement.subjectId))) return true;
+      const status = requirement.currentStatus || 'pendiente';
+      return requirement.type === 'cursar'
+        ? status === 'regular' || status === 'aprobada'
+        : status === 'aprobada';
+    },
+    [],
+  );
+
   const subjectMap = useMemo(() => {
     const map = {};
     for (const subject of simulatorSubjects) map[subject.id] = subject;
@@ -63,9 +85,11 @@ function AcademicAssistantSimulator({ approvedIds = [] }) {
   const availableFrom = useCallback(
     (idSet) =>
       allSubjects.filter(
-        (s) => !idSet.has(s.id) && s.correlatives.every((c) => idSet.has(c)),
+        (s) => !idSet.has(s.id) && requirementsFor(s).every(
+          (requirement) => requirementMet(requirement, idSet)
+        ),
       ),
-    [allSubjects],
+    [allSubjects, requirementMet, requirementsFor],
   );
 
   const currentAvailable = useMemo(
@@ -88,8 +112,12 @@ function AcademicAssistantSimulator({ approvedIds = [] }) {
       const unlocked = allSubjects.filter((s) => {
         if (approvedSet.has(s.id)) return false;
         if (checkedId === s.id) return false;
-        if (!s.correlatives.includes(checkedId)) return false;
-        if (!s.correlatives.every((c) => hypotheticalSet.has(c))) return false;
+        if (!requirementsFor(s).some(
+          (requirement) => Number(requirement.subjectId) === Number(checkedId)
+        )) return false;
+        if (!requirementsFor(s).every(
+          (requirement) => requirementMet(requirement, hypotheticalSet)
+        )) return false;
         if (currentAvailableIds.has(s.id)) return false;
         return true;
       });
@@ -100,7 +128,7 @@ function AcademicAssistantSimulator({ approvedIds = [] }) {
     }
 
     return result;
-  }, [simulated, allSubjects, checkedIds, approvedSet, currentAvailableIds]);
+  }, [simulated, allSubjects, checkedIds, approvedSet, currentAvailableIds, requirementMet, requirementsFor]);
 
   const totalNewlyUnlocked = useMemo(
     () => {

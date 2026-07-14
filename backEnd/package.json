@@ -5,6 +5,8 @@
   "main": "src/app.js",
   "scripts": {
     "dev": "nodemon src/server.js",
+    "repair:academic-correlations": "node repair-academic-correlations.js --apply",
+    "repair:academic-correlations:dry": "node repair-academic-correlations.js --dry-run",
     "test": "jest --runInBand"
   },
   "keywords": [],

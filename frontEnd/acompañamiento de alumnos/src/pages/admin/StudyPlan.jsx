@@ -11,18 +11,72 @@
  * Estructura de datos esperada:
  * - studyPlan: { id, careerId, careerName, planYear, status, conditions: {...}, subjects: [...] }
  * - conditions: { englishRequired, englishCertification, electiveCredits, electiveLabel, unahurSubjects, unahurLabel }
- * - subject: { code, name, year, semester, type, correlatives: [], credits }
+ * - subject: { code, name, year, semester, type, correlatives: [{ codigo, tipo }], credits }
  */
 
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Plus, FilePen, SquarePen, Trash2, BookOpen, X, Check, ChevronDown } from 'lucide-react';
+import { Search, Plus, FilePen, Trash2, BookOpen, X, Check, ChevronDown } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import { getPlanEstudio, savePlanEstudio, addMateriaAlPlan, deleteMateriaDelPlan } from '../../services/planEstudioService';
 import { mapPlanEstudioFromApi, mapPlanEstudioToApi } from './careers/mapPlanEstudio';
 import styles from './StudyPlan.module.css';
+
+function CorrelativasEditor({ value = [], options = [], onChange }) {
+  const toggle = (codigo) => {
+    const selected = value.some((correlativa) => correlativa.codigo === codigo);
+    onChange(
+      selected
+        ? value.filter((correlativa) => correlativa.codigo !== codigo)
+        : [...value, { codigo, tipo: 'cursar' }]
+    );
+  };
+
+  const changeType = (codigo, tipo) => {
+    onChange(
+      value.map((correlativa) =>
+        correlativa.codigo === codigo ? { ...correlativa, tipo } : correlativa
+      )
+    );
+  };
+
+  if (options.length === 0) {
+    return <span className={styles.correlativeEmpty}>No hay otras materias disponibles.</span>;
+  }
+
+  return (
+    <div className={styles.correlativeEditor}>
+      {options.map((option) => {
+        const correlativa = value.find((item) => item.codigo === option.code);
+        return (
+          <div key={option.code} className={styles.correlativeOption}>
+            <label className={styles.correlativeCheck}>
+              <input
+                type="checkbox"
+                checked={Boolean(correlativa)}
+                onChange={() => toggle(option.code)}
+              />
+              <span title={option.name}>{option.code}</span>
+            </label>
+            {correlativa && (
+              <select
+                className={styles.correlativeTypeSelect}
+                value={correlativa.tipo}
+                onChange={(event) => changeType(option.code, event.target.value)}
+                aria-label={`Tipo de correlativa ${option.code}`}
+              >
+                <option value="cursar">Para cursar</option>
+                <option value="aprobar">Para aprobar</option>
+              </select>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function StudyPlan() {
   const location = useLocation();
@@ -93,7 +147,12 @@ function StudyPlan() {
   }, [planId]);
 
   const handleStartEdit = () => {
-    setEditedSubjects(studyPlan.subjects.map(s => ({ ...s })));
+    setEditedSubjects(
+      studyPlan.subjects.map((s) => ({
+        ...s,
+        correlatives: s.correlatives.map((correlativa) => ({ ...correlativa })),
+      }))
+    );
     setEditedConditions({ ...studyPlan.conditions });
     setEditedStatus(studyPlan.status);
     setIsEditing(true);
@@ -156,13 +215,7 @@ function StudyPlan() {
 
   const handleAddNewSubject = () => {
     if (newSubject.code && newSubject.name) {
-      const subjectToAdd = {
-        ...newSubject,
-        correlatives: typeof newSubject.correlatives === 'string' 
-          ? newSubject.correlatives.split(',').map(s => s.trim()).filter(s => s)
-          : newSubject.correlatives
-      };
-      setEditedSubjects([...editedSubjects, subjectToAdd]);
+      setEditedSubjects([...editedSubjects, newSubject]);
       setNewSubject({
         code: '',
         name: '',
@@ -181,18 +234,6 @@ function StudyPlan() {
 
   const handleAddFieldChange = (field, value) => {
     setAddForm((s) => ({ ...s, [field]: value }));
-  };
-
-  const handleToggleCorrelativa = (codigo) => {
-    setAddForm((s) => {
-      const has = (s.correlativas || []).includes(codigo);
-      return {
-        ...s,
-        correlativas: has
-          ? s.correlativas.filter((c) => c !== codigo)
-          : [...(s.correlativas || []), codigo],
-      };
-    });
   };
 
   const handleAddSubject = async () => {
@@ -233,7 +274,14 @@ function StudyPlan() {
   const confirmDeleteSubject = async () => {
     if (!subjectToDelete) return;
     if (isEditing && editedSubjects) {
-      const updated = editedSubjects.filter((s) => s.code !== subjectToDelete.code);
+      const updated = editedSubjects
+        .filter((s) => s.code !== subjectToDelete.code)
+        .map((s) => ({
+          ...s,
+          correlatives: s.correlatives.filter(
+            (correlativa) => correlativa.codigo !== subjectToDelete.code
+          ),
+        }));
       setEditedSubjects(updated);
       setSubjectToDelete(null);
       return;
@@ -258,15 +306,24 @@ function StudyPlan() {
   };
 
   const handleEditedFieldChange = (code, field, value) => {
-    setEditedSubjects(editedSubjects.map(s => 
-      s.code === code ? { ...s, [field]: value } : s
-    ));
+    setEditedSubjects(
+      editedSubjects.map((subject) => {
+        if (subject.code === code) return { ...subject, [field]: value };
+        if (field !== 'code') return subject;
+        return {
+          ...subject,
+          correlatives: subject.correlatives.map((correlativa) =>
+            correlativa.codigo === code ? { ...correlativa, codigo: value } : correlativa
+          ),
+        };
+      })
+    );
   };
 
-  const handleEditedCorrelativesChange = (code, value) => {
-    setEditedSubjects(editedSubjects.map(s => 
-      s.code === code ? { ...s, correlatives: value.split(',').map(s => s.trim()).filter(s => s) } : s
-    ));
+  const handleEditedCorrelativesChange = (code, correlatives) => {
+    setEditedSubjects(
+      editedSubjects.map((s) => (s.code === code ? { ...s, correlatives } : s))
+    );
   };
 
   const subjectsToFilter = isEditing && editedSubjects ? editedSubjects : studyPlan?.subjects || [];
@@ -551,12 +608,12 @@ function StudyPlan() {
                     </select>
                   </td>
                   <td className={styles.correlativesCell} data-label="Correlativas">
-                    <input
-                      type="text"
-                      className={styles.editInput}
-                      placeholder="INF101, INF102"
+                    <CorrelativasEditor
                       value={newSubject.correlatives}
-                      onChange={(e) => handleNewSubjectChange('correlatives', e.target.value)}
+                      options={editedSubjects ?? []}
+                      onChange={(correlatives) =>
+                        handleNewSubjectChange('correlatives', correlatives)
+                      }
                     />
                   </td>
                   <td className={styles.creditsCell} data-label="Créditos">
@@ -665,18 +722,28 @@ function StudyPlan() {
                       </td>
                       <td className={styles.correlativesCell} data-label="Correlativas">
                         {isEditing ? (
-                          <input
-                            type="text"
-                            className={styles.editInput}
-                            value={displaySubject.correlatives.join(', ')}
-                            onChange={(e) => handleEditedCorrelativesChange(subject.code, e.target.value)}
-                            placeholder="INF101, INF102"
+                          <CorrelativasEditor
+                            value={displaySubject.correlatives}
+                            options={editedSubjects.filter(
+                              (candidate) => candidate.code !== displaySubject.code
+                            )}
+                            onChange={(correlatives) =>
+                              handleEditedCorrelativesChange(subject.code, correlatives)
+                            }
                           />
                         ) : (
                           <div className={styles.correlatives}>
                             {subject.correlatives.length > 0 ? (
                               subject.correlatives.map(corr => (
-                                <span key={corr} className={styles.correlativeTag}>{corr}</span>
+                                <span
+                                  key={`${corr.codigo}-${corr.tipo}`}
+                                  className={styles.correlativeTag}
+                                >
+                                  {corr.codigo}
+                                  <small>
+                                    {corr.tipo === 'aprobar' ? 'Para aprobar' : 'Para cursar'}
+                                  </small>
+                                </span>
                               ))
                             ) : (
                               <span style={{ color: 'var(--text-muted)' }}>—</span>
@@ -800,9 +867,9 @@ function StudyPlan() {
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+        <div className={styles.modalForm}>
+          <div className={styles.modalGrid}>
+            <label className={styles.modalField}>
               <span>Código *</span>
               <input
                 className={styles.editInput}
@@ -811,7 +878,7 @@ function StudyPlan() {
                 placeholder="INF101"
               />
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            <label className={styles.modalField}>
               <span>Nombre *</span>
               <input
                 className={styles.editInput}
@@ -820,7 +887,7 @@ function StudyPlan() {
                 placeholder="Matemática I"
               />
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            <label className={styles.modalField}>
               <span>Año de cursada</span>
               <select
                 className={styles.editSelect}
@@ -832,7 +899,7 @@ function StudyPlan() {
                 ))}
               </select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            <label className={styles.modalField}>
               <span>Modalidad</span>
               <select
                 className={styles.editSelect}
@@ -843,7 +910,7 @@ function StudyPlan() {
                 <option value="Anual">Anual</option>
               </select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            <label className={styles.modalField}>
               <span>Créditos que otorga</span>
               <input
                 type="number"
@@ -853,8 +920,8 @@ function StudyPlan() {
                 onChange={(e) => handleAddFieldChange('creditos_otorga', Number(e.target.value))}
               />
             </label>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem', paddingBottom: '0.25rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <div className={styles.modalCheckboxes}>
+              <label className={styles.modalCheckbox}>
                 <input
                   type="checkbox"
                   checked={addForm.es_optativa}
@@ -862,7 +929,7 @@ function StudyPlan() {
                 />
                 Optativa
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <label className={styles.modalCheckbox}>
                 <input
                   type="checkbox"
                   checked={addForm.es_unahur}
@@ -874,24 +941,17 @@ function StudyPlan() {
           </div>
 
           {studyPlan?.subjects?.length > 0 && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            <div className={styles.modalField}>
               <span>Correlativas (materias ya existentes en el plan)</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
-                {studyPlan.subjects.map((s) => (
-                  <label key={s.code} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8125rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={(addForm.correlativas || []).includes(s.code)}
-                      onChange={() => handleToggleCorrelativa(s.code)}
-                    />
-                    {s.code}
-                  </label>
-                ))}
-              </div>
-            </label>
+              <CorrelativasEditor
+                value={addForm.correlativas}
+                options={studyPlan.subjects}
+                onChange={(correlativas) => handleAddFieldChange('correlativas', correlativas)}
+              />
+            </div>
           )}
 
-          {addError && <p style={{ color: '#ef4444', fontSize: '0.875rem', margin: 0 }}>{addError}</p>}
+          {addError && <p className={styles.modalError}>{addError}</p>}
         </div>
       </Modal>
     </div>

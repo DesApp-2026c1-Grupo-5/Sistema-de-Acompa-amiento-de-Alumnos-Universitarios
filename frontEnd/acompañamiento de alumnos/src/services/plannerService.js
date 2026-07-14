@@ -6,6 +6,10 @@ export async function getCareerSubjects() {
     ...subject,
     id: Number(subject.id),
     correlatives: (subject.correlatives ?? []).map(Number),
+    correlativeRequirements: (subject.correlativeRequirements ?? []).map((requirement) => ({
+      ...requirement,
+      subjectId: Number(requirement.subjectId),
+    })),
     hours: subject.hours || 6,
     cuatrimestre:
       subject.cuatrimestre || (subject.year % 2 === 0 ? 2 : 1),
@@ -19,6 +23,8 @@ export async function getCareerSubjects() {
     subjects: subjects.map(mapSubject),
     simulatorSubjects: simulatorSubjects.map(mapSubject),
     currentPlan,
+    planningBlocked: !!res?.data?.planningBlocked,
+    unplannableSubjects: res?.data?.unplannableSubjects ?? [],
     materiasNombres: res?.data?.materiasNombres ?? {},
     summary: res?.data?.summary ?? null,
   };

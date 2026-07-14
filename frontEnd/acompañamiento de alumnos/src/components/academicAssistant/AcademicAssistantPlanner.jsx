@@ -22,6 +22,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [planesGuardados, setPlanesGuardados] = useState([]);
+  const [planningBlocked, setPlanningBlocked] = useState(false);
   const [activePlanTab, setActivePlanTab] = useState('nuevo');
   const dragSource = useRef(null);
   const labelInputRef = useRef(null);
@@ -35,38 +36,25 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
     return map;
   }, [allSubjects]);
 
-  const pendingIds = useMemo(
-    () => new Set(allSubjects.map((s) => s.id)),
-    [allSubjects]
-  );
+  const requirementsFor = (subject) => subject.correlativeRequirements?.length
+    ? subject.correlativeRequirements
+    : (subject.correlatives || []).map((subjectId) => ({
+        subjectId,
+        type: 'aprobar',
+        currentStatus: approvedSet.has(subjectId) ? 'aprobada' : 'pendiente',
+      }));
 
-  // Una correlativa está satisfecha si ya no es una materia pendiente
-  // (aprobada/regular/cursando), si está aprobada, o si se cursó en un grupo anterior.
-  const corrSatisfecha = (cId, earlierIds) =>
-    !pendingIds.has(cId) || approvedSet.has(cId) || earlierIds.has(cId);
+  const corrSatisfecha = (requirement, earlierIds) => {
+    if (earlierIds.has(Number(requirement.subjectId))) return true;
+    const status = requirement.currentStatus || 'pendiente';
+    return requirement.type === 'cursar'
+      ? status === 'regular' || status === 'aprobada'
+      : status === 'aprobada';
+  };
 
   function filterSubjects(subjects) {
     if (!hideApproved || approvedSet.size === 0) return subjects;
     return subjects.filter((s) => !approvedSet.has(s.id));
-  }
-
-  function buildDefaultPlan(subjects) {
-    const groups = {};
-    for (const s of subjects) {
-      const key = `${s.year}-${s.cuatrimestre}`;
-      if (!groups[key]) {
-        groups[key] = {
-          year: s.year,
-          cuatrimestre: s.cuatrimestre,
-          label: `Año ${s.year} - Cuatrimestre ${s.cuatrimestre}`,
-          subjects: [],
-        };
-      }
-      groups[key].subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives, extraHours: 0 });
-    }
-    return Object.values(groups).sort((a, b) =>
-      a.year !== b.year ? a.year - b.year : a.cuatrimestre - b.cuatrimestre
-    );
   }
 
   function nextLabel() {
@@ -92,12 +80,8 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
 
         setAllSubjects(subjects);
         setMateriasNombres(data.materiasNombres || {});
-
-        if (currentPlan.length > 0) {
-          setPlan(currentPlan);
-        } else {
-          setPlan(buildDefaultPlan(subjects));
-        }
+        setPlanningBlocked(!!data.planningBlocked);
+        setPlan(currentPlan);
       })
       .catch((err) => setError(err.message))
       .finally(() => {
@@ -148,6 +132,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
         name,
         hours,
         correlatives: materia?.correlatives || [],
+        correlativeRequirements: materia?.correlativeRequirements || [],
         extraHours,
       });
     }
@@ -215,11 +200,14 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
 
   const handleToggleHide = (checked) => {
     setHideApproved(checked);
-    if (allSubjects.length === 0) return;
-    const filtered = checked && approvedSet.size > 0
-      ? allSubjects.filter((s) => !approvedSet.has(s.id))
-      : allSubjects;
-    setPlan(buildDefaultPlan(filtered));
+    setPlan((current) => current
+      .map((group) => ({
+        ...group,
+        subjects: checked
+          ? group.subjects.filter((subject) => !approvedSet.has(subject.id))
+          : group.subjects,
+      }))
+      .filter((group) => group.subjects.length > 0));
   };
 
   const handleGenerate = () => {
@@ -255,11 +243,20 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
 
       for (let i = 0; i < remaining.length; i++) {
         const s = remaining[i];
-        const met = s.correlatives.every((cId) => corrSatisfecha(cId, earlierIds));
+        const met = requirementsFor(s).every(
+          (requirement) => corrSatisfecha(requirement, earlierIds)
+        );
         if (!met) continue;
         if (groupHours + s.hours > classHours) continue;
 
-        group.subjects.push({ id: s.id, name: s.name, hours: s.hours, correlatives: s.correlatives, extraHours: 0 });
+        group.subjects.push({
+          id: s.id,
+          name: s.name,
+          hours: s.hours,
+          correlatives: s.correlatives,
+          correlativeRequirements: s.correlativeRequirements,
+          extraHours: 0,
+        });
         groupHours += s.hours;
         remaining.splice(i, 1);
         i--;
@@ -268,18 +265,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
       if (group.subjects.length > 0) {
         for (const sub of group.subjects) placedIds.add(sub.id);
         newPlan.push(group);
-      } else if (remaining.length > 0) {
-        // Deadlock (correlativas circulares o datos inconsistentes): forzar una materia
-        // para no perderla ni generar cuatrimestres vacíos infinitos.
-        const forced = remaining.shift();
-        placedIds.add(forced.id);
-        newPlan.push({
-          year: yearCursor,
-          cuatrimestre: cuatriCursor,
-          label: `Año ${yearCursor} - Cuatrimestre ${cuatriCursor}`,
-          subjects: [{ id: forced.id, name: forced.name, hours: forced.hours, correlatives: forced.correlatives, extraHours: 0 }],
-        });
-      }
+      } else if (remaining.length > 0) break;
 
       advanceCursor();
     }
@@ -495,6 +481,11 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
             {mensaje}
           </div>
         )}
+        {planningBlocked && plan.length === 0 && (
+          <div className={styles.mensaje}>
+            Hay materias que no pueden planificarse hasta cumplir sus correlativas.
+          </div>
+        )}
 
         <div className={styles.tabs}>
           <button
@@ -592,8 +583,8 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
                       for (let g = 0; g < groupIndex; g++) {
                         for (const s of plan[g].subjects) earlierIds.add(s.id);
                       }
-                      const corrUnmet = hasCorr && !subject.correlatives.every(
-                        (cId) => corrSatisfecha(cId, earlierIds)
+                      const corrUnmet = hasCorr && !requirementsFor(subject).every(
+                        (requirement) => corrSatisfecha(requirement, earlierIds)
                       );
 
                       return (
