@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { getMyProfile } from '../../services/profileService';
 import { getCarreras } from '../../services/carreraService';
-import { cambiarCarrera } from "../../services/situacionAcademicaService";
+import ModalConfirmation from '../../components/common/ModalConfirmation';
 import {
   crearSituacion,
   getSituacion,
@@ -15,133 +14,149 @@ import {
   eliminarActividad,
   importarExcel,
   confirmarImportacion,
+  cambiarCarrera,
 } from '../../services/situacionAcademicaService';
 import styles from './SituacionAcademica.module.css';
 
 const ESTADOS = ['pendiente', 'cursando', 'regular', 'aprobada'];
+const ESTADOS_PLAN_SELECCIONABLES = ['vigente', 'transicion'];
+const ETIQUETAS_ESTADO_PLAN = {
+  vigente: 'Vigente',
+  transicion: 'En transición',
+};
 
-function WizardPlan({ onCreated }) {
+function WizardPlan({ mode = 'create', currentPlanId, onCreated, onCancel }) {
   const [carreras, setCarreras] = useState([]);
   const [carreraId, setCarreraId] = useState('');
   const [planId, setPlanId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [error, setError] = useState(null);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const isChanging = mode === 'change';
 
-  const normalizar = (texto = '') =>
-    texto
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
+  const cargarCarreras = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+
+    try {
+      const response = await getCarreras();
+      setCarreras(response?.data ?? []);
+    } catch (err) {
+      setCarreras([]);
+      setLoadError(err.message || 'No pudimos cargar las carreras disponibles.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const cargarCarrerasDelPerfil = async () => {
-      try {
-        let profileCareers = [];
+    let cancelled = false;
 
-        try {
-          profileCareers = JSON.parse(localStorage.getItem('profileCareers') || '[]');
-        } catch {
-          profileCareers = [];
-        }
-
-        if (profileCareers.length === 0) {
-          const perfil = await getMyProfile();
-          const carreraPerfil = perfil?.data?.user?.career;
-
-          if (carreraPerfil && carreraPerfil !== 'Carrera no definida') {
-            profileCareers = carreraPerfil
-              .split(',')
-              .map((c) => c.trim())
-              .filter(Boolean);
-          }
-        }
-
-        const resCarreras = await getCarreras();
-        const todasLasCarreras = resCarreras?.data ?? [];
-
-        console.log('Carreras guardadas en perfil:', profileCareers);
-        console.log('Respuesta getCarreras:', resCarreras);
-        console.log('Carreras del backend:', todasLasCarreras);
-
-        const carrerasFiltradas = todasLasCarreras.filter((carrera) =>
-          profileCareers.some((careerName) => {
-            const perfil = normalizar(careerName);
-            const backend = normalizar(carrera.nombre);
-
-            return (
-              perfil === backend ||
-              perfil.includes(backend) ||
-              backend.includes(perfil)
-            );
-          })
-        );
-
-        setCarreras(carrerasFiltradas);
-      } catch {
+    getCarreras()
+      .then((response) => {
+        if (!cancelled) setCarreras(response?.data ?? []);
+      })
+      .catch((err) => {
+        if (cancelled) return;
         setCarreras([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+        setLoadError(err.message || 'No pudimos cargar las carreras disponibles.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    cargarCarrerasDelPerfil();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const carreraSel = carreras.find((c) => c.id === Number(carreraId));
-  const planesList = carreraSel?.planes ?? [];
+  const planesList = (carreraSel?.planes ?? []).filter((plan) =>
+    ESTADOS_PLAN_SELECCIONABLES.includes((plan.estado ?? '').toLowerCase())
+  );
+  const planSel = planesList.find((plan) => plan.id === Number(planId));
 
-  const handleCrear = async () => {
+  const getPlanLabel = (plan) =>
+    plan.nombre || (plan.anio ? `Plan ${plan.anio}` : `Plan ${plan.id}`);
+
+  const guardarSeleccion = async () => {
     if (!planId) return;
 
     setSaving(true);
     setError(null);
 
     try {
-      try {
+      if (isChanging) {
+        await cambiarCarrera(Number(planId));
+      } else {
         await crearSituacion(Number(planId));
-      } catch (err) {
-        if (err.status === 409) {
-          await cambiarCarrera(Number(planId));
-        } else {
-          throw err;
-        }
       }
-      onCreated();
+      await onCreated();
     } catch (err) {
-      setError(err.message || 'Error al crear la situación académica');
+      setError(
+        err.message ||
+          (isChanging
+            ? 'No pudimos cambiar la carrera.'
+            : 'No pudimos crear la situación académica.')
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <p className={styles.loading}>Cargando carreras...</p>;
+  const handleSubmit = () => {
+    if (!planId || saving || Number(planId) === Number(currentPlanId)) return;
+
+    if (isChanging) {
+      setConfirmationOpen(true);
+      return;
+    }
+
+    guardarSeleccion();
+  };
+
+  const handleConfirmChange = () => {
+    setConfirmationOpen(false);
+    guardarSeleccion();
+  };
 
   return (
     <section className={styles.page}>
       <header className={styles.pageHeader}>
-        <h1>Mi Situación Académica</h1>
-        <p>Primero, seleccioná tu carrera y plan de estudios</p>
+        <div>
+          <h1>Mi Situación Académica</h1>
+          <p>
+            {isChanging
+              ? 'Seleccioná la nueva carrera y su plan de estudios'
+              : 'Primero, seleccioná tu carrera y plan de estudios'}
+          </p>
+        </div>
       </header>
 
       <div className={styles.wizardCard}>
-        {carreras.length === 0 ? (
-          <>
-            <p className={styles.errorText}>
-              No tenés carreras seleccionadas en tu perfil.
-            </p>
-
-            <p className={styles.hintText}>
-              Para comenzar, andá a tu perfil, tocá “Editar perfil” y agregá al menos una carrera.
-            </p>
-          </>
+        {loading ? (
+          <p className={styles.wizardStatus}>Cargando carreras disponibles...</p>
+        ) : loadError ? (
+          <div className={styles.wizardStatus} role="alert">
+            <p className={styles.errorText}>{loadError}</p>
+            <button type="button" className={styles.secondaryButton} onClick={cargarCarreras}>
+              Reintentar
+            </button>
+          </div>
+        ) : carreras.length === 0 ? (
+          <div className={styles.wizardStatus}>
+            <p className={styles.emptyTitle}>No hay carreras disponibles</p>
+            <p className={styles.hintText}>Contactá a administración para poder iniciar tu trayectoria académica.</p>
+          </div>
         ) : (
           <>
             <div className={styles.wizardField}>
-              <label>Carrera</label>
+              <label htmlFor="academic-career">Carrera</label>
 
               <select
+                id="academic-career"
                 value={carreraId}
                 onChange={(e) => {
                   setCarreraId(e.target.value);
@@ -158,34 +173,67 @@ function WizardPlan({ onCreated }) {
               </select>
             </div>
 
-            {planesList.length > 0 && (
-              <div className={styles.wizardField}>
-                <label>Plan de estudios</label>
+            <div className={styles.wizardField}>
+              <label htmlFor="academic-plan">Plan de estudios</label>
 
-                <select value={planId} onChange={(e) => setPlanId(e.target.value)}>
-                  <option value="">Seleccioná un plan</option>
+              <select
+                id="academic-plan"
+                value={planId}
+                disabled={!carreraId || planesList.length === 0}
+                onChange={(e) => setPlanId(e.target.value)}
+              >
+                <option value="">Seleccioná un plan</option>
 
-                  {planesList.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre} ({p.estado})
+                {planesList.map((plan) => {
+                  const isCurrent = Number(plan.id) === Number(currentPlanId);
+                  return (
+                    <option key={plan.id} value={plan.id} disabled={isChanging && isCurrent}>
+                      {getPlanLabel(plan)} · {ETIQUETAS_ESTADO_PLAN[plan.estado] ?? plan.estado}
+                      {isChanging && isCurrent ? ' (actual)' : ''}
                     </option>
-                  ))}
-                </select>
-              </div>
-            )}
+                  );
+                })}
+              </select>
 
-            {error && <p className={styles.errorText}>{error}</p>}
+              {carreraId && planesList.length === 0 && (
+                <p className={styles.hintText}>Esta carrera no tiene planes habilitados para nuevas inscripciones.</p>
+              )}
+            </div>
 
-            <button
-              className={styles.primaryButton}
-              disabled={!planId || saving}
-              onClick={handleCrear}
-            >
-              {saving ? 'Creando...' : 'Comenzar'}
-            </button>
+            {error && <p className={styles.errorText} role="alert">{error}</p>}
+
+            <div className={styles.wizardActions}>
+              {isChanging && (
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  disabled={saving}
+                  onClick={onCancel}
+                >
+                  Cancelar
+                </button>
+              )}
+              <button
+                type="button"
+                className={styles.primaryButton}
+                disabled={!planId || saving || Number(planId) === Number(currentPlanId)}
+                onClick={handleSubmit}
+              >
+                {saving ? 'Guardando...' : isChanging ? 'Cambiar carrera' : 'Comenzar'}
+              </button>
+            </div>
           </>
         )}
       </div>
+
+      <ModalConfirmation
+        open={confirmationOpen}
+        title="Cambiar carrera"
+        message={`Cambiar a ${carreraSel?.nombre ?? 'la carrera seleccionada'} (${planSel ? getPlanLabel(planSel) : 'plan seleccionado'}) eliminará las materias, finales y créditos registrados. ¿Querés continuar?`}
+        confirmText="Cambiar carrera"
+        onConfirm={handleConfirmChange}
+        onCancel={() => setConfirmationOpen(false)}
+      />
     </section>
   );
 }
@@ -480,9 +528,12 @@ export default function SituacionAcademica() {
   if (sinSituacion || cambiandoCarrera) {
     return (
       <WizardPlan
-        onCreated={() => {
+        mode={cambiandoCarrera ? 'change' : 'create'}
+        currentPlanId={data?.situation?.plan_id}
+        onCancel={() => setCambiandoCarrera(false)}
+        onCreated={async () => {
           setCambiandoCarrera(false);
-          cargarDatos();
+          await cargarDatos();
         }}
       />
     );

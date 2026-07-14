@@ -170,6 +170,12 @@
   color: #ffffff;
 }
 
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .changeCareerButton {
   flex-shrink: 0;
   height: 42px;
@@ -836,11 +842,28 @@
 }
 
 .wizardCard {
+  width: 100%;
   max-width: 480px;
+  box-sizing: border-box;
   padding: 32px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   background: #ffffff;
+}
+
+.wizardStatus {
+  margin: 0;
+}
+
+.wizardStatus p:first-child {
+  margin-top: 0;
+}
+
+.emptyTitle {
+  margin: 0;
+  color: inherit;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .wizardField {
@@ -867,6 +890,22 @@
   outline: none;
 }
 
+.wizardField select:focus {
+  border-color: #08aeb8;
+  box-shadow: 0 0 0 3px rgb(8 174 184 / 14%);
+}
+
+.wizardField select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.wizardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .errorText {
   color: #ef4444;
   font-size: 12px;
@@ -877,6 +916,20 @@
   margin-top: 12px;
   color: #405a7a;
   font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .wizardCard {
+    padding: 24px 20px;
+  }
+
+  .wizardActions {
+    flex-direction: column-reverse;
+  }
+
+  .wizardActions button {
+    width: 100%;
+  }
 }
 
 .smallBtn {

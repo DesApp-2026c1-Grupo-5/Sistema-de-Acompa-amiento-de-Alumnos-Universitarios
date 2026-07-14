@@ -13,7 +13,7 @@ const listarCarreras = async (req, res) => {
       {
         model: plan_estudio,
         as: "planes",
-        attributes: ["id", "anio", "estado"],
+        attributes: ["id", "nombre", "anio", "estado"],
       },
     ],
     order: [["nombre", "ASC"]],
@@ -23,6 +23,7 @@ const listarCarreras = async (req, res) => {
     const plain = c.get({ plain: true });
     const planes = (plain.planes || []).map((p) => ({
       id: p.id,
+      nombre: p.nombre,
       anio: p.anio,
       estado: p.estado,
     }));

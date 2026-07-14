@@ -46,7 +46,12 @@ const createAdmin = async (prefix = "admin") => {
   return { email, token: login.body.token, user, admin };
 };
 
-const createPlanWithSubject = async ({ creditsRequired = 20, subjectCredits = 8 } = {}) => {
+const createPlanWithSubject = async ({
+  creditsRequired = 20,
+  subjectCredits = 8,
+  planStatus = "vigente",
+  planName = "Plan test",
+} = {}) => {
   const carrera = await db.carrera.create({
     nombre: `Carrera ${Date.now()} ${Math.random()}`,
     titulo: "Titulo",
@@ -55,9 +60,9 @@ const createPlanWithSubject = async ({ creditsRequired = 20, subjectCredits = 8 
   });
   const plan = await db.plan_estudio.create({
     carrera_id: carrera.id,
-    nombre: "Plan test",
+    nombre: planName,
     anio: 2026,
-    estado: "activo",
+    estado: planStatus,
     creditos_requeridos: creditsRequired,
   });
   const materia = await db.materia.create({
@@ -469,6 +474,93 @@ describe("integracion backend", () => {
 
     const situation = await db.situacion_academica.findByPk(res.body.data.id);
     expect(situation.plan_id).toBe(plan.id);
+  });
+
+  test("lista carreras con el nombre y estado de sus planes", async () => {
+    const student = await registerStudent("listadocarreras");
+    const { carrera, plan } = await createPlanWithSubject({ planName: "Plan 2026" });
+
+    const res = await request(app)
+      .get("/api/carreras")
+      .set("Authorization", `Bearer ${student.token}`)
+      .expect(200);
+
+    expect(res.body.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: carrera.id,
+          planes: expect.arrayContaining([
+            expect.objectContaining({
+              id: plan.id,
+              nombre: "Plan 2026",
+              anio: 2026,
+              estado: "vigente",
+            }),
+          ]),
+        }),
+      ])
+    );
+  });
+
+  test("rechaza asociar una situacion a un plan discontinuado", async () => {
+    const student = await registerStudent("plandiscontinuado");
+    const { plan } = await createPlanWithSubject({ planStatus: "discontinuado" });
+
+    const res = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(400);
+
+    expect(res.body.message).toBe("El plan de estudio no está disponible para nuevas inscripciones");
+    expect(await db.situacion_academica.count()).toBe(0);
+  });
+
+  test("cambia la situacion a otro plan habilitado", async () => {
+    const student = await registerStudent("cambiocarrera");
+    const { plan: originalPlan } = await createPlanWithSubject();
+    const { plan: newPlan } = await createPlanWithSubject({ planStatus: "transicion" });
+
+    const created = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: originalPlan.id })
+      .expect(201);
+
+    await request(app)
+      .patch("/api/student/academic-situation/change-career")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: newPlan.id })
+      .expect(200);
+
+    const situation = await db.situacion_academica.findByPk(created.body.data.id);
+    expect(situation.plan_id).toBe(newPlan.id);
+  });
+
+  test("no elimina la trayectoria al elegir nuevamente el mismo plan", async () => {
+    const student = await registerStudent("mismoplan");
+    const { plan } = await createPlanWithSubject();
+
+    const created = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+
+    const statesBefore = await db.estado_materia.count({
+      where: { situacion_id: created.body.data.id },
+    });
+
+    await request(app)
+      .patch("/api/student/academic-situation/change-career")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(409);
+
+    const statesAfter = await db.estado_materia.count({
+      where: { situacion_id: created.body.data.id },
+    });
+    expect(statesAfter).toBe(statesBefore);
   });
 
   test("crea actividad pendiente sin sumar creditos", async () => {
