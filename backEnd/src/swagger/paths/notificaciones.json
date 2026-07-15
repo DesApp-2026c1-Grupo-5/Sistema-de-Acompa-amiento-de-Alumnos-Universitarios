@@ -1,0 +1,144 @@
+{
+  "/api/notificaciones": {
+    "get": {
+      "tags": ["Notificaciones"],
+      "summary": "Listar notificaciones",
+      "description": "Retorna las notificaciones del estudiante autenticado con filtros por tipo y estado de lectura.",
+      "parameters": [
+        {
+          "name": "tipo",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["academic", "session", "material", "general"] },
+          "description": "Filtrar por tipo de notificación"
+        },
+        {
+          "name": "leida",
+          "in": "query",
+          "schema": { "type": "boolean" },
+          "description": "Filtrar por estado de lectura"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Notificaciones obtenidas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Notificacion" }
+                  },
+                  "summary": {
+                    "type": "object",
+                    "properties": {
+                      "total": { "type": "integer" },
+                      "unreadCount": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/notificaciones/leidas": {
+    "patch": {
+      "tags": ["Notificaciones"],
+      "summary": "Marcar todas como leídas",
+      "description": "Marca todas las notificaciones no leídas del usuario como leídas.",
+      "responses": {
+        "200": {
+          "description": "Notificaciones marcadas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "updatedCount": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/notificaciones/{id}/leida": {
+    "patch": {
+      "tags": ["Notificaciones"],
+      "summary": "Marcar notificación como leída",
+      "description": "Marca una notificación específica como leída. Solo el propietario puede marcarla.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la notificación"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Notificación marcada como leída",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Notificacion" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/notificaciones/{id}": {
+    "delete": {
+      "tags": ["Notificaciones"],
+      "summary": "Eliminar notificación",
+      "description": "Elimina una notificación específica. Solo el propietario puede eliminarla.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la notificación"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Notificación eliminada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": { "id": { "type": "integer" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

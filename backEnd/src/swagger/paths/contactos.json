@@ -1,0 +1,134 @@
+{
+  "/api/contactos/buscar": {
+    "get": {
+      "tags": ["Contactos"],
+      "summary": "Buscar usuarios para contactar",
+      "description": "Busca usuarios disponibles para agregar como contacto. Retorna un array directo (sin wrapper).",
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "schema": { "type": "string", "default": "" },
+          "description": "Texto de búsqueda"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Usuarios encontrados",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ContactoUsuario" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/contactos/invitar/{estudianteId}": {
+    "post": {
+      "tags": ["Contactos"],
+      "summary": "Enviar solicitud de contacto",
+      "description": "Envía una solicitud de contacto a otro estudiante. No se puede enviarse una solicitud a uno mismo ni duplicar solicitudes.",
+      "parameters": [
+        {
+          "name": "estudianteId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del estudiante receptor"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Solicitud enviada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "message": { "type": "string", "example": "Solicitud enviada" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "No podés enviarte una solicitud a ti mismo o la solicitud ya existe",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/contactos/{id}/aceptar": {
+    "patch": {
+      "tags": ["Contactos"],
+      "summary": "Aceptar solicitud de contacto",
+      "description": "Acepta una solicitud de contacto pendiente. Solo el receptor de la solicitud puede aceptarla.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la solicitud de contacto"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Solicitud aceptada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "message": { "type": "string", "example": "Invitacion aceptada exitosamente" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/contactos/{id}/ignorar": {
+    "patch": {
+      "tags": ["Contactos"],
+      "summary": "Ignorar solicitud de contacto",
+      "description": "Rechaza una solicitud de contacto pendiente. Solo el receptor de la solicitud puede ignorarla.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la solicitud de contacto"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Solicitud ignorada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "message": { "type": "string", "example": "Invitacion ignorada exitosamente" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

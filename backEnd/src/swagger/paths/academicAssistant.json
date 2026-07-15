@@ -1,0 +1,196 @@
+{
+  "/api/student/academic-assistant": {
+    "get": {
+      "tags": ["Asistente Académico"],
+      "summary": "Obtener asistente académico",
+      "description": "Retorna el asistente académico completo con progreso, estadísticas, materias, finales, años y disponibilidad. Si el estudiante no tiene perfil, situación académica o plan, retorna datos vacíos con razón de indisponibilidad.",
+      "responses": {
+        "200": {
+          "description": "Asistente académico obtenido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "availability": {
+                        "type": "object",
+                        "properties": {
+                          "canUse": { "type": "boolean" },
+                          "reason": {
+                            "type": ["string", "null"],
+                            "enum": ["NO_STUDENT_PROFILE", "NO_ACADEMIC_SITUATION", "PLAN_NOT_FOUND", null]
+                          }
+                        }
+                      },
+                      "progress": {
+                        "type": "object",
+                        "properties": {
+                          "percentage": { "type": "number" },
+                          "label": { "type": "string", "example": "Avance de carrera" }
+                        }
+                      },
+                      "stats": {
+                        "type": "object",
+                        "properties": {
+                          "approved": { "type": "integer" },
+                          "regularized": { "type": "integer" },
+                          "pending": { "type": "integer" },
+                          "creditsObtained": { "type": "integer" },
+                          "creditsMissing": { "type": "integer" },
+                          "unahurSubjects": { "type": "integer" }
+                        }
+                      },
+                      "subjects": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer" },
+                            "name": { "type": "string" },
+                            "year": { "type": "string" },
+                            "type": { "type": "string" },
+                            "correlatives": {
+                              "type": "object",
+                              "properties": {
+                                "status": { "type": "string" },
+                                "text": { "type": "string" }
+                              }
+                            },
+                            "status": { "type": "string" },
+                            "availableThisTerm": { "type": "boolean" }
+                          }
+                        }
+                      },
+                      "finals": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer" },
+                            "name": { "type": "string" },
+                            "attempts": { "type": "integer" },
+                            "expires": { "type": "string" },
+                            "status": { "type": "string", "enum": ["valid", "expiring", "expired"] }
+                          }
+                        }
+                      },
+                      "years": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "year": { "type": "integer" },
+                            "total": { "type": "integer" },
+                            "approved": { "type": "integer" },
+                            "regularized": { "type": "integer" },
+                            "missing": { "type": "integer" },
+                            "percentage": { "type": "number" }
+                          }
+                        }
+                      },
+                      "studentStatus": {
+                        "type": "object",
+                        "properties": {
+                          "approvedIds": { "type": "array", "items": { "type": "integer" } },
+                          "regularizedIds": { "type": "array", "items": { "type": "integer" } },
+                          "inProgressIds": { "type": "array", "items": { "type": "integer" } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-assistant/plan-subjects": {
+    "get": {
+      "tags": ["Asistente Académico"],
+      "summary": "Obtener materias del plan para planificación",
+      "description": "Retorna las materias del plan de estudio del estudiante organizadas por año y cuatrimestre, incluyendo correlatividades, estado de cada materia y un resumen general.",
+      "responses": {
+        "200": {
+          "description": "Materias del plan obtenidas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "subjects": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer" },
+                            "name": { "type": "string" },
+                            "year": { "type": "integer" },
+                            "cuatrimestre": { "type": "integer" },
+                            "type": { "type": "string" },
+                            "hours": { "type": "integer" },
+                            "credits": { "type": "integer" },
+                            "correlatives": { "type": "array", "items": { "type": "integer" } },
+                            "correlativeRequirements": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "subjectId": { "type": "integer" },
+                                  "type": { "type": "string" },
+                                  "current_status": { "type": "string" }
+                                }
+                              }
+                            },
+                            "status": { "type": "string" },
+                            "approved": { "type": "boolean" },
+                            "regularized": { "type": "boolean" },
+                            "inProgress": { "type": "boolean" }
+                          }
+                        }
+                      },
+                      "currentPlan": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "year": { "type": "integer" },
+                            "cuatrimestre": { "type": "integer" },
+                            "label": { "type": "string" },
+                            "subjects": { "type": "array" }
+                          }
+                        }
+                      },
+                      "planningBlocked": { "type": "boolean" },
+                      "unplannableSubjects": { "type": "array" },
+                      "materiasNombres": { "type": "object" },
+                      "summary": {
+                        "type": "object",
+                        "properties": {
+                          "totalSubjects": { "type": "integer" },
+                          "pendingSubjects": { "type": "integer" },
+                          "approvedSubjects": { "type": "integer" },
+                          "regularizedSubjects": { "type": "integer" },
+                          "inProgressSubjects": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

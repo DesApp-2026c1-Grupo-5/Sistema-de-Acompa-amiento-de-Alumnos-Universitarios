@@ -1449,6 +1449,60 @@
             "type": "object"
           }
         }
+      },
+      "MetricaEstadistica": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "label": { "type": "string" },
+          "value": { "type": "integer" },
+          "trend": { "type": ["string", "null"] },
+          "trendType": { "type": ["string", "null"] },
+          "icon": { "type": "string" }
+        }
+      },
+      "DataPointMes": {
+        "type": "object",
+        "properties": {
+          "month": { "type": "string", "example": "Ene" },
+          "value": { "type": "integer" }
+        }
+      },
+      "BucketEstadistica": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string" },
+          "students": { "type": "integer" },
+          "percentage": { "type": "integer" }
+        }
+      },
+      "CarreraMateriasEstadistica": {
+        "type": "object",
+        "properties": {
+          "career": { "type": "string" },
+          "cursadas": { "type": "integer" },
+          "aprobadas": { "type": "integer" }
+        }
+      },
+      "MateriaTopEstadistica": {
+        "type": "object",
+        "properties": {
+          "position": { "type": "integer" },
+          "subject": { "type": "string" },
+          "materials": { "type": "integer" },
+          "rating": { "type": "number" }
+        }
+      },
+      "CarreraActivaEstadistica": {
+        "type": "object",
+        "properties": {
+          "position": { "type": "integer" },
+          "career": { "type": "string" },
+          "posts": { "type": "integer" },
+          "sessions": { "type": "integer" },
+          "interactions": { "type": "integer" },
+          "score": { "type": "integer" }
+        }
       }
     }
   },
