@@ -1,0 +1,130 @@
+{
+  "/api/sesiones/{id}/archivos": {
+    "get": {
+      "tags": ["Archivos de Sesión"],
+      "summary": "Listar archivos de la sesión",
+      "description": "Retorna todos los archivos subidos a una sesión de estudio.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Archivos obtenidos",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ArchivoSesion" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Archivos de Sesión"],
+      "summary": "Subir archivos a la sesión",
+      "description": "Sube uno o más archivos a una sesión de estudio. Solo el creador de la sesión puede subir archivos. Usa multipart/form-data.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "required": ["files"],
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "description": "Archivos a subir"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Archivos subidos exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ArchivoSesion" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/sesiones/{id}/archivos/{archivoId}": {
+    "delete": {
+      "tags": ["Archivos de Sesión"],
+      "summary": "Eliminar archivo de la sesión",
+      "description": "Elimina un archivo de una sesión de estudio. Solo el creador de la sesión puede eliminar archivos.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        },
+        {
+          "name": "archivoId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del archivo"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Archivo eliminado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la eliminación" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
