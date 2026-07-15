@@ -1,0 +1,314 @@
+{
+  "/api/materiales": {
+    "get": {
+      "tags": ["Materiales"],
+      "summary": "Listar materiales",
+      "description": "Retorna una lista paginada de materiales con filtros por tipo, materia, texto de búsqueda y estado de suspensión.",
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "schema": { "type": "string", "maxLength": 100 },
+          "description": "Búsqueda en título y descripción"
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "schema": { "type": "string" },
+          "description": "Tipo de material"
+        },
+        {
+          "name": "materia_id",
+          "in": "query",
+          "schema": { "type": "integer" },
+          "description": "Filtrar por materia"
+        },
+        {
+          "name": "suspendido",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["true", "false", "all"], "default": "false" },
+          "description": "Filtrar por estado de suspensión"
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "default": 1, "minimum": 1 }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": { "type": "integer", "default": 12, "minimum": 1, "maximum": 50 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Materiales obtenidos",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Material" }
+                  },
+                  "pagination": { "$ref": "#/components/schemas/Pagination" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Materiales"],
+      "summary": "Crear material (link externo)",
+      "description": "Crea un material de tipo link externo. No se permiten archivos vía este endpoint; usar /materiales/archivo para subir archivos.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearMaterialRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Material creado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Material" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Campos obligatorios faltantes o tipo inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o materia no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/materiales/{id}": {
+    "get": {
+      "tags": ["Materiales"],
+      "summary": "Obtener material por ID",
+      "description": "Retorna los detalles de un material específico incluyendo voto del usuario y denuncia pendiente.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del material"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Material obtenido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Material" }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Material no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/materiales/{id}/descarga": {
+    "get": {
+      "tags": ["Materiales"],
+      "summary": "Descargar material",
+      "description": "Descarga el archivo asociado a un material. Solo funciona para materiales de tipo archivo. Los materiales suspendidos no se pueden descargar.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del material"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Archivo descargado (binary)",
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "El material no es un archivo",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "403": {
+          "description": "El material está suspendido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Material o archivo no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/materiales/archivo": {
+    "post": {
+      "tags": ["Materiales"],
+      "summary": "Subir material archivo",
+      "description": "Sube un archivo como material. Usa multipart/form-data. El contenido del archivo debe coincidir con su formato declarado.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "required": ["materia_id", "titulo", "file"],
+              "properties": {
+                "materia_id": { "type": "integer" },
+                "titulo": { "type": "string", "maxLength": 120 },
+                "descripcion": { "type": "string", "maxLength": 255 },
+                "tags": { "type": "string", "description": "JSON string de array de textos (máx 10 tags de 40 chars)" },
+                "file": { "type": "string", "format": "binary", "description": "Archivo a subir" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Material archivo creado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Material" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Errores de validación",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Materia no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/materiales/votar": {
+    "post": {
+      "tags": ["Materiales"],
+      "summary": "Votar material",
+      "description": "Vota un material con like o dislike. Funciona como toggle: si ya votó igual, se elimina el voto. No se pueden votar materiales suspendidos.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/VotarMaterialRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Voto registrado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "likes": { "type": "integer" },
+                      "dislikes": { "type": "integer" },
+                      "mi_voto": { "type": ["string", "null"], "enum": ["like", "dislike", null] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Valor inválido o material suspendido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o material no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
