@@ -1,0 +1,75 @@
+{
+  "/api/materias": {
+    "get": {
+      "tags": ["Materias"],
+      "summary": "Listar materias",
+      "description": "Retorna la lista de materias. Opcionalmente se puede filtrar por plan de estudio o año de cursada.",
+      "parameters": [
+        {
+          "name": "plan_id",
+          "in": "query",
+          "schema": { "type": "integer" },
+          "description": "Filtrar por ID del plan de estudio"
+        },
+        {
+          "name": "anio_cursada",
+          "in": "query",
+          "schema": { "type": "integer", "minimum": 1 },
+          "description": "Filtrar por año de cursada"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Lista de materias",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "nombre": { "type": "string" },
+                        "anio_cursada": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/materias": {
+    "get": {
+      "tags": ["Materias"],
+      "summary": "Listar materias (vista admin)",
+      "description": "Retorna la lista completa de materias con información detallada para administradores.",
+      "responses": {
+        "200": {
+          "description": "Lista de materias detallada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Materia" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

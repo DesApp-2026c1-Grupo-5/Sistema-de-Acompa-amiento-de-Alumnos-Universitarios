@@ -1,0 +1,833 @@
+{
+  "/api/student/academic-situation": {
+    "post": {
+      "tags": ["Situación Académica"],
+      "summary": "Crear situación académica",
+      "description": "Crea una nueva situación académica asociando al estudiante con un plan de estudio. Solo se puede tener una situación activa.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearSituacionRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Situación académica creada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/SituacionAcademica" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "El plan no está disponible para nuevas inscripciones",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o plan no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "409": {
+          "description": "Ya tenés una situación académica activa",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "get": {
+      "tags": ["Situación Académica"],
+      "summary": "Obtener situación académica",
+      "description": "Retorna la situación académica completa del estudiante incluyendo estados de materias, finales, actividades de crédito y estadísticas.",
+      "responses": {
+        "200": {
+          "description": "Situación académica obtenida",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "oneOf": [
+                      { "type": "null" },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "situation": { "$ref": "#/components/schemas/SituacionAcademica" },
+                          "stats": {
+                            "type": "object",
+                            "properties": {
+                              "progress_percentage": { "type": "number" },
+                              "approved": { "type": "integer" },
+                              "regularized": { "type": "integer" },
+                              "in_progress": { "type": "integer" },
+                              "pending": { "type": "integer" },
+                              "credits_obtained": { "type": "integer" },
+                              "credits_missing": { "type": "integer" },
+                              "unahur_completed": { "type": "integer" },
+                              "unahur_required": { "type": "integer" }
+                            }
+                          },
+                          "subjects": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/EstadoMateria" }
+                          },
+                          "credit_activities": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/ActividadCredito" }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/subjects": {
+    "patch": {
+      "tags": ["Situación Académica"],
+      "summary": "Actualizar estados de materias",
+      "description": "Actualiza los estados de las materias de la situación académica. No permite duplicados de materia_id.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ActualizarMateriasRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Materias actualizadas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la actualización" }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o situación académica no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/finals": {
+    "post": {
+      "tags": ["Situación Académica"],
+      "summary": "Registrar final",
+      "description": "Registra un intento de final para una materia de la situación académica.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearFinalRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Final registrado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Final" }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "No tenés permisos sobre esta materia",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o estado de materia no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/finals/{id}": {
+    "delete": {
+      "tags": ["Situación Académica"],
+      "summary": "Eliminar final",
+      "description": "Elimina un registro de final. Solo se puede eliminar si pertenece al estudiante autenticado.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del final"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Final eliminado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": { "id": { "type": "integer" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "No tenés permisos para eliminar este final",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o final no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "patch": {
+      "tags": ["Situación Académica"],
+      "summary": "Actualizar final",
+      "description": "Actualiza un registro de final existente. Al menos un campo (fecha o nota) es requerido.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del final"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fecha": { "type": "string", "format": "date" },
+                "nota": { "type": "number", "minimum": 0, "maximum": 10 }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Final actualizado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Final" }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "No tenés permisos para modificar este final",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o final no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/credits": {
+    "post": {
+      "tags": ["Situación Académica"],
+      "summary": "Registrar actividad de crédito",
+      "description": "Registra una nueva actividad de crédito para el estudiante.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearActividadRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Actividad registrada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/ActividadCredito" }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o situación académica no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/credits/{id}": {
+    "patch": {
+      "tags": ["Situación Académica"],
+      "summary": "Actualizar actividad de crédito",
+      "description": "Actualiza el estado de una actividad de crédito existente.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la actividad"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["estado"],
+              "properties": {
+                "estado": { "type": "string", "enum": ["pendiente", "aprobada"] }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Actividad actualizada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/ActividadCredito" }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "No tenés permisos para modificar esta actividad",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o actividad no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Situación Académica"],
+      "summary": "Eliminar actividad de crédito",
+      "description": "Elimina una actividad de crédito existente.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la actividad"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Actividad eliminada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": { "id": { "type": "integer" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "No tenés permisos para eliminar esta actividad",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o actividad no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/import-excel": {
+    "post": {
+      "tags": ["Situación Académica"],
+      "summary": "Importar situación académica desde Excel",
+      "description": "Importa estados de materias y actividades de crédito desde un archivo Excel. Retorna una vista previa para confirmar antes de aplicar.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "required": ["file"],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Archivo Excel (.xlsx) con los datos académicos"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Vista previa de la importación",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "total": { "type": "integer" },
+                      "validos": { "type": "integer" },
+                      "creditos": { "type": "integer" },
+                      "errores": { "type": "integer" },
+                      "errors": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "row": { "type": "integer" },
+                            "materia": { "type": "string" },
+                            "errors": { "type": "array", "items": { "type": "string" } }
+                          }
+                        }
+                      },
+                      "preview": { "type": "array" },
+                      "creditActivities": { "type": "array" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Situación académica no encontrada o errores de validación",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/confirm-excel": {
+    "post": {
+      "tags": ["Situación Académica"],
+      "summary": "Confirmar importación de Excel",
+      "description": "Confirma y aplica la importación previamente validada. Debe contener al menos una materia o actividad de crédito.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "materias": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MateriaEstado" }
+                },
+                "credit_activities": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["descripcion", "creditos"],
+                    "properties": {
+                      "descripcion": { "type": "string", "maxLength": 255 },
+                      "creditos": { "type": "integer", "minimum": 1 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Importación confirmada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "type": "array", "description": "Resultados de cada materia/actividad procesada" }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o situación académica no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/academic-situation/change-career": {
+    "patch": {
+      "tags": ["Situación Académica"],
+      "summary": "Cambiar carrera",
+      "description": "Cambia la carrera del estudiante asociándolo a un nuevo plan de estudio.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearSituacionRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Carrera actualizada correctamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "message": { "type": "string", "example": "Carrera actualizada correctamente" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "El plan no está disponible",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante, situación o plan no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "409": {
+          "description": "Ya estás asociado a este plan de estudio",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/plan-cursada": {
+    "post": {
+      "tags": ["Situación Académica"],
+      "summary": "Guardar plan de cursada",
+      "description": "Crea un nuevo plan de cursada con sus materias proyectadas.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearPlanCursadaRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Plan de cursada guardado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/PlanCursada" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Nombre obligatorio o materias inválidas",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o situación académica no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "get": {
+      "tags": ["Situación Académica"],
+      "summary": "Listar planes de cursada",
+      "description": "Retorna todos los planes de cursada del estudiante autenticado.",
+      "responses": {
+        "200": {
+          "description": "Lista de planes de cursada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/PlanCursada" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/student/plan-cursada/{planCursadaId}": {
+    "get": {
+      "tags": ["Situación Académica"],
+      "summary": "Obtener plan de cursada por ID",
+      "description": "Retorna un plan de cursada específico con todos sus items.",
+      "parameters": [
+        {
+          "name": "planCursadaId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de cursada"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Plan de cursada obtenido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/PlanCursada" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de plan inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante, situación o plan no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Situación Académica"],
+      "summary": "Eliminar plan de cursada",
+      "description": "Elimina un plan de cursada existente.",
+      "parameters": [
+        {
+          "name": "planCursadaId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de cursada"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Plan eliminado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": { "id": { "type": "integer" } }
+                  },
+                  "message": { "type": "string", "example": "Plan eliminado correctamente" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de plan inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante, situación o plan no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
