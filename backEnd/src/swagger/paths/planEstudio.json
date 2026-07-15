@@ -1,0 +1,368 @@
+{
+  "/api/carreras/{carreraId}/planes": {
+    "post": {
+      "tags": ["Planes de Estudio"],
+      "summary": "Crear plan de estudio para una carrera",
+      "description": "Crea un nuevo plan de estudio asociado a una carrera. Opcionalmente se pueden incluir materias con sus correlatividades.",
+      "parameters": [
+        {
+          "name": "carreraId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la carrera"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/CrearPlanEstudioRequest" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "materias": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MateriaPayload" }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Plan de estudio creado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/PlanEstudio" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de carrera inválido o errores de validación de materias",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Carrera no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/planes-estudio/{id}": {
+    "get": {
+      "tags": ["Planes de Estudio"],
+      "summary": "Obtener plan de estudio por ID",
+      "description": "Retorna un plan de estudio con todas sus materias y correlatividades.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de estudio"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Plan de estudio obtenido exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/PlanEstudio" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de plan inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "patch": {
+      "tags": ["Planes de Estudio"],
+      "summary": "Actualizar estado del plan de estudio",
+      "description": "Actualiza únicamente el estado de un plan de estudio (vigente, transición, discontinuado).",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de estudio"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["estado"],
+              "properties": {
+                "estado": {
+                  "type": "string",
+                  "enum": ["vigente", "transicion", "discontinuado"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Plan actualizado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/PlanEstudio" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de plan inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "put": {
+      "tags": ["Planes de Estudio"],
+      "summary": "Actualizar plan de estudio completo",
+      "description": "Reemplaza completamente la configuración de un plan de estudio incluyendo materias y correlatividades.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de estudio"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["estado", "creditos_requeridos", "niveles_ingles_requeridos", "materias_unahur"],
+              "properties": {
+                "estado": {
+                  "type": "string",
+                  "enum": ["vigente", "transicion", "discontinuado"]
+                },
+                "creditos_requeridos": { "type": "integer", "minimum": 0, "maximum": 500 },
+                "niveles_ingles_requeridos": { "type": "integer", "minimum": 0, "maximum": 10 },
+                "materias_unahur": { "type": "integer", "minimum": 0 },
+                "materias": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MateriaPayload" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Plan actualizado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/PlanEstudio" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Errores de validación",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/planes-estudio/{planId}/materias": {
+    "post": {
+      "tags": ["Planes de Estudio"],
+      "summary": "Agregar materia al plan de estudio",
+      "description": "Agrega una nueva materia a un plan de estudio existente. Se pueden incluir correlatividades.",
+      "parameters": [
+        {
+          "name": "planId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de estudio"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/MateriaPayload" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Materia agregada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Materia" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Errores de validación",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/planes-estudio/{planId}/materias/{materiaId}": {
+    "put": {
+      "tags": ["Planes de Estudio"],
+      "summary": "Actualizar materia del plan",
+      "description": "Actualiza una materia existente dentro de un plan de estudio.",
+      "parameters": [
+        {
+          "name": "planId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de estudio"
+        },
+        {
+          "name": "materiaId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la materia"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/MateriaPayload" }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Materia actualizada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Materia" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Errores de validación",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Planes de Estudio"],
+      "summary": "Eliminar materia del plan",
+      "description": "Elimina una materia de un plan de estudio.",
+      "parameters": [
+        {
+          "name": "planId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del plan de estudio"
+        },
+        {
+          "name": "materiaId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la materia"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Materia eliminada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "message": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

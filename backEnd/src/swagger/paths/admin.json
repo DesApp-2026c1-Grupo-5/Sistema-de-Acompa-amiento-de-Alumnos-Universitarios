@@ -1,0 +1,273 @@
+{
+  "/api/admins": {
+    "get": {
+      "tags": ["Admin"],
+      "summary": "Listar administradores",
+      "description": "Retorna una lista paginada de todos los administradores del sistema.",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "default": 1, "minimum": 1 }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 50 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Lista de administradores",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Administrador" }
+                  },
+                  "pagination": { "$ref": "#/components/schemas/Pagination" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Admin"],
+      "summary": "Crear administrador",
+      "description": "Crea un nuevo administrador en el sistema. Solo administradores existentes pueden crear nuevos admins.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["nombre", "apellido", "email", "password"],
+              "properties": {
+                "nombre": { "type": "string", "minLength": 2 },
+                "apellido": { "type": "string", "minLength": 2 },
+                "email": { "type": "string", "format": "email" },
+                "password": { "type": "string", "minLength": 8 }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Administrador creado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Administrador" }
+                }
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "El email ya está registrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admins/{id}": {
+    "delete": {
+      "tags": ["Admin"],
+      "summary": "Eliminar administrador",
+      "description": "Elimina un administrador del sistema. No se puede eliminar a uno mismo.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del administrador"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Administrador eliminado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "message": { "type": "string", "example": "Administrador eliminado correctamente" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "No podés eliminar tu propia cuenta",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Administrador no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/home/students/search": {
+    "get": {
+      "tags": ["Admin"],
+      "summary": "Buscar estudiantes",
+      "description": "Busca estudiantes por nombre o email. Retorna resultados paginados con información básica del estudiante.",
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "schema": { "type": "string", "default": "" },
+          "description": "Texto de búsqueda"
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "default": 1, "minimum": 1 }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": { "type": "integer", "default": 5, "minimum": 1, "maximum": 20 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Resultados de búsqueda",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "estudiante_id": { "type": "integer" },
+                        "usuario_id": { "type": "integer" },
+                        "nombre_completo": { "type": "string" },
+                        "email": { "type": "string" },
+                        "activo": { "type": "boolean" }
+                      }
+                    }
+                  },
+                  "pagination": {
+                    "allOf": [
+                      { "$ref": "#/components/schemas/Pagination" },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "hasMore": { "type": "boolean" }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/estudiantes/{id}/estado": {
+    "patch": {
+      "tags": ["Admin"],
+      "summary": "Cambiar estado de estudiante",
+      "description": "Activa o suspende la cuenta de un estudiante. Al suspender, el estudiante no puede iniciar sesión.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del estudiante"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["activo"],
+              "properties": {
+                "activo": {
+                  "type": "boolean",
+                  "description": "true para activar, false para suspender"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Estado cambiado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "message": { "type": "string" },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "estudiante_id": { "type": "integer" },
+                      "usuario_id": { "type": "integer" },
+                      "email": { "type": "string" },
+                      "activo": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID inválido o campo activo no booleano",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
