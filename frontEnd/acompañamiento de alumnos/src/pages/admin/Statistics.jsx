@@ -126,39 +126,59 @@ export default function Statistics() {
       </div>
 
       <section className={styles.metricsGrid}>
-        {currentData.metricas.map((metric) => {
-          const Icon = icons[metric.icon];
+        {currentData.metricas
+          .filter((metric) => {
+            if (
+              activeTab === "usage" &&
+              (
+                metric.label === "Sesiones totales creadas" ||
+                metric.label === "Denuncias pendientes"
+              )
+            ) {
+              return false;
+            }
 
-          return (
-            <article
-              className={styles.metricCard}
-              key={metric.id}
-            >
-              <div className={styles.metricTop}>
-                <div
-                  className={`${styles.metricIcon} ${styles[metric.icon]}`}
-                >
-                  <Icon size={21} />
-                </div>
+            if (
+              activeTab === "social" &&
+              metric.label === "Tasa de ocupación"
+            ) {
+              return false;
+            }
 
-                {metric.trend && (
-                  <span
-                    className={`${styles.trend} ${
-                      metric.trendType === 'negative'
+            return true;
+          })
+          .map((metric) => {
+            const Icon = icons[metric.icon];
+
+            return (
+              <article
+                className={styles.metricCard}
+                key={metric.id}
+              >
+                <div className={styles.metricTop}>
+                  <div
+                    className={`${styles.metricIcon} ${styles[metric.icon]}`}
+                  >
+                    <Icon size={21} />
+                  </div>
+
+                  {metric.trend && (
+                    <span
+                      className={`${styles.trend} ${metric.trendType === 'negative'
                         ? styles.negative
                         : styles.positive
-                    }`}
-                  >
-                    ↗ {metric.trend}
-                  </span>
-                )}
-              </div>
+                        }`}
+                    >
+                      ↗ {metric.trend}
+                    </span>
+                  )}
+                </div>
 
-              <strong>{metric.value}</strong>
-              <p>{metric.label}</p>
-            </article>
-          );
-        })}
+                <strong>{metric.value}</strong>
+                <p>{metric.label}</p>
+              </article>
+            );
+          })}
       </section>
 
       {activeTab === 'uso' ? (
@@ -660,19 +680,17 @@ function ModerationDonut({ stats }) {
   const donutStyle =
     total > 0
       ? {
-          background: `conic-gradient(
+        background: `conic-gradient(
             #f59e0b 0 ${pendingPercentage}%,
-            #ef4444 ${pendingPercentage}% ${
-              pendingPercentage + acceptedPercentage
-            }%,
-            #22c55e ${
-              pendingPercentage + acceptedPercentage
-            }% 100%
+            #ef4444 ${pendingPercentage}% ${pendingPercentage + acceptedPercentage
+          }%,
+            #22c55e ${pendingPercentage + acceptedPercentage
+          }% 100%
           )`,
-        }
+      }
       : {
-          background: '#e5e7eb',
-        };
+        background: '#e5e7eb',
+      };
 
   return (
     <section className={styles.card}>

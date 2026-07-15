@@ -107,22 +107,6 @@ const buildMetricasUso = ({
       trendType: null,
       icon: "file",
     },
-    {
-      id: 3,
-      label: "Sesiones creadas",
-      value: sesionesCreadas,
-      trend: null,
-      trendType: null,
-      icon: "calendar",
-    },
-    {
-      id: 4,
-      label: "Denuncias pendientes",
-      value: denunciasPendientes,
-      trend: null,
-      trendType: null,
-      icon: "flag",
-    },
   ];
 
 const buildMetricasSociales = ({

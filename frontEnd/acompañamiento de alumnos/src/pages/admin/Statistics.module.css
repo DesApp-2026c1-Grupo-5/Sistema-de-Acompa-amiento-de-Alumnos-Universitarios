@@ -79,6 +79,10 @@
   gap: 14px;
 }
 
+.metricsGrid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 .metricCard {
   height: 140px;
   padding: 20px;
