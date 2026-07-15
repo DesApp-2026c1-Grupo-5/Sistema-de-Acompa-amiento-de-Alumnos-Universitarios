@@ -1,0 +1,501 @@
+{
+  "/api/profile/me": {
+    "get": {
+      "tags": ["Profile"],
+      "summary": "Obtener mi perfil",
+      "description": "Retorna el perfil completo del estudiante autenticado incluyendo contactos, solicitudes pendientes y publicaciones.",
+      "responses": {
+        "200": {
+          "description": "Perfil obtenido exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "user": {
+                        "$ref": "#/components/schemas/ProfileResponse"
+                      },
+                      "contacts": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/ContactoUsuario"
+                        }
+                      },
+                      "pendingRequests": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/ContactoUsuario"
+                        }
+                      },
+                      "publications": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Post"
+                        }
+                      },
+                      "userReactions": {
+                        "type": "object",
+                        "description": "Mapa de postId -> reacción del usuario (like/dislike/null)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Perfil de estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    },
+    "put": {
+      "tags": ["Profile"],
+      "summary": "Actualizar mi perfil",
+      "description": "Actualiza los campos del perfil del estudiante autenticado. Al menos un campo es requerido.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ActualizarPerfilRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Perfil actualizado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "nombre": { "type": "string" },
+                      "apellido": { "type": "string" },
+                      "name": { "type": "string" },
+                      "bio": { "type": ["string", "null"] },
+                      "localidad": { "type": ["string", "null"] },
+                      "location": { "type": ["string", "null"] },
+                      "telefono": { "type": ["string", "null"] },
+                      "phone": { "type": ["string", "null"] },
+                      "fecha_nacimiento": { "type": ["string", "null"] },
+                      "birthDate": { "type": ["string", "null"] },
+                      "pub_inscripciones": { "type": "boolean" },
+                      "pub_regularizaciones": { "type": "boolean" },
+                      "pub_aprobaciones": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Perfil de estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/profile/me/privacy": {
+    "patch": {
+      "tags": ["Profile"],
+      "summary": "Actualizar privacidad del perfil",
+      "description": "Actualiza la configuración de privacidad del perfil. Al menos un campo es requerido.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ActualizarPrivacidadRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Privacidad actualizada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "privacidad": { "type": "string" },
+                      "email_visible": { "type": "boolean" },
+                      "pub_inscripciones": { "type": "boolean" },
+                      "pub_regularizaciones": { "type": "boolean" },
+                      "pub_aprobaciones": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Perfil de estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/profile/{id}": {
+    "get": {
+      "tags": ["Profile"],
+      "summary": "Obtener perfil por ID",
+      "description": "Retorna el perfil de un estudiante por su ID. Si el perfil es privado y el solicitante no tiene permisos, retorna información limitada.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del estudiante"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Perfil obtenido exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "privado": { "type": "boolean" },
+                      "user": { "$ref": "#/components/schemas/ProfileResponse" },
+                      "contacts": { "type": "array" },
+                      "publications": { "type": "array" },
+                      "userReactions": { "type": "object" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Perfil de estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/profile/{id}/contactos": {
+    "get": {
+      "tags": ["Profile"],
+      "summary": "Obtener contactos de un perfil",
+      "description": "Retorna la lista de contactos paginada de un estudiante. Respeta la configuración de privacidad.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del estudiante"
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "default": 1, "minimum": 1 }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": { "type": "integer", "default": 5, "minimum": 1, "maximum": 50 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Contactos obtenidos exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "initials": { "type": "string" },
+                        "name": { "type": "string" },
+                        "foto_url": { "type": ["string", "null"] }
+                      }
+                    }
+                  },
+                  "pagination": { "$ref": "#/components/schemas/Pagination" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de estudiante inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "403": {
+          "description": "No tiene permisos para ver estos contactos",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Perfil de estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/profile/me/avatar": {
+    "patch": {
+      "tags": ["Profile"],
+      "summary": "Actualizar avatar con URL",
+      "description": "Actualiza la foto de perfil del estudiante autenticado proporcionando una URL.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["foto_url"],
+              "properties": {
+                "foto_url": {
+                  "type": "string",
+                  "description": "URL de la imagen de perfil"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Avatar actualizado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "foto_url": { "type": ["string", "null"] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Perfil de estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Profile"],
+      "summary": "Subir foto de perfil",
+      "description": "Sube una imagen como foto de perfil. Usa multipart/form-data.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "required": ["file"],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Imagen a subir (JPEG, PNG, etc.)"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Foto subida exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "foto_url": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Profile"],
+      "summary": "Eliminar foto de perfil",
+      "description": "Elimina la foto de perfil del estudiante autenticado.",
+      "responses": {
+        "200": {
+          "description": "Foto eliminada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "foto_url": { "type": ["string", "null"] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/profile/me/banner": {
+    "post": {
+      "tags": ["Profile"],
+      "summary": "Subir imagen de banner",
+      "description": "Sube una imagen como banner del perfil. Usa multipart/form-data.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "required": ["file"],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Imagen del banner a subir"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Banner subido exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "banner_url": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Profile"],
+      "summary": "Eliminar imagen de banner",
+      "description": "Elimina la imagen de banner del perfil del estudiante autenticado.",
+      "responses": {
+        "200": {
+          "description": "Banner eliminado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "banner_url": { "type": ["string", "null"] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
