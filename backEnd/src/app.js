@@ -1,5 +1,6 @@
 const express = require("express");
-const path = require("path");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
 
 const authRoutes = require("./routes/auth.routes");
 const adminRoutes = require("./routes/admin.routes");
@@ -51,6 +52,11 @@ app.use("/api", statsRoutes);
 app.use("/api", academicAssistantRoutes);
 app.use("/api", situacionAcademicaRoutes);
 app.use("/api", planCursadaRoutes);
+
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: ".swagger-ui .topbar { display: none }",
+  customSiteTitle: "API - Sistema de Acompañamiento"
+}));
 
 app.use((req, res) => {
   res.status(404).json({
