@@ -1,0 +1,1482 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sistema de Acompañamiento de Alumnos Universitarios - API",
+    "version": "1.0.0",
+    "description": "API REST para el sistema de acompañamiento académico de estudiantes universitarios. Permite gestionar situaciones académicas, sesiones de estudio, materiales, denuncias, notificaciones y más.",
+    "contact": {
+      "name": "Equipo de desarrollo"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor de desarrollo"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtenido del endpoint POST /api/auth/login"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "estudiante@unahur.edu.ar"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "MiPassword123"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["nombre_completo", "email", "password"],
+        "properties": {
+          "nombre_completo": {
+            "type": "string",
+            "description": "Debe contener nombre y apellido separados por espacio",
+            "example": "Juan Perez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "juan.perez@unahur.edu.ar"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "MiPassword123"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "token": {
+            "type": "string",
+            "description": "Token JWT"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UsuarioAuth"
+          }
+        }
+      },
+      "UsuarioAuth": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": ["estudiante", "administrador"]
+          },
+          "estudiante": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EstudianteResumen"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "administrador": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdministradorResumen"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "EstudianteResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "apellido": {
+            "type": "string"
+          },
+          "foto_url": {
+            "type": ["string", "null"]
+          }
+        }
+      },
+      "AdministradorResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "apellido": {
+            "type": "string"
+          }
+        }
+      },
+      "Estudiante": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "usuario_id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "apellido": {
+            "type": "string"
+          },
+          "foto_url": {
+            "type": ["string", "null"]
+          },
+          "banner_url": {
+            "type": ["string", "null"]
+          },
+          "bio": {
+            "type": ["string", "null"]
+          },
+          "localidad": {
+            "type": ["string", "null"]
+          },
+          "telefono": {
+            "type": ["string", "null"]
+          },
+          "fecha_nacimiento": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "privacidad": {
+            "type": "string",
+            "enum": ["publico", "privado", "contactos"]
+          },
+          "pub_inscripciones": {
+            "type": "boolean"
+          },
+          "pub_regularizaciones": {
+            "type": "boolean"
+          },
+          "pub_aprobaciones": {
+            "type": "boolean"
+          },
+          "email_visible": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Administrador": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "apellido": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Carrera": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "instituto": {
+            "type": "string"
+          },
+          "duracion_anios": {
+            "type": "integer"
+          },
+          "planes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanEstudioResumen"
+            }
+          }
+        }
+      },
+      "PlanEstudioResumen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "anio": {
+            "type": "integer"
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["vigente", "transicion", "discontinuado"]
+          }
+        }
+      },
+      "PlanEstudio": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "carrera_id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "anio": {
+            "type": "integer"
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["vigente", "transicion", "discontinuado"]
+          },
+          "creditos_requeridos": {
+            "type": "integer"
+          },
+          "niveles_ingles_requeridos": {
+            "type": "integer"
+          },
+          "materias_unahur": {
+            "type": "integer"
+          },
+          "materias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Materia"
+            }
+          }
+        }
+      },
+      "Materia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "anio_cursada": {
+            "type": "integer"
+          },
+          "modalidad": {
+            "type": "string"
+          },
+          "es_optativa": {
+            "type": "boolean"
+          },
+          "es_unahur": {
+            "type": "boolean"
+          },
+          "creditos_otorga": {
+            "type": "integer"
+          },
+          "plan_nombre": {
+            "type": ["string", "null"]
+          }
+        }
+      },
+      "MateriaEstado": {
+        "type": "object",
+        "properties": {
+          "materia_id": {
+            "type": "integer"
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["pendiente", "cursando", "regular", "aprobada"]
+          },
+          "anio": {
+            "type": ["integer", "null"]
+          },
+          "cuatrimestre": {
+            "type": ["integer", "null"]
+          },
+          "nota": {
+            "type": ["number", "null"]
+          },
+          "fecha": {
+            "type": ["string", "null"],
+            "format": "date"
+          }
+        }
+      },
+      "Post": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "contenido": {
+            "type": "string"
+          },
+          "estudiante_id": {
+            "type": "integer"
+          },
+          "event_type": {
+            "type": ["string", "null"],
+            "enum": ["inscripcion", "regularizacion", "aprobacion", "general", null]
+          },
+          "event_subject": {
+            "type": ["string", "null"]
+          },
+          "oculto": {
+            "type": "boolean"
+          },
+          "likes": {
+            "type": "integer"
+          },
+          "dislikes": {
+            "type": "integer"
+          },
+          "mi_voto": {
+            "type": ["string", "null"],
+            "enum": ["like", "dislike", null]
+          },
+          "mi_denuncia_pendiente": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estudiante": {
+            "$ref": "#/components/schemas/EstudianteResumen"
+          }
+        }
+      },
+      "CrearPostRequest": {
+        "type": "object",
+        "required": ["contenido"],
+        "properties": {
+          "contenido": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "example": "Aprobé Analysis Matemático II!"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": ["inscripcion", "regularizacion", "aprobacion", "general"]
+          },
+          "event_subject": {
+            "type": "string",
+            "maxLength": 255
+          }
+        }
+      },
+      "VotarPostRequest": {
+        "type": "object",
+        "required": ["tipo"],
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": ["like", "dislike"]
+          }
+        }
+      },
+      "Material": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "materia_id": {
+            "type": "integer"
+          },
+          "estudiante_id": {
+            "type": "integer"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "url_o_path": {
+            "type": "string"
+          },
+          "formato": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "suspendido": {
+            "type": "boolean"
+          },
+          "likes": {
+            "type": "integer"
+          },
+          "dislikes": {
+            "type": "integer"
+          },
+          "mi_voto": {
+            "type": ["string", "null"],
+            "enum": ["like", "dislike", null]
+          },
+          "mi_denuncia_pendiente": {
+            "type": "boolean"
+          },
+          "estudiante": {
+            "$ref": "#/components/schemas/EstudianteResumen"
+          },
+          "materia": {
+            "$ref": "#/components/schemas/Materia"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          }
+        }
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "CrearMaterialRequest": {
+        "type": "object",
+        "required": ["materia_id", "tipo", "titulo", "url_o_path"],
+        "properties": {
+          "materia_id": {
+            "type": "integer"
+          },
+          "tipo": {
+            "type": "string",
+            "description": "Tipo de material (link, file, discord, etc.)"
+          },
+          "titulo": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "url_o_path": {
+            "type": "string",
+            "description": "URL HTTP/HTTPS o path del archivo"
+          },
+          "formato": {
+            "type": "string"
+          },
+          "subtipo_link": {
+            "type": "string"
+          },
+          "discord_servidor": {
+            "type": "string"
+          },
+          "discord_canal": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "VotarMaterialRequest": {
+        "type": "object",
+        "required": ["material_id", "valor"],
+        "properties": {
+          "material_id": {
+            "type": "integer"
+          },
+          "valor": {
+            "type": "string",
+            "enum": ["like", "dislike"]
+          }
+        }
+      },
+      "SesionEstudio": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "materia_id": {
+            "type": "integer"
+          },
+          "creador_id": {
+            "type": "integer"
+          },
+          "tema": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": ["virtual", "presencial"]
+          },
+          "link_ubicacion": {
+            "type": ["string", "null"]
+          },
+          "fecha_hora": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duracion_minutos": {
+            "type": "integer"
+          },
+          "cupos_max": {
+            "type": ["integer", "null"]
+          },
+          "descripcion": {
+            "type": ["string", "null"]
+          },
+          "requiere_aprobacion": {
+            "type": "boolean"
+          },
+          "cancelada": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CrearSesionRequest": {
+        "type": "object",
+        "required": ["materia_id", "tema", "tipo", "fecha_hora", "duracion_minutos"],
+        "properties": {
+          "materia_id": {
+            "type": "integer"
+          },
+          "tema": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 150
+          },
+          "tipo": {
+            "type": "string",
+            "enum": ["virtual", "presencial"]
+          },
+          "link_ubicacion": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Link virtual o ubicación presencial"
+          },
+          "fecha_hora": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Debe ser una fecha futura"
+          },
+          "duracion_minutos": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1440
+          },
+          "cupos_max": {
+            "type": "integer"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "requiere_aprobacion": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "Denuncia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "material_id": {
+            "type": ["integer", "null"]
+          },
+          "post_id": {
+            "type": ["integer", "null"]
+          },
+          "denunciante_id": {
+            "type": "integer"
+          },
+          "motivo_id": {
+            "type": "integer"
+          },
+          "detalle": {
+            "type": ["string", "null"]
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["pendiente", "verificada", "rechazada"]
+          },
+          "admin_revisor_id": {
+            "type": ["integer", "null"]
+          },
+          "fecha_creacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fecha_resolucion": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "CrearDenunciaRequest": {
+        "type": "object",
+        "required": ["motivo_id"],
+        "properties": {
+          "motivo_id": {
+            "type": "integer"
+          },
+          "detalle": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "MotivoDenuncia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Notificacion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["Academica", "Sesion", "Material", "General"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "actionUrl": {
+            "type": ["string", "null"]
+          },
+          "referenceType": {
+            "type": ["string", "null"]
+          },
+          "referenceId": {
+            "type": ["integer", "null"]
+          },
+          "senderId": {
+            "type": ["integer", "null"]
+          },
+          "senderName": {
+            "type": "string"
+          }
+        }
+      },
+      "SituacionAcademica": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "plan_id": {
+            "type": "integer"
+          },
+          "estudiante_id": {
+            "type": "integer"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EstadoMateria": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "situacion_id": {
+            "type": "integer"
+          },
+          "materia_id": {
+            "type": "integer"
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["pendiente", "cursando", "regular", "aprobada"]
+          },
+          "anio": {
+            "type": ["integer", "null"]
+          },
+          "cuatrimestre": {
+            "type": ["integer", "null"]
+          },
+          "nota": {
+            "type": ["number", "null"]
+          },
+          "fecha": {
+            "type": ["string", "null"],
+            "format": "date"
+          }
+        }
+      },
+      "Final": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "estado_materia_id": {
+            "type": "integer"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "nota": {
+            "type": "number"
+          },
+          "aprobado": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ActividadCredito": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "situacion_id": {
+            "type": "integer"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "creditos": {
+            "type": "integer"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["pendiente", "aprobada"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlanCursada": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "situacion_id": {
+            "type": "integer"
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "plan_cursada_items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanCursadaItem"
+            }
+          }
+        }
+      },
+      "PlanCursadaItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "plan_id": {
+            "type": "integer"
+          },
+          "materia_id": {
+            "type": "integer"
+          },
+          "anio_proyectado": {
+            "type": "integer"
+          },
+          "cuatrimestre_proyectado": {
+            "type": "integer"
+          },
+          "horas": {
+            "type": "integer"
+          },
+          "horas_extra": {
+            "type": "integer"
+          },
+          "materia": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "nombre": { "type": "string" },
+                  "carga_horaria_semanal": { "type": "integer" }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Contacto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "fecha_solicitud": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fecha_respuesta": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "CrearCarreraRequest": {
+        "type": "object",
+        "required": ["nombre", "titulo", "instituto", "duracion_anios"],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "titulo": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "instituto": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "duracion_anios": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "plan": {
+            "$ref": "#/components/schemas/CrearPlanEstudioRequest"
+          },
+          "materias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MateriaPayload"
+            }
+          }
+        }
+      },
+      "CrearPlanEstudioRequest": {
+        "type": "object",
+        "required": ["anio", "creditos_requeridos", "niveles_ingles_requeridos"],
+        "properties": {
+          "anio": {
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2100
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["vigente", "transicion", "discontinuado"],
+            "default": "vigente"
+          },
+          "creditos_requeridos": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 500
+          },
+          "niveles_ingles_requeridos": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          }
+        }
+      },
+      "MateriaPayload": {
+        "type": "object",
+        "required": ["codigo", "nombre", "anio_cursada", "creditos_otorga"],
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "anio_cursada": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": ["Cuatrimestral", "Anual"]
+          },
+          "es_optativa": {
+            "type": "boolean",
+            "default": false
+          },
+          "es_unahur": {
+            "type": "boolean",
+            "default": false
+          },
+          "creditos_otorga": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlativas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CorrelativaPayload"
+            }
+          }
+        }
+      },
+      "CorrelativaPayload": {
+        "description": "Puede ser un string (código de la materia requisito con tipo por defecto 'cursar') o un objeto con código y tipo",
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Código de la materia requisito (tipo por defecto: cursar)"
+          },
+          {
+            "type": "object",
+            "required": ["codigo", "tipo"],
+            "properties": {
+              "codigo": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "tipo": {
+                "type": "string",
+                "enum": ["cursar", "aprobar"]
+              }
+            }
+          }
+        ]
+      },
+      "CrearSituacionRequest": {
+        "type": "object",
+        "required": ["plan_id"],
+        "properties": {
+          "plan_id": {
+            "type": "integer"
+          }
+        }
+      },
+      "ActualizarMateriasRequest": {
+        "type": "object",
+        "required": ["materias"],
+        "properties": {
+          "materias": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/MateriaEstado"
+            }
+          }
+        }
+      },
+      "CrearFinalRequest": {
+        "type": "object",
+        "required": ["estado_materia_id", "fecha", "nota"],
+        "properties": {
+          "estado_materia_id": {
+            "type": "integer"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "nota": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          }
+        }
+      },
+      "CrearActividadRequest": {
+        "type": "object",
+        "required": ["descripcion", "creditos", "fecha"],
+        "properties": {
+          "descripcion": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "creditos": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["pendiente", "aprobada"],
+            "default": "pendiente"
+          }
+        }
+      },
+      "CrearPlanCursadaRequest": {
+        "type": "object",
+        "required": ["nombre", "items"],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["materia_id", "anio_proyectado", "cuatrimestre_proyectado"],
+              "properties": {
+                "materia_id": {
+                  "type": "integer"
+                },
+                "anio_proyectado": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10
+                },
+                "cuatrimestre_proyectado": {
+                  "type": "integer",
+                  "enum": [1, 2]
+                },
+                "horas": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 80
+                },
+                "horas_extra": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 80
+                }
+              }
+            }
+          }
+        }
+      },
+      "ActualizarPerfilRequest": {
+        "type": "object",
+        "description": "Al menos un campo es requerido",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "apellido": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "bio": {
+            "type": ["string", "null"],
+            "maxLength": 500
+          },
+          "localidad": {
+            "type": ["string", "null"],
+            "maxLength": 120
+          },
+          "telefono": {
+            "type": ["string", "null"],
+            "maxLength": 32,
+            "pattern": "^\\+?[0-9 ()-]+$",
+            "description": "Debe contener entre 8 y 15 dígitos"
+          },
+          "fecha_nacimiento": {
+            "type": ["string", "null"],
+            "format": "date",
+            "description": "Formato AAAA-MM-DD. Edad mínima: 16 años"
+          },
+          "pub_inscripciones": {
+            "type": "boolean"
+          },
+          "pub_regularizaciones": {
+            "type": "boolean"
+          },
+          "pub_aprobaciones": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ActualizarPrivacidadRequest": {
+        "type": "object",
+        "description": "Al menos un campo es requerido",
+        "properties": {
+          "privacidad": {
+            "type": "string",
+            "enum": ["publico", "privado", "contactos"]
+          },
+          "email_visible": {
+            "type": "boolean"
+          },
+          "pub_inscripciones": {
+            "type": "boolean"
+          },
+          "pub_regularizaciones": {
+            "type": "boolean"
+          },
+          "pub_aprobaciones": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ProfileResponse": {
+        "type": "object",
+        "properties": {
+          "initials": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "career": {
+            "type": "string"
+          },
+          "location": {
+            "type": ["string", "null"]
+          },
+          "phone": {
+            "type": ["string", "null"]
+          },
+          "birthDate": {
+            "type": ["string", "null"]
+          },
+          "email": {
+            "type": ["string", "null"]
+          },
+          "academicStatus": {
+            "type": "string"
+          },
+          "bio": {
+            "type": ["string", "null"]
+          },
+          "contactsCount": {
+            "type": "integer"
+          },
+          "foto_url": {
+            "type": ["string", "null"]
+          },
+          "banner_url": {
+            "type": ["string", "null"]
+          },
+          "privacidad": {
+            "type": "string"
+          },
+          "pub_inscripciones": {
+            "type": "boolean"
+          },
+          "pub_regularizaciones": {
+            "type": "boolean"
+          },
+          "pub_aprobaciones": {
+            "type": "boolean"
+          },
+          "email_visible": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InscripcionSesion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "sesion_id": {
+            "type": "integer"
+          },
+          "estudiante_id": {
+            "type": "integer"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "fecha_inscripcion": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ArchivoSesion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "nombreOriginal": {
+            "type": "string"
+          },
+          "nombreArchivo": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          },
+          "uploader": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "nombre": { "type": "string" },
+                  "apellido": { "type": "string" }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContactoUsuario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "initials": {
+            "type": "string"
+          },
+          "foto_url": {
+            "type": ["string", "null"]
+          },
+          "career": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "solicitudEnviada": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AdminStats": {
+        "type": "object",
+        "properties": {
+          "usoSistema": {
+            "type": "object"
+          },
+          "reportesSociales": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Autenticación y registro de usuarios" },
+    { "name": "Profile", "description": "Gestión de perfil de estudiantes" },
+    { "name": "Posts", "description": "Publicaciones y votos" },
+    { "name": "Admin", "description": "Gestión de administradores" },
+    { "name": "Carreras", "description": "Gestión de carreras universitarias" },
+    { "name": "Planes de Estudio", "description": "Gestión de planes de estudio y sus materias" },
+    { "name": "Materias", "description": "Listado de materias" },
+    { "name": "Estados de Materia", "description": "Inscripción, regularización y aprobación de materias" },
+    { "name": "Situación Académica", "description": "Gestión de situación académica, finales, créditos e importación Excel" },
+    { "name": "Asistente Académico", "description": "Asistente académico y simulador de planificación" },
+    { "name": "Sesiones de Estudio", "description": "Gestión de sesiones grupales de estudio" },
+    { "name": "Archivos de Sesión", "description": "Gestión de archivos adjuntos en sesiones de estudio" },
+    { "name": "Inscripciones a Sesiones", "description": "Inscripciones y gestion de participantes en sesiones" },
+    { "name": "Materiales", "description": "Gestión de materiales compartidos" },
+    { "name": "Denuncias", "description": "Creación de denuncias por estudiantes" },
+    { "name": "Denuncias Admin", "description": "Panel de administración de denuncias" },
+    { "name": "Motivos de Denuncia", "description": "Gestión de motivos de denuncia" },
+    { "name": "Notificaciones", "description": "Gestión de notificaciones" },
+    { "name": "Contactos", "description": "Sistema de contactos entre estudiantes" },
+    { "name": "Estadísticas", "description": "Estadísticas del panel de administración" }
+  ]
+}
