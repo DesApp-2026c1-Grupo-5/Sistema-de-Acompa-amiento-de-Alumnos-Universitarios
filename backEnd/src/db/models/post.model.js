@@ -19,12 +19,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'post_id'
       });
 
+      post.hasMany(models.denuncia, {
+        foreignKey: 'post_id',
+        as: 'denuncias'
+      });
+
     }
   }
   post.init({
     contenido: DataTypes.STRING,
     event_type: DataTypes.STRING,
     event_subject: DataTypes.STRING,
+    oculto: { type: DataTypes.BOOLEAN, defaultValue: false },
   }, {
     sequelize,
     modelName: 'post',

@@ -1,0 +1,146 @@
+{
+  "/api/materias/{id}/inscribir": {
+    "post": {
+      "tags": ["Estados de Materia"],
+      "summary": "Inscribirse a una materia",
+      "description": "Inscribe al estudiante autenticado en una materia. Crea un registro de estado de materia con estado 'cursando'.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la materia"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "anio": { "type": ["integer", "null"], "description": "Año de cursada" },
+                "cuatrimestre": { "type": ["integer", "null"], "enum": [1, 2], "description": "Cuatrimestre" },
+                "nota": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+                "fecha": { "type": ["string", "null"], "format": "date" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Inscripción exitosa",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la acción académica" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/materias/{id}/regularizar": {
+    "post": {
+      "tags": ["Estados de Materia"],
+      "summary": "Regularizar materia",
+      "description": "Cambia el estado de una materia a 'regular' para el estudiante autenticado.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la materia"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "anio": { "type": ["integer", "null"] },
+                "cuatrimestre": { "type": ["integer", "null"], "enum": [1, 2] },
+                "nota": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+                "fecha": { "type": ["string", "null"], "format": "date" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Regularización exitosa",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la acción académica" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/materias/{id}/aprobar": {
+    "post": {
+      "tags": ["Estados de Materia"],
+      "summary": "Aprobar materia",
+      "description": "Cambia el estado de una materia a 'aprobada' para el estudiante autenticado.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la materia"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "anio": { "type": ["integer", "null"] },
+                "cuatrimestre": { "type": ["integer", "null"], "enum": [1, 2] },
+                "nota": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+                "fecha": { "type": ["string", "null"], "format": "date" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Aprobación exitosa",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la acción académica" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

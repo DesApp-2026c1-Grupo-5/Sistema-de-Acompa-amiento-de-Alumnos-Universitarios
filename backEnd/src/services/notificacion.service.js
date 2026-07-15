@@ -2,6 +2,7 @@ const { notificacion } = require("../db/models");
 
 const crearNotificacion = async ({
   usuario_id,
+  emisor_usuario_id,
   titulo,
   tipo,
   mensaje,
@@ -9,8 +10,13 @@ const crearNotificacion = async ({
   referencia_id,
   action_url,
 }) => {
+  if (emisor_usuario_id != null && Number(usuario_id) === Number(emisor_usuario_id)) {
+    return null;
+  }
+
   return notificacion.create({
     usuario_id,
+    emisor_usuario_id: emisor_usuario_id ?? null,
     titulo,
     tipo,
     mensaje,
@@ -21,4 +27,26 @@ const crearNotificacion = async ({
   });
 };
 
-module.exports = { crearNotificacion };
+const crearNotificacionUnica = async (payload) => {
+  if (payload.emisor_usuario_id != null && Number(payload.usuario_id) === Number(payload.emisor_usuario_id)) {
+    return { notificacion: null, creada: false };
+  }
+
+  const where = {
+    usuario_id: payload.usuario_id,
+    titulo: payload.titulo,
+  };
+
+  if (payload.tipo !== undefined) where.tipo = payload.tipo;
+  if (payload.referencia_tipo !== undefined) where.referencia_tipo = payload.referencia_tipo;
+  if (payload.referencia_id !== undefined) where.referencia_id = payload.referencia_id;
+
+  const existente = await notificacion.findOne({ where });
+  if (existente) {
+    return { notificacion: existente, creada: false };
+  }
+
+  return { notificacion: await crearNotificacion(payload), creada: true };
+};
+
+module.exports = { crearNotificacion, crearNotificacionUnica };

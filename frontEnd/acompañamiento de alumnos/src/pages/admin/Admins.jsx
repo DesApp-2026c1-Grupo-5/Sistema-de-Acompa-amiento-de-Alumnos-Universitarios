@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Eye, EyeOff, Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Eye, EyeOff, Trash2, ChevronDown } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Button from '../../components/common/Button';
 import ModalConfirmation from '../../components/common/ModalConfirmation';
-import { getAdmins, createAdmin } from '../../services/adminService';
+import Pagination from '../../components/common/Pagination';
+import { getAdmins, createAdmin, deleteAdmin } from '../../services/adminService';
 import styles from './Admins.module.css';
+
+const PAGE_SIZE = 5;
 
 function Admins() {
   const [admins, setAdmins] = useState([]);
@@ -15,6 +18,9 @@ function Admins() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [expandedId, setExpandedId] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -23,16 +29,30 @@ function Admins() {
     password: ''
   });
 
-  useEffect(() => {
-    getAdmins()
-      .then((res) => {
-        setAdmins(res.data ?? []);
-      })
-      .catch((err) => {
-        setLoadError(err.message || 'No pudimos cargar los administradores.');
-      })
-      .finally(() => setLoading(false));
+  const fetchPage = useCallback((p) => {
+    return getAdmins({ page: p, limit: PAGE_SIZE }).then((res) => {
+      setAdmins(res.data ?? []);
+      setTotalPages(res.pagination?.totalPages ?? 1);
+    });
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      setLoading(true);
+      try {
+        await fetchPage(page);
+      } catch (err) {
+        if (active) setLoadError(err.message || 'No pudimos cargar los administradores.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      active = false;
+    };
+  }, [page, fetchPage]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -51,14 +71,18 @@ function Admins() {
   const handleConfirmCreate = async () => {
     setFormError('');
     try {
-      const res = await createAdmin(
+      await createAdmin(
         formData.name,
         formData.lastname,
         formData.email,
         formData.password
       );
 
-      setAdmins((prev) => [res.data, ...prev]);
+      if (page === 1) {
+        await fetchPage(1);
+      } else {
+        setPage(1);
+      }
 
       setFormData({
         name: '',
@@ -88,13 +112,23 @@ function Admins() {
     setShowDeleteModal(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (adminToDelete) {
-      setAdmins((prev) => prev.filter((admin) => admin.id !== adminToDelete.id));
-      console.log('DELETE /api/admins', adminToDelete.id);
+  const handleConfirmDelete = async () => {
+    if (!adminToDelete) return;
+
+    try {
+      await deleteAdmin(adminToDelete.id);
+
+      if (admins.length === 1 && page > 1) {
+        setPage((prevPage) => prevPage - 1);
+      } else {
+        await fetchPage(page);
+      }
+    } catch (err) {
+      alert(err.message || 'No se pudo eliminar el administrador.');
+    } finally {
+      setShowDeleteModal(false);
+      setAdminToDelete(null);
     }
-    setShowDeleteModal(false);
-    setAdminToDelete(null);
   };
 
   const handleCancelDelete = () => {
@@ -248,13 +282,18 @@ function Admins() {
                 </thead>
                 <tbody>
                   {admins.map((admin) => (
-                    <tr key={admin.id}>
-                      <td className={styles.nameCell}>
-                        {admin.nombre} {admin.apellido}
+                    <tr key={admin.id} className={expandedId === admin.id ? styles.expanded : ''}>
+                      <td
+                        className={styles.nameCell}
+                        data-label="Nombre"
+                        onClick={() => setExpandedId(expandedId === admin.id ? null : admin.id)}
+                      >
+                        <span className={styles.nameText}>{admin.nombre} {admin.apellido}</span>
+                        <ChevronDown size={18} className={styles.chevron} />
                       </td>
-                      <td className={styles.emailCell}>{admin.email}</td>
-                      <td className={styles.dateCell}>{admin.createdAt?.slice(0, 10)}</td>
-                      <td>
+                      <td className={styles.emailCell} data-label="Email">{admin.email}</td>
+                      <td className={styles.dateCell} data-label="Fecha creación">{admin.createdAt?.slice(0, 10)}</td>
+                      <td className={styles.actionsCell} data-label="Acciones">
                         <Button
                           variant="iconSquareDanger"
                           title="Eliminar"
@@ -266,9 +305,22 @@ function Admins() {
                   ))}
                 </tbody>
               </table>
+
+              {totalPages > 1 && (
+                <div className={styles.paginationSection}>
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onChange={(p) => {
+                      setPage(p);
+                      setExpandedId(null);
+                    }}
+                  />
+                </div>
+              )}
             </div>
           )}
-</div>
+        </div>
       </div>
 
       <ModalConfirmation

@@ -25,6 +25,23 @@ const formatDate = (value) => {
   return date.toISOString().split("T")[0];
 };
 
+const buildEditableProfile = (estudianteData) => ({
+  id: estudianteData.id,
+  nombre: estudianteData.nombre,
+  apellido: estudianteData.apellido,
+  name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+  bio: estudianteData.bio ?? null,
+  localidad: estudianteData.localidad ?? null,
+  location: estudianteData.localidad ?? null,
+  telefono: estudianteData.telefono ?? null,
+  phone: estudianteData.telefono ?? null,
+  fecha_nacimiento: estudianteData.fecha_nacimiento ?? null,
+  birthDate: estudianteData.fecha_nacimiento ?? null,
+  pub_inscripciones: estudianteData.pub_inscripciones,
+  pub_regularizaciones: estudianteData.pub_regularizaciones,
+  pub_aprobaciones: estudianteData.pub_aprobaciones,
+});
+
 const buildAcademicStatus = async (estudianteId) => {
   const aprobadas = await estado_materia.count({
     include: [
@@ -147,6 +164,7 @@ const buildPublications = async (estudianteId) => {
 
     return {
       id: plain.id,
+      authorId: plain.estudiante?.id ?? plain.estudiante_id,
       authorInitials: getInitials(plain.estudiante?.nombre, plain.estudiante?.apellido),
       authorImage: plain.estudiante?.foto_url ?? null,
       authorName: `${plain.estudiante?.nombre ?? ""} ${plain.estudiante?.apellido ?? ""}`.trim(),
@@ -160,6 +178,20 @@ const buildPublications = async (estudianteId) => {
   });
 
   return { publications, userReactions };
+};
+
+const sonContactos = async (estudianteIdA, estudianteIdB) => {
+  if (!estudianteIdA || !estudianteIdB) return false;
+  const existe = await contacto.findOne({
+    where: {
+      estado: "aceptado",
+      [Op.or]: [
+        { estudiante_solicitante_id: estudianteIdA, estudiante_receptor_id: estudianteIdB },
+        { estudiante_solicitante_id: estudianteIdB, estudiante_receptor_id: estudianteIdA },
+      ],
+    },
+  });
+  return !!existe;
 };
 
 const obtenerMiPerfil = async (req, res, next) => {
@@ -192,7 +224,9 @@ const obtenerMiPerfil = async (req, res, next) => {
         initials: getInitials(estudianteData.nombre, estudianteData.apellido),
         name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
         career,
-        location: null,
+        location: estudianteData.localidad ?? null,
+        phone: estudianteData.telefono ?? null,
+        birthDate: estudianteData.fecha_nacimiento ?? null,
         email: estudianteData.usuario.email,
         academicStatus,
         bio: estudianteData.bio,
@@ -203,6 +237,7 @@ const obtenerMiPerfil = async (req, res, next) => {
         pub_inscripciones: estudianteData.pub_inscripciones,
         pub_regularizaciones: estudianteData.pub_regularizaciones,
         pub_aprobaciones: estudianteData.pub_aprobaciones,
+        email_visible: estudianteData.email_visible,
       },
       contacts: contacts.slice(0, 6),
       pendingRequests,
@@ -212,18 +247,177 @@ const obtenerMiPerfil = async (req, res, next) => {
   });
 };
 
-const actualizarMiPerfil = async (req, res, next) => {
-  const {
-    nombre,
-    apellido,
-    foto_url,
-    bio,
-    privacidad,
-    pub_inscripciones,
-    pub_regularizaciones,
-    pub_aprobaciones,
-  } = req.body;
+const obtenerPerfilPorId = async (req, res, next) => {
+  const { id } = req.params;
 
+  const estudianteData = await estudiante.findOne({
+    where: { id },
+    include: [
+      {
+        model: usuario,
+        attributes: ["id", "email", "tipo", "activo"],
+      },
+    ],
+  });
+
+  if (!estudianteData) {
+    const error = new Error("Perfil de estudiante no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Si el que pide es el dueño del perfil → acceso completo
+  const requesterEstudiante = await estudiante.findOne({
+    where: { usuario_id: req.user.sub },
+  });
+  const esDueno = requesterEstudiante && requesterEstudiante.id === estudianteData.id;
+
+  // Si el que pide es admin → acceso completo
+  const esAdmin = req.user.tipo === "administrador";
+
+  // Evaluar privacidad
+  const privacidad = estudianteData.privacidad || "publico";
+  const esPublico = privacidad === "publico";
+
+  let puedeVer = esDueno || esAdmin || esPublico;
+
+  if (!puedeVer && requesterEstudiante) {
+    puedeVer = await sonContactos(requesterEstudiante.id, estudianteData.id);
+  }
+
+  if (!puedeVer) {
+    return res.status(200).json({
+      ok: true,
+      data: {
+        privado: true,
+        user: {
+          initials: getInitials(estudianteData.nombre, estudianteData.apellido),
+          name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+          activo: estudianteData.usuario.activo,
+          foto_url: estudianteData.foto_url,
+          privacidad,
+        },
+        contacts: [],
+        publications: [],
+        userReactions: {},
+      },
+    });
+  }
+
+  const contacts = await buildContacts(estudianteData.id);
+  const { publications, userReactions } = await buildPublications(estudianteData.id);
+  const career = await buildCareerLabel(estudianteData.id);
+  const academicStatus = await buildAcademicStatus(estudianteData.id);
+
+  return res.status(200).json({
+    ok: true,
+    data: {
+      privado: false,
+      user: {
+        initials: getInitials(estudianteData.nombre, estudianteData.apellido),
+        name: `${estudianteData.nombre} ${estudianteData.apellido}`.trim(),
+        activo: estudianteData.usuario.activo,
+        career,
+        location: estudianteData.localidad ?? null,
+        email: !esDueno && estudianteData.email_visible === false ? null : estudianteData.usuario.email,
+        academicStatus,
+        bio: estudianteData.bio,
+        contactsCount: contacts.length,
+        foto_url: estudianteData.foto_url,
+        banner_url: estudianteData.banner_url,
+        privacidad,
+        pub_inscripciones: estudianteData.pub_inscripciones,
+        pub_regularizaciones: estudianteData.pub_regularizaciones,
+        pub_aprobaciones: estudianteData.pub_aprobaciones,
+        email_visible: estudianteData.email_visible,
+      },
+      contacts: contacts.slice(0, 6),
+      publications,
+      userReactions,
+    },
+  });
+};
+
+const obtenerContactos = async (req, res) => {
+  const targetId = Number(req.params.id);
+  if (!Number.isInteger(targetId) || targetId <= 0) {
+    const error = new Error("id de estudiante invalido");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const target = await estudiante.findByPk(targetId);
+  if (!target) {
+    const error = new Error("Perfil de estudiante no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const requester = await estudiante.findOne({
+    where: { usuario_id: req.user.sub },
+  });
+  const esDueno = requester && requester.id === targetId;
+  const esAdmin = req.user.tipo === "administrador";
+  const esPublico = (target.privacidad || "publico") === "publico";
+
+  let puedeVer = esDueno || esAdmin || esPublico;
+  if (!puedeVer && requester) {
+    puedeVer = await sonContactos(requester.id, targetId);
+  }
+  if (!puedeVer) {
+    const error = new Error("No tiene permisos para ver estos contactos");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 5));
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await contacto.findAndCountAll({
+    where: {
+      estado: { [Op.in]: ["aceptado", "aceptada"] },
+      [Op.or]: [
+        { estudiante_solicitante_id: targetId },
+        { estudiante_receptor_id: targetId },
+      ],
+    },
+    include: [
+      { model: estudiante, as: "solicitante", attributes: ["id", "nombre", "apellido", "foto_url"] },
+      { model: estudiante, as: "receptor", attributes: ["id", "nombre", "apellido", "foto_url"] },
+    ],
+    order: [["fecha_respuesta", "DESC"]],
+    limit,
+    offset,
+  });
+
+  const data = rows
+    .map((row) => {
+      const persona =
+        row.estudiante_solicitante_id === targetId ? row.receptor : row.solicitante;
+      if (!persona) return null;
+      return {
+        id: persona.id,
+        initials: getInitials(persona.nombre, persona.apellido),
+        name: `${persona.nombre} ${persona.apellido}`.trim(),
+        foto_url: persona.foto_url ?? null,
+      };
+    })
+    .filter(Boolean);
+
+  return res.status(200).json({
+    ok: true,
+    data,
+    pagination: {
+      page,
+      limit,
+      total: count,
+      totalPages: Math.ceil(count / limit),
+    },
+  });
+};
+
+const actualizarMiPerfil = async (req, res, next) => {
   const estudianteData = await estudiante.findOne({
     where: { usuario_id: req.user.sub },
   });
@@ -234,26 +428,35 @@ const actualizarMiPerfil = async (req, res, next) => {
     throw error;
   }
 
-  await estudianteData.update({
-    nombre: nombre ?? estudianteData.nombre,
-    apellido: apellido ?? estudianteData.apellido,
-    foto_url: foto_url ?? estudianteData.foto_url,
-    bio: bio ?? estudianteData.bio,
-    privacidad: privacidad ?? estudianteData.privacidad,
-    pub_inscripciones: pub_inscripciones ?? estudianteData.pub_inscripciones,
-    pub_regularizaciones:
-      pub_regularizaciones ?? estudianteData.pub_regularizaciones,
-    pub_aprobaciones: pub_aprobaciones ?? estudianteData.pub_aprobaciones,
-  });
+  const editableFields = [
+    "nombre",
+    "apellido",
+    "bio",
+    "localidad",
+    "telefono",
+    "fecha_nacimiento",
+    "pub_inscripciones",
+    "pub_regularizaciones",
+    "pub_aprobaciones",
+  ];
+  const changes = {};
+
+  for (const field of editableFields) {
+    if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+      changes[field] = req.body[field];
+    }
+  }
+
+  await estudianteData.update(changes);
 
   return res.status(200).json({
     ok: true,
-    data: estudianteData,
+    data: buildEditableProfile(estudianteData),
   });
 };
 
 const actualizarPrivacidadMiPerfil = async (req, res) => {
-  const { privacidad, pub_inscripciones, pub_regularizaciones, pub_aprobaciones } = req.body;
+  const { privacidad, pub_inscripciones, pub_regularizaciones, pub_aprobaciones, email_visible } = req.body;
 
   const estudianteData = await estudiante.findOne({
     where: { usuario_id: req.user.sub },
@@ -271,11 +474,18 @@ const actualizarPrivacidadMiPerfil = async (req, res) => {
     pub_regularizaciones:
       pub_regularizaciones ?? estudianteData.pub_regularizaciones,
     pub_aprobaciones: pub_aprobaciones ?? estudianteData.pub_aprobaciones,
+    email_visible: email_visible ?? estudianteData.email_visible,
   });
 
   return res.status(200).json({
     ok: true,
-    data: estudianteData,
+    data: {
+      privacidad: estudianteData.privacidad,
+      email_visible: estudianteData.email_visible,
+      pub_inscripciones: estudianteData.pub_inscripciones,
+      pub_regularizaciones: estudianteData.pub_regularizaciones,
+      pub_aprobaciones: estudianteData.pub_aprobaciones,
+    },
   });
 };
 
@@ -298,7 +508,7 @@ const actualizarAvatarMiPerfil = async (req, res) => {
 
   return res.status(200).json({
     ok: true,
-    data: estudianteData,
+    data: { foto_url: estudianteData.foto_url },
   });
 };
 
@@ -342,6 +552,8 @@ const eliminarBannerMiPerfil = async (req, res) => {
 
 module.exports = {
   obtenerMiPerfil,
+  obtenerPerfilPorId,
+  obtenerContactos,
   actualizarMiPerfil,
   actualizarPrivacidadMiPerfil,
   actualizarAvatarMiPerfil,

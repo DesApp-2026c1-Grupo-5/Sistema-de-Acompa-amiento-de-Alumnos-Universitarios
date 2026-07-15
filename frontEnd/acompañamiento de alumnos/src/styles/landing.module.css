@@ -612,7 +612,19 @@
     padding-top: 42px;
   }
 
+  .heroSection h1 {
+    font-size: clamp(43px, 4.5vw, 70px);
+  }
+
   .heroSection p {
+    font-size: 16.2px;
+  }
+
+  .sectionHeading h2 {
+    font-size: clamp(36px, 3.6vw, 48.6px);
+  }
+
+  .sectionHeading p {
     font-size: 18px;
   }
 

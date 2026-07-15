@@ -51,6 +51,7 @@ module.exports = (sequelize, DataTypes) => {
     codigo: DataTypes.STRING,
     nombre: DataTypes.STRING,
     anio_cursada: DataTypes.INTEGER,
+    cuatrimestre: DataTypes.INTEGER,
     tipo: DataTypes.STRING,
     modalidad: DataTypes.STRING,
     carga_horaria_semanal: DataTypes.INTEGER,

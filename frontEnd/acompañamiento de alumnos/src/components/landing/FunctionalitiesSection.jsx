@@ -9,10 +9,10 @@ const functionalities = [
     type: "dashboard",
   },
   {
-    icon: "◷",
-    title: "Sesiones de Estudio",
+    icon: "🧩",
+    title: "Simulador de cursada",
     description:
-      "Organiza y programa sesiones de estudio individuales o grupales con recordatorios inteligentes.",
+      "Simula los distintos escenarios para poder visualizar cómo podés continuar con tu cursada.",
     type: "calendar",
   },
   {
@@ -23,10 +23,10 @@ const functionalities = [
     type: "feed",
   },
   {
-    icon: "📖",
-    title: "Biblioteca de Materiales",
+    icon: "📝",
+    title: "Planificador de cursada",
     description:
-      "Accede y comparte recursos académicos: apuntes, guías, ejercicios y material de estudio.",
+      "Podés planificar cómo será tu carrera en base a la cantidad de horas de cada materia y a tu predisposición horaria.",
     type: "materials",
   },
 ];
@@ -76,14 +76,19 @@ const MockContent = ({ type }) => {
 
   if (type === "calendar") {
     return (
-      <div className={styles.calendarMock}>
-        {Array.from({ length: 21 }).map((_, index) => (
-          <span
-            key={index}
-            className={index === 10 || index === 11 || index === 15 ? styles.active : ""}
-          ></span>
-        ))}
-      </div>
+      <>
+        <div className={styles.mockLinePrimary}></div>
+        <div className={styles.mockLine}></div>
+        <div className={`${styles.mockLine} ${styles.mockLineShort}`}></div>
+
+        <div className={styles.feedRow}>
+          <span className={`${styles.avatar} ${styles.active}`}></span>
+          <div>
+            <div className={styles.mockLine}></div>
+            <div className={`${styles.mockLine} ${styles.mockLineShort}`}></div>
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -110,13 +115,22 @@ const MockContent = ({ type }) => {
   }
 
   return (
-    <div className={styles.materialsMock}>
-      <span className={styles.active}></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
+    <div className={styles.calendarMock}>
+      {Array.from({ length: 28 }).map((_, index) => (
+        <span
+          key={index}
+          className={
+            index === 3 ||
+              index === 4 ||
+              index === 10 ||
+              index === 16 ||
+              index === 17 ||
+              index === 24
+              ? styles.active
+              : ""
+          }
+        />
+      ))}
     </div>
   );
 };

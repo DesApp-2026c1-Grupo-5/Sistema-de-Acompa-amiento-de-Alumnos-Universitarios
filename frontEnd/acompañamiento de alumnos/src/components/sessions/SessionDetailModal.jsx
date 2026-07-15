@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Video, MapPin, CalendarDays, Clock, Users, Paperclip, Upload, Trash2, Globe, Lock } from 'lucide-react';
 import Modal from '../common/Modal';
 import Avatar from '../common/Avatar';
 import styles from '../../pages/student/StudySessions.module.css';
@@ -17,13 +18,6 @@ function formatDuration(session) {
 
 function getStatusInfo(session) {
   if (session.cancelled) return { text: 'Cancelada', className: styles.statusFull };
-  if (session.date && session.time) {
-    const start = new Date(`${session.date}T${session.time}:00`).getTime();
-    const totalMinutes = (session.durationHours || 0) * 60 + (session.durationMinutes || 0);
-    if (Date.now() >= start + totalMinutes * 60 * 1000) {
-      return { text: 'Finalizada', className: styles.statusEnded };
-    }
-  }
   if (session.maxParticipants && session.participantsCount >= session.maxParticipants) {
     return { text: 'Completa', className: styles.statusFull };
   }
@@ -172,6 +166,16 @@ function SessionDetailModal({
                 </span>
               </div>
             </div>
+
+            <div className={styles.detailRow}>
+              {session.privacy === 'public' ? <Globe size={18} /> : <Lock size={18} />}
+              <div className={styles.detailRowText}>
+                <span className={styles.detailLabel}>Privacidad</span>
+                <span className={styles.detailValue}>
+                  {session.privacy === 'public' ? 'Pública' : 'Privada'}
+                </span>
+              </div>
+            </div>
           </div>
 
           {session.description && (
@@ -183,21 +187,25 @@ function SessionDetailModal({
 
           <div className={styles.detailSection}>
             <h4 className={styles.detailSectionTitle}>Creador</h4>
-            <div className={styles.participantRow}>
-              <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
-              <span className={styles.participantName}>{session.creatorName}</span>
-            </div>
+            <Link to={`/student/profile/${session.creatorId}`} className={styles.participantLink}>
+              <div className={styles.participantRow}>
+                <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
+                <span className={styles.participantName}>{session.creatorName}</span>
+              </div>
+            </Link>
           </div>
 
           {session.participants?.length > 0 && (
             <div className={styles.detailSection}>
               <h4 className={styles.detailSectionTitle}>Participantes</h4>
               {session.participants.map((p) => (
-                <div key={p.inscripcionId} className={styles.participantRow}>
-                  <Avatar initials={p.initials} src={p.image} size="sm" />
-                  <span className={styles.participantName}>{p.name}</span>
-                  <span className={styles.confirmedBadge}>Confirmado</span>
-                </div>
+                <Link key={p.inscripcionId} to={`/student/profile/${p.estudianteId}`} className={styles.participantLink}>
+                  <div className={styles.participantRow}>
+                    <Avatar initials={p.initials} src={p.image} size="sm" />
+                    <span className={styles.participantName}>{p.name}</span>
+                    <span className={styles.confirmedBadge}>Confirmado</span>
+                  </div>
+                </Link>
               ))}
             </div>
           )}

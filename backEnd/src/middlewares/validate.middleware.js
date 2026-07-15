@@ -1,8 +1,9 @@
-const validate = (schema, source = "body") => (req, res, next) => {
+const validate = (schema, source = "body", options = {}) => (req, res, next) => {
   const { error, value } = schema.validate(req[source], {
     abortEarly: true,
     stripUnknown: true,
     convert: true,
+    ...options,
   });
 
   if (error) {

@@ -6,10 +6,17 @@ import {
   HardDrive,
   GitBranch,
   MessageSquare,
+  Upload,
 } from 'lucide-react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
-import { TYPE_OPTIONS } from '../../pages/student/materials/mockData';
+import {
+  ALLOWED_EXTENSIONS,
+  FILE_ACCEPT,
+  MAX_FILE_SIZE_BYTES,
+  MAX_FILE_SIZE_MB,
+  TYPE_OPTIONS,
+} from '../../pages/student/materials/materialConstants';
 import { parseTags, validateUrl } from '../../pages/student/materials/helpers';
 import styles from './UploadMaterialModal.module.css';
 
@@ -23,7 +30,6 @@ const TYPE_ICONS = {
 };
 
 const URL_PLACEHOLDERS = {
-  file: 'https://drive.google.com/file/d/...',
   link: 'https://ejemplo.com/recurso',
   video: 'https://youtube.com/watch?v=...',
   drive: 'https://drive.google.com/drive/folders/...',
@@ -38,6 +44,26 @@ const INITIAL_FORM = {
   description: '',
   tags: '',
   url: '',
+  file: null,
+};
+
+const getFileExtension = (fileName = '') => fileName.split('.').pop()?.toLowerCase() ?? '';
+
+const validateFile = (file) => {
+  if (!file) return 'Seleccioná un archivo.';
+  if (file.size === 0) return 'El archivo está vacío.';
+  if (!ALLOWED_EXTENSIONS.includes(getFileExtension(file.name))) {
+    return `Formato no permitido. Usá: ${ALLOWED_EXTENSIONS.join(', ')}.`;
+  }
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return `El archivo no puede superar los ${MAX_FILE_SIZE_MB} MB.`;
+  }
+  return '';
+};
+
+const formatFileSize = (bytes) => {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MB`;
 };
 
 function UploadMaterialModal({ onClose, onSubmit, materias = [] }) {
@@ -55,12 +81,22 @@ function UploadMaterialModal({ onClose, onSubmit, materias = [] }) {
   };
 
   const handleTypeChange = (type) => {
-    setForm((prev) => ({ ...prev, type, url: '' }));
-    setErrors((prev) => ({ ...prev, url: '' }));
+    if (type === form.type) return;
+    setForm((prev) => ({ ...prev, type, url: '', file: null }));
+    setErrors((prev) => ({ ...prev, url: '', file: '' }));
+    setSubmitError('');
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0] ?? null;
+    setForm((prev) => ({ ...prev, file }));
+    setErrors((prev) => ({ ...prev, file: validateFile(file) }));
+    setSubmitError('');
   };
 
   const isValid = useMemo(() => {
     if (!form.title.trim() || !form.subject || !form.type) return false;
+    if (form.type === 'file') return !validateFile(form.file);
     return !!form.url.trim() && !validateUrl(form.url);
   }, [form]);
 
@@ -69,8 +105,13 @@ function UploadMaterialModal({ onClose, onSubmit, materias = [] }) {
     if (!form.title.trim()) next.title = 'El título es obligatorio.';
     if (!form.subject) next.subject = 'Seleccioná una materia.';
     if (!form.type) next.type = 'Seleccioná un tipo.';
-    const urlError = validateUrl(form.url);
-    if (urlError) next.url = urlError;
+    if (form.type === 'file') {
+      const fileError = validateFile(form.file);
+      if (fileError) next.file = fileError;
+    } else {
+      const urlError = validateUrl(form.url);
+      if (urlError) next.url = urlError;
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -84,8 +125,10 @@ function UploadMaterialModal({ onClose, onSubmit, materias = [] }) {
       tipo: form.type,
       titulo: form.title.trim(),
       descripcion: form.description.trim(),
-      url_o_path: form.url.trim(),
       tags: parseTags(form.tags),
+      ...(form.type === 'file'
+        ? { archivo: form.file }
+        : { url_o_path: form.url.trim() }),
     };
 
     setSubmitting(true);
@@ -186,19 +229,50 @@ function UploadMaterialModal({ onClose, onSubmit, materias = [] }) {
           </div>
         </div>
 
-        <label className={styles.field}>
-          <span className={styles.label}>
-            URL <span className={styles.required}>*</span>
-          </span>
-          <input
-            type="url"
-            className={`${styles.input} ${errors.url ? styles.inputError : ''}`}
-            placeholder={URL_PLACEHOLDERS[form.type] || 'https://...'}
-            value={form.url}
-            onChange={(e) => setField('url', e.target.value)}
-          />
-          {errors.url && <span className={styles.errorText}>{errors.url}</span>}
-        </label>
+        {form.type === 'file' ? (
+          <div className={styles.field}>
+            <span className={styles.label}>
+              Archivo <span className={styles.required}>*</span>
+            </span>
+            <label
+              className={`${styles.fileBox} ${errors.file ? styles.inputError : ''}`}
+            >
+              <Upload size={20} className={styles.fileIcon} aria-hidden="true" />
+              <span className={styles.fileContent}>
+                <span className={styles.fileText}>
+                  {form.file?.name || 'Seleccionar archivo'}
+                </span>
+                <span className={styles.fileHint}>
+                  {form.file
+                    ? `${getFileExtension(form.file.name).toUpperCase()} · ${formatFileSize(form.file.size)}`
+                    : `${ALLOWED_EXTENSIONS.join(', ')} · Máximo ${MAX_FILE_SIZE_MB} MB`}
+                </span>
+              </span>
+              <input
+                key={form.type}
+                type="file"
+                className={styles.fileInput}
+                accept={FILE_ACCEPT}
+                onChange={handleFileChange}
+              />
+            </label>
+            {errors.file && <span className={styles.errorText}>{errors.file}</span>}
+          </div>
+        ) : (
+          <label className={styles.field}>
+            <span className={styles.label}>
+              URL <span className={styles.required}>*</span>
+            </span>
+            <input
+              type="url"
+              className={`${styles.input} ${errors.url ? styles.inputError : ''}`}
+              placeholder={URL_PLACEHOLDERS[form.type] || 'https://...'}
+              value={form.url}
+              onChange={(e) => setField('url', e.target.value)}
+            />
+            {errors.url && <span className={styles.errorText}>{errors.url}</span>}
+          </label>
+        )}
 
         <label className={styles.field}>
           <span className={styles.label}>Descripción</span>
@@ -208,7 +282,7 @@ function UploadMaterialModal({ onClose, onSubmit, materias = [] }) {
             rows={3}
             value={form.description}
             onChange={(e) => setField('description', e.target.value)}
-            maxLength={400}
+            maxLength={255}
           />
         </label>
 

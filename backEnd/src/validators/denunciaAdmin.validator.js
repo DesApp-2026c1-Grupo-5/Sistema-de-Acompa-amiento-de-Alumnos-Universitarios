@@ -9,6 +9,28 @@ const listarDenunciasQuerySchema = Joi.object({
   limit: Joi.number().integer().min(1).max(50).default(10),
 });
 
+const materialIdParamSchema = Joi.object({
+  materialId: Joi.number().integer().positive().required(),
+  id: Joi.number().integer().positive().optional(),
+});
+
+const postIdParamSchema = Joi.object({
+  postId: Joi.number().integer().positive().required(),
+  id: Joi.number().integer().positive().optional(),
+});
+
+const denunciaAdminIdParamSchema = Joi.object({
+  id: Joi.number().integer().positive().required(),
+});
+
+const denunciaIdParamSchema = Joi.object({
+  denunciaId: Joi.number().integer().positive().required(),
+});
+
 module.exports = {
   listarDenunciasQuerySchema,
+  materialIdParamSchema,
+  postIdParamSchema,
+  denunciaAdminIdParamSchema,
+  denunciaIdParamSchema,
 };

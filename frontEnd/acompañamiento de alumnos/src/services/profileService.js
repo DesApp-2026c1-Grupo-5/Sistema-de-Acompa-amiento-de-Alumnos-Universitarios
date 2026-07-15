@@ -1,9 +1,13 @@
 import { api } from "./api";
 
 export const getMyProfile = () => api.get("/profile/me");
+export const getProfileById = (id) => api.get(`/profile/${id}`);
 
-export const updateMyPrivacy = (privacidad) =>
-  api.patch("/profile/me/privacy", { privacidad });
+export const getProfileContacts = (id, { page = 1, limit = 5 } = {}) =>
+  api.get(`/profile/${id}/contactos?page=${page}&limit=${limit}`);
+
+export const updateMyPrivacy = (payload) =>
+  api.patch("/profile/me/privacy", payload);
 
 export const updateMyProfile = (payload) => api.put("/profile/me", payload);
 

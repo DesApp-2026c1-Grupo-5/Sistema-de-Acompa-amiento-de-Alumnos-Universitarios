@@ -5,10 +5,25 @@ const validate = require("../middlewares/validate.middleware");
 const genericMiddleware = require("../middlewares/genericMiddleware");
 const contactoMiddleware = require("../middlewares/contacto.middleware");
 const contactoController = require("../controllers/contacto.controller");
-const { invitacionIdParamSchema } = require("../validators/contacto.validator");
+const { invitacionIdParamSchema, estudianteIdParamSchema } = require("../validators/contacto.validator");
 const { contacto, estudiante } = require("../db/models");
 
 const router = express.Router();
+
+router.get(
+  "/contactos/buscar",
+  authMiddleware,
+  genericMiddleware.existModelBy(estudiante, "usuario_id", "user.sub"),
+  contactoController.buscarUsuarios
+);
+
+router.post(
+  "/contactos/invitar/:estudianteId",
+  authMiddleware,
+  validate(estudianteIdParamSchema, "params"),
+  genericMiddleware.existModelBy(estudiante, "usuario_id", "user.sub"),
+  contactoController.enviarInvitacion
+);
 
 router.patch(
   "/contactos/:id/aceptar",

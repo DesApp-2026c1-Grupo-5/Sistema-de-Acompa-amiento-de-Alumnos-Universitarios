@@ -153,7 +153,7 @@
   font-size: 14px;
 }
 
-/* INPUT CON ÍCONO */
+/* INPUT CON ÍCONO */                  
 
 .authInput {
   height: 52px;
@@ -163,7 +163,8 @@
   align-items: center;
   gap: 12px;
   padding: 0 14px;
-  background: white;
+  background: #ffffff !important;
+  color: #0f172a !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -181,9 +182,11 @@
   flex: 1;
   border: none;
   outline: none;
-  color: #0f172a;
+  color: #0f172a !important;
   font-size: 16px;
-  background: transparent;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #0f172a !important;
 }
 
 .authInput input::placeholder {
@@ -273,4 +276,13 @@
 .authDemoUsers p {
   margin: 6px 0;
   font-size: 14px;
+}
+
+.authInput input:-webkit-autofill,
+.authInput input:-webkit-autofill:hover,
+.authInput input:-webkit-autofill:focus,
+.authInput input:-webkit-autofill:active {
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  caret-color: #0f172a;
 }

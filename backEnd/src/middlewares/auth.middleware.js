@@ -1,31 +1,59 @@
 const { verifyToken } = require("../utils/jwt");
+const db = require("../db/models");
 
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+const { usuario } = db;
 
-  if (!authHeader) {
-    return res.status(401).json({
-      ok: false,
-      message: "Token de autenticacion requerido",
+const authMiddleware = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      return res.status(401).json({
+        ok: false,
+        message: "Token de autenticación requerido",
+      });
+    }
+
+    const [scheme, token] = authHeader.split(" ");
+
+    if (scheme !== "Bearer" || !token) {
+      return res.status(401).json({
+        ok: false,
+        message: "Formato de token inválido",
+      });
+    }
+
+    const decoded = verifyToken(token);
+
+    const usuarioData = await usuario.findByPk(decoded.sub, {
+      attributes: ["id", "email", "tipo", "activo"],
+      raw: true,
     });
+
+    if (!usuarioData) {
+      return res.status(401).json({
+        ok: false,
+        message: "Usuario no encontrado",
+      });
+    }
+
+    if (!usuarioData.activo) {
+      return res.status(403).json({
+        ok: false,
+        message: "La cuenta se encuentra suspendida",
+      });
+    }
+
+    req.user = {
+      sub: usuarioData.id,
+      email: usuarioData.email,
+      tipo: usuarioData.tipo,
+    };
+
+    return next();
+  } catch (error) {
+    return next(error);
   }
-
-  const [scheme, token] = authHeader.split(" ");
-
-  if (scheme !== "Bearer" || !token) {
-    return res.status(401).json({
-      ok: false,
-      message: "Formato de token invalido",
-    });
-  }
-
-  const decoded = verifyToken(token);
-  req.user = {
-    sub: decoded.sub,
-    email: decoded.email,
-    tipo: decoded.tipo,
-  };
-  return next();
 };
 
 module.exports = authMiddleware;

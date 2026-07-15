@@ -25,6 +25,10 @@ function Header({
     navigate(user?.tipo === 'administrador' ? '/admin/home' : '/student/profile');
 
   useEffect(() => {
+    if (user?.tipo !== 'estudiante') {
+      return;
+    }
+
     const loadUnreadCount = async () => {
       try {
         const response = await getNotifications();
@@ -38,11 +42,15 @@ function Header({
     loadUnreadCount();
 
     window.addEventListener('notifications-updated', loadUnreadCount);
+    window.addEventListener('focus', loadUnreadCount);
+    document.addEventListener('visibilitychange', loadUnreadCount);
 
     return () => {
       window.removeEventListener('notifications-updated', loadUnreadCount);
+      window.removeEventListener('focus', loadUnreadCount);
+      document.removeEventListener('visibilitychange', loadUnreadCount);
     };
-  }, []);
+  }, [user?.tipo]);
 
   return (
     <header className={styles.header}>
@@ -67,19 +75,21 @@ function Header({
       </div>
 
       <div className={styles.header__right}>
-        <button
-          className={styles.header__iconBtn}
-          aria-label="Notificaciones"
-          onClick={() => navigate('/student/notifications')}
-        >
-          <Bell size={20} />
+        {user?.tipo === 'estudiante' && (
+          <button
+            className={styles.header__iconBtn}
+            aria-label="Notificaciones"
+            onClick={() => navigate('/student/notifications')}
+          >
+            <Bell size={20} />
 
-          {notifications > 0 && (
-            <span className={styles.header__notificationBadge}>
-              {notifications}
-            </span>
-          )}
-        </button>
+            {notifications > 0 && (
+              <span className={styles.header__notificationBadge}>
+                {notifications}
+              </span>
+            )}
+          </button>
+        )}
 
         <button
           className={styles.header__iconBtn}

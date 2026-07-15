@@ -1,0 +1,138 @@
+.page {
+  --bg: #ffffff;
+  --card-bg: #ffffff;
+  --text-h: #000000;
+  --text-p: #1f3757;
+  --border: #dbe3ef;
+
+  min-height: 100vh;
+  padding: 32px 16px;
+  background: var(--bg);
+  color: var(--text-h);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cookieCard {
+  width: 100%;
+  max-width: 760px;
+  padding: 32px;
+  border-radius: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+
+  display: flex;
+  gap: 20px;
+
+  animation: fadeUp 0.3s ease both;
+}
+
+.iconBox {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 20px;
+
+  color: #039c9a;
+  background: rgba(3, 156, 154, 0.12);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.badge {
+  width: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+
+  color: #039c9a;
+  background: rgba(3, 156, 154, 0.12);
+
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.content h1 {
+  margin: 0;
+  color: var(--text-h);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1.1;
+}
+
+.content p {
+  margin: 0;
+  color: var(--text-p);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.note {
+  padding-top: 6px;
+  color: var(--text-p);
+  font-weight: 700;
+}
+
+.actions {
+  margin-top: 12px;
+}
+
+.acceptButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;
+
+  padding: 12px 20px;
+  border-radius: 12px;
+
+  background: #039c9a;
+  color: #ffffff;
+
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.acceptButton:hover {
+  background: #028785;
+  transform: translateY(-1px);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .cookieCard {
+    padding: 24px;
+    flex-direction: column;
+  }
+
+  .iconBox {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+  }
+}

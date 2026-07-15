@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import PageTitle from '../../components/common/PageTitle';
 import SearchBar from '../../components/common/SearchBar';
 import EmptyState from '../../components/common/EmptyState';
@@ -8,14 +9,18 @@ import CreatePostCard from '../../components/home/CreatePostCard';
 import FeedPost from '../../components/home/FeedPost';
 import UpcomingSessionsCard from '../../components/home/UpcomingSessionsCard';
 import SessionDetailModal from '../../components/sessions/SessionDetailModal';
+import ModalConfirmation from '../../components/common/ModalConfirmation';
 import { useAuth } from '../../context/useAuth';
-import { getPosts, createPost, votePost } from '../../services/postService';
+import { getPosts, createPost, votePost, deletePost } from '../../services/postService';
 import { getSessions, getSession } from '../../services/sessionService';
 import { getInitials, mapPostFromApi } from './home/mapPost';
 import { mapSessionFromApi } from './sessions/mapSession';
 import styles from './HomeStudent.module.css';
 
+const PAGE_SIZE = 10;
+
 function HomeStudent() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const est = user?.estudiante ?? {};
 
@@ -28,30 +33,70 @@ function HomeStudent() {
 
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const [publishError, setPublishError] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sessionsOpen, setSessionsOpen] = useState(false);
+  const loaderRef = useRef(null);
+  const pageRef = useRef(1);
+  const loadingMoreRef = useRef(false);
+  const hasMoreRef = useRef(true);
 
   const [mySessions, setMySessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState(null);
   const [detailSession, setDetailSession] = useState(null);
+  const [postToDelete, setPostToDelete] = useState(null);
+  const [deletingPost, setDeletingPost] = useState(false);
 
-  useEffect(() => {
-    getPosts()
-      .then((res) => {
-        setPublications((res?.data ?? []).map(mapPostFromApi));
-      })
-      .catch((err) => {
-        setError(err.message || 'No pudimos cargar el feed.');
-      })
-      .finally(() => setLoading(false));
+  const fetchPage = useCallback((pageNum) => {
+    return getPosts({ page: pageNum, limit: PAGE_SIZE }).then((res) => {
+      const mapped = (res?.data ?? []).map(mapPostFromApi);
+      setPublications((prev) => (pageNum === 1 ? mapped : [...prev, ...mapped]));
+      const more = res?.pagination?.hasMore ?? false;
+      hasMoreRef.current = more;
+      pageRef.current = pageNum;
+      setHasMore(more);
+    });
   }, []);
 
   useEffect(() => {
-    getSessions()
+    fetchPage(1)
+      .catch((err) => setError(err.message || 'No pudimos cargar el feed.'))
+      .finally(() => setLoading(false));
+  }, [fetchPage]);
+
+  const loadMore = useCallback(() => {
+    if (loadingMoreRef.current || !hasMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    fetchPage(pageRef.current + 1)
+      .catch((err) => setError(err.message || 'No pudimos cargar más publicaciones.'))
+      .finally(() => {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      });
+  }, [fetchPage]);
+
+  useEffect(() => {
+    if (!hasMore || searchTerm) return undefined;
+    const el = loaderRef.current;
+    if (!el) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, searchTerm, loading, loadMore]);
+
+  useEffect(() => {
+    getSessions({ vista: 'mias', limit: 50 })
       .then((res) => {
         const all = (res?.data ?? []).map(mapSessionFromApi);
         const now = Date.now();
@@ -68,8 +113,7 @@ function HomeStudent() {
             const da = new Date(`${a.date}T${a.time || '00:00'}:00`).getTime();
             const db = new Date(`${b.date}T${b.time || '00:00'}:00`).getTime();
             return da - db;
-          })
-          .slice(0, 5);
+          });
         setMySessions(mias);
       })
       .catch((err) => setSessionsError(err.message || 'No pudimos cargar tus sesiones.'))
@@ -133,6 +177,23 @@ function HomeStudent() {
 
   const handleLike = (postId) => handleReaction(postId, 'like');
   const handleDislike = (postId) => handleReaction(postId, 'dislike');
+  const handleReport = (postId) => navigate(`/student/report-publication/${postId}`);
+  const handleConfirmDeletePost = async () => {
+    if (!postToDelete) return;
+
+    setDeletingPost(true);
+    setPublishError('');
+    try {
+      await deletePost(postToDelete.id);
+      setPublications((prev) => prev.filter((post) => post.id !== postToDelete.id));
+      setPostToDelete(null);
+    } catch (err) {
+      setPublishError(err.message || 'No pudimos eliminar la publicación.');
+    } finally {
+      setDeletingPost(false);
+    }
+  };
+
   const handleViewSessionDetails = async (sessionId) => {
     const target = mySessions.find((s) => s.id === sessionId);
     if (!target) return;
@@ -177,8 +238,11 @@ function HomeStudent() {
         key={post.id}
         post={post}
         userReaction={post.miVoto}
+        currentUserId={est.id}
         onLike={handleLike}
         onDislike={handleDislike}
+        onReport={handleReport}
+        onDelete={(id) => setPostToDelete(publications.find((item) => item.id === id))}
       />
     ));
   };
@@ -209,7 +273,16 @@ function HomeStudent() {
             <p className={styles.feedStatus}>{publishError}</p>
           )}
 
-          <div className={styles.feed}>{renderFeed()}</div>
+          <div className={styles.feed}>
+            {renderFeed()}
+            {!loading && !error && !searchTerm && hasMore && (
+              <div ref={loaderRef} className={styles.feedSentinel}>
+                {loadingMore && (
+                  <p className={styles.feedStatus}>Cargando más publicaciones…</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <>
@@ -269,6 +342,15 @@ function HomeStudent() {
           onClose={() => setDetailSession(null)}
         />
       )}
+
+      <ModalConfirmation
+        open={!!postToDelete}
+        title="Eliminar publicación"
+        message="¿Querés eliminar esta publicación? Esta acción no se puede deshacer."
+        confirmText={deletingPost ? 'Eliminando...' : 'Eliminar'}
+        onConfirm={handleConfirmDeletePost}
+        onCancel={() => setPostToDelete(null)}
+      />
     </div>
   );
 }

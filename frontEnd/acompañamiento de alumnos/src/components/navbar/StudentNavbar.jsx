@@ -1,4 +1,4 @@
-import { Home, User, GraduationCap, Bot, Clock, FileText } from 'lucide-react';
+import { Home, User, GraduationCap, Bot, Clock, FileText, Bell } from 'lucide-react';
 
 export const studentLinks = [
   { path: '/student/home', label: 'Home', icon: Home },
@@ -7,4 +7,5 @@ export const studentLinks = [
   { path: '/student/academic-assistant', label: 'Asistente Academico', icon: Bot },
   { path: '/student/study-sessions', label: 'Sesiones De Estudio', icon: Clock },
   { path: '/student/materials', label: 'Materiales', icon: FileText },
+  { path: '/student/notifications', label: 'Notificaciones', icon: Bell },
 ];

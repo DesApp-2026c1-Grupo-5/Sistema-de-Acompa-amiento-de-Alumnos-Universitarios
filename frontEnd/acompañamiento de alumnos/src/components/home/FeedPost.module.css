@@ -30,6 +30,15 @@
   flex-wrap: wrap;
 }
 
+.authorLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.authorLink:hover .author {
+  text-decoration: underline;
+}
+
 .author {
   color: #020617;
   font-size: 15px;
@@ -37,10 +46,26 @@
   line-height: 1.3;
 }
 
-.eventBadge {
+.authorRow .eventBadge {
   display: inline-flex !important;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 6px;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  line-height: 1.25;
+  text-align: left;
+  white-space: normal;
+}
+
+.eventBadge svg {
+  flex-shrink: 0;
+}
+
+.eventBadge span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .time {
@@ -144,12 +169,53 @@
   stroke: #00a8ad;
 }
 
+.reportBtn {
+  color: #b91c1c;
+}
+
+.reportBtn span,
+.reportBtn svg {
+  color: #b91c1c;
+  stroke: #b91c1c;
+}
+
+.reportBtn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.reportBtn:hover span,
+.reportBtn:hover svg {
+  color: #dc2626;
+  stroke: #dc2626;
+}
+
+.reportBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.reportBtn:disabled:hover {
+  background: transparent;
+  color: #b91c1c;
+}
+
+.reportBtn:disabled span,
+.reportBtn:disabled svg {
+  color: #b91c1c;
+  stroke: #b91c1c;
+}
+
 /* DARK MODE */
 
 :global(html.dark) .card {
   background: #1e293b;
   border-color: #334155;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+:global(html.dark) .authorLink {
+  color: inherit;
 }
 
 :global(html.dark) .author {
@@ -215,6 +281,41 @@
   stroke: #22d3ee;
 }
 
+:global(html.dark) .reportBtn {
+  color: #fca5a5;
+}
+
+:global(html.dark) .reportBtn span,
+:global(html.dark) .reportBtn svg {
+  color: #fca5a5;
+  stroke: #fca5a5;
+}
+
+:global(html.dark) .reportBtn:hover {
+  background: rgba(248, 113, 113, 0.16);
+  color: #fecaca;
+}
+
+:global(html.dark) .reportBtn:hover span,
+:global(html.dark) .reportBtn:hover svg {
+  color: #fecaca;
+  stroke: #fecaca;
+}
+
+:global(html.dark) .reportBtn:disabled {
+  opacity: 0.7;
+}
+
+:global(html.dark) .reportBtn:disabled:hover {
+  background: transparent;
+}
+
+:global(html.dark) .reportBtn:disabled span,
+:global(html.dark) .reportBtn:disabled svg {
+  color: #fca5a5;
+  stroke: #fca5a5;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 600px) {
@@ -223,7 +324,94 @@
     gap: 12px;
   }
 
+  .authorRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
   .content {
     font-size: 14px;
   }
+}
+
+.moreMenuWrapper {
+  position: relative;
+  margin-left: auto;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  z-index: 20;
+  min-width: 170px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+}
+
+.dropdownItem {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #b91c1c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.dropdownItem svg {
+  color: #b91c1c;
+  stroke: #b91c1c;
+  flex-shrink: 0;
+}
+
+.dropdownItem:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.dropdownItem:hover:not(:disabled) svg {
+  color: #dc2626;
+  stroke: #dc2626;
+}
+
+.dropdownItem:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+:global(html.dark) .dropdownMenu {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+:global(html.dark) .dropdownItem {
+  color: #fca5a5;
+}
+
+:global(html.dark) .dropdownItem svg {
+  color: #fca5a5;
+  stroke: #fca5a5;
+}
+
+:global(html.dark) .dropdownItem:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.16);
+  color: #fecaca;
+}
+
+:global(html.dark) .dropdownItem:hover:not(:disabled) svg {
+  color: #fecaca;
+  stroke: #fecaca;
 }

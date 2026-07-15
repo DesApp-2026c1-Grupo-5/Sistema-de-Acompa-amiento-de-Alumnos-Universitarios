@@ -2,21 +2,18 @@
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class notificacion extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-
       notificacion.belongsTo(models.usuario, {
         foreignKey: 'usuario_id'
       });
 
+      notificacion.belongsTo(models.usuario, {
+        as: 'emisor',
+        foreignKey: 'emisor_usuario_id'
+      });
     }
   }
   notificacion.init({
-    usuario_id: DataTypes.INTEGER,
     titulo: DataTypes.STRING,
     tipo: DataTypes.STRING,
     mensaje: DataTypes.STRING,

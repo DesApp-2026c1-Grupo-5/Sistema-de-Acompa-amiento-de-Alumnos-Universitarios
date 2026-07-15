@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import SearchBar from '../../components/materials/SearchBar';
 import MaterialGrid from '../../components/materials/MaterialGrid';
@@ -6,7 +6,7 @@ import UploadMaterialModal from '../../components/materials/UploadMaterialModal'
 import MaterialDetailModal from '../../components/materials/MaterialDetailModal';
 import Button from '../../components/common/Button';
 import ErrorState from '../../components/common/ErrorState';
-import { filterMaterials } from './materials/helpers';
+import Pagination from '../../components/common/Pagination';
 import { mapMaterialFromApi } from './materials/mapMaterial';
 import {
   getMaterials,
@@ -14,6 +14,7 @@ import {
   createMaterial,
   voteMaterial,
   getMaterias,
+  downloadMaterial,
 } from '../../services/materialService';
 import styles from './MaterialRepositoryPage.module.css';
 
@@ -23,27 +24,50 @@ function MaterialRepositoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [detailMaterial, setDetailMaterial] = useState(null);
+  const [downloadingMaterialId, setDownloadingMaterialId] = useState(null);
+  const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => {
-    Promise.all([getMaterials(), getMaterias()])
-      .then(([matRes, materiasRes]) => {
-        setMaterials((matRes?.data ?? []).map(mapMaterialFromApi));
-        setMaterias(materiasRes?.data ?? []);
-      })
-      .catch((err) => {
-        setError(err.message || 'No pudimos cargar los materiales.');
-      })
-      .finally(() => setLoading(false));
+    getMaterias()
+      .then((res) => setMaterias(res?.data ?? []))
+      .catch(() => setMaterias([]));
   }, []);
 
-  const filtered = useMemo(
-    () => filterMaterials(materials, { query, type: typeFilter }),
-    [materials, query, typeFilter]
-  );
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedQuery(query);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchMaterials = async () => {
+      setLoading(true);
+      try {
+        const res = await getMaterials({ page, limit: 12, q: debouncedQuery, tipo: typeFilter });
+        if (!active) return;
+        setMaterials((res?.data ?? []).map(mapMaterialFromApi));
+        setTotalPages(res?.pagination?.totalPages ?? 1);
+      } catch (err) {
+        if (active) setError(err.message || 'No pudimos cargar los materiales.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchMaterials();
+    return () => {
+      active = false;
+    };
+  }, [page, debouncedQuery, typeFilter]);
 
   const updateMaterial = (id, updater) => {
     setMaterials((prev) =>
@@ -68,9 +92,41 @@ function MaterialRepositoryPage() {
     }
   };
 
-  const handleDownload = (material) => {
-    if (material.fileUrl) {
-      window.open(material.fileUrl, '_blank', 'noopener,noreferrer');
+  const handleDownload = async (material) => {
+    setDownloadError('');
+
+    if (!material.uploadedFile) {
+      const externalUrl = material.fileUrl || material.externalUrl;
+      if (externalUrl) {
+        window.open(externalUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        setDownloadError('Este material no tiene un archivo disponible.');
+      }
+      return;
+    }
+
+    setDownloadingMaterialId(material.id);
+    try {
+      const { blob, filename } = await downloadMaterial(material.id);
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download =
+        filename ||
+        (material.format && material.format !== 'file'
+          ? `${material.title}.${material.format}`
+          : material.title);
+      try {
+        document.body.appendChild(anchor);
+        anchor.click();
+      } finally {
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      }
+    } catch (err) {
+      setDownloadError(err.message || 'No pudimos descargar el archivo.');
+    } finally {
+      setDownloadingMaterialId(null);
     }
   };
 
@@ -112,9 +168,18 @@ function MaterialRepositoryPage() {
             query={query}
             onQueryChange={setQuery}
             typeFilter={typeFilter}
-            onTypeFilterChange={setTypeFilter}
+            onTypeFilterChange={(v) => {
+              setTypeFilter(v);
+              setPage(1);
+            }}
           />
         </section>
+
+        {downloadError && (
+          <p className={styles.downloadError} role="alert">
+            {downloadError}
+          </p>
+        )}
 
         <section className={styles.gridSection}>
           {loading ? (
@@ -125,12 +190,20 @@ function MaterialRepositoryPage() {
               description={error}
             />
           ) : (
-            <MaterialGrid
-              materials={filtered}
-              onView={handleView}
-              onDownload={handleDownload}
-              onJoinDiscord={handleJoinDiscord}
-            />
+            <>
+              <MaterialGrid
+                materials={materials}
+                onView={handleView}
+                onDownload={handleDownload}
+                onJoinDiscord={handleJoinDiscord}
+                downloadingMaterialId={downloadingMaterialId}
+              />
+              {totalPages > 1 && (
+                <div className={styles.paginationSection}>
+                  <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>

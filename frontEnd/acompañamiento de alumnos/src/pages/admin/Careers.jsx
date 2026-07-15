@@ -2,11 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, Plus } from 'lucide-react';
 import PageTitle from '../../components/common/PageTitle';
 import Modal from '../../components/common/Modal';
+import Pagination from '../../components/common/Pagination';
 import CareerCard from '../../components/admin/CareerCard';
 import CareerForm from './CareerForm';
 import { getCarreras } from '../../services/carreraService';
 import { mapCarreraFromApi } from './careers/mapCarrera';
 import styles from './Careers.module.css';
+
+const FIRST_PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 function Careers() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +18,7 @@ function Careers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   const loadCareers = useCallback(async () => {
     try {
@@ -51,6 +56,15 @@ function Careers() {
     career.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const total = filteredCareers.length;
+  const totalPages = total <= FIRST_PAGE_SIZE
+    ? 1
+    : 1 + Math.ceil((total - FIRST_PAGE_SIZE) / PAGE_SIZE);
+  const safePage = Math.min(page, totalPages);
+  const start = safePage === 1 ? 0 : FIRST_PAGE_SIZE + (safePage - 2) * PAGE_SIZE;
+  const end = safePage === 1 ? FIRST_PAGE_SIZE : start + PAGE_SIZE;
+  const pagedCareers = filteredCareers.slice(start, end);
+
   const handleCreated = async () => {
     setFormOpen(false);
     setLoading(true);
@@ -71,7 +85,10 @@ function Careers() {
           placeholder="Buscar carrera..."
           className={styles.searchInput}
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(1);
+          }}
         />
       </div>
 
@@ -79,25 +96,35 @@ function Careers() {
       {error && <p className={styles.errorText}>{error}</p>}
 
       {!loading && !error && (
-        <div className={styles.grid}>
-          <button
-            type="button"
-            className={styles.addCard}
-            onClick={() => setFormOpen(true)}
-          >
-            <div className={styles.addIconWrapper}>
-              <Plus size={32} />
-            </div>
-            <h3 className={styles.addTitle}>Agregar carrera</h3>
-            <p className={styles.addDescription}>
-              Definir nueva carrera universitaria
-            </p>
-          </button>
+        <>
+          <div className={styles.grid}>
+            {safePage === 1 && (
+              <button
+                type="button"
+                className={styles.addCard}
+                onClick={() => setFormOpen(true)}
+              >
+                <div className={styles.addIconWrapper}>
+                  <Plus size={32} />
+                </div>
+                <h3 className={styles.addTitle}>Agregar carrera</h3>
+                <p className={styles.addDescription}>
+                  Definir nueva carrera universitaria
+                </p>
+              </button>
+            )}
 
-          {filteredCareers.map((career) => (
-            <CareerCard key={career.id} career={career} />
-          ))}
-        </div>
+            {pagedCareers.map((career) => (
+              <CareerCard key={career.id} career={career} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className={styles.paginationSection}>
+              <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
+            </div>
+          )}
+        </>
       )}
 
       <Modal

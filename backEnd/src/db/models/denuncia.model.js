@@ -25,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'motivo'
       });
 
+      denuncia.belongsTo(models.post, {
+        foreignKey: 'post_id'
+      });
+
       denuncia.belongsTo(models.administrador, {
         foreignKey: 'admin_revisor_id',
         as: 'revisor'
@@ -35,7 +39,6 @@ module.exports = (sequelize, DataTypes) => {
   denuncia.init({
     detalle: DataTypes.STRING,
     estado: DataTypes.STRING,
-    admin_revisor_id: DataTypes.INTEGER,
     fecha_creacion: DataTypes.DATE,
     fecha_resolucion: DataTypes.DATE
   }, {

@@ -46,11 +46,28 @@
   width: 100%;
 }
 
+.paginationSection {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+}
+
 .statusText {
   margin: 0;
   padding: 24px 4px;
   color: #64748b;
   font-size: 15px;
+}
+
+.downloadError {
+  margin: -6px 0 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  background: var(--color-soft);
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 :global(.dark) .statusText {

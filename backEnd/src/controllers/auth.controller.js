@@ -19,9 +19,18 @@ const login = async (req, res) => {
     ],
   });
 
-  if (!usuarioData || !usuarioData.activo) {
+  if (!usuarioData) {
     const error = new Error("Credenciales invalidas");
     error.statusCode = 401;
+    throw error;
+  }
+
+  if (!usuarioData.activo) {
+    const error = new Error(
+      "Tu cuenta está suspendida. Para más información contactate con ayuda@sivaunahur.com"
+    );
+    error.statusCode = 403;
+    error.suspended = true;
     throw error;
   }
 
@@ -89,6 +98,7 @@ const register = async (req, res) => {
         pub_inscripciones: true,
         pub_regularizaciones: true,
         pub_aprobaciones: true,
+        email_visible: true,
       },
       { transaction: t }
     );

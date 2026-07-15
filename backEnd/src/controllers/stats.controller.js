@@ -24,6 +24,8 @@ const MONTHS = [
   "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
 ];
 
+const ESTADOS_APROBADOS = ["aprobada", "aprobado", "promocionada", "promotionada"];
+
 const countBuckets = (values, buckets) => {
   const counts = buckets.map(() => 0);
   for (const v of values) {
@@ -51,11 +53,35 @@ const bucketize = (values, buckets, fieldName = "students") => {
 const lastNMonths = (n) => {
   const result = [];
   const now = new Date();
+
   for (let i = n - 1; i >= 0; i -= 1) {
-    const inicio = new Date(now.getFullYear(), now.getMonth() - i, 1, 0, 0, 0, 0);
-    const fin = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
-    result.push({ label: MONTHS[inicio.getMonth()], inicio, fin });
+    const inicio = new Date(
+      now.getFullYear(),
+      now.getMonth() - i,
+      1,
+      0,
+      0,
+      0,
+      0
+    );
+
+    const fin = new Date(
+      now.getFullYear(),
+      now.getMonth() - i + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+    result.push({
+      label: MONTHS[inicio.getMonth()],
+      inicio,
+      fin,
+    });
   }
+
   return result;
 };
 
@@ -65,11 +91,23 @@ const buildMetricasUso = ({
   sesionesCreadas,
   denunciasPendientes,
 }) => [
-  { id: 1, label: "Usuarios activos",       value: usuariosActivos,       trend: null, trendType: null, icon: "users" },
-  { id: 2, label: "Materiales compartidos", value: materialesCompartidos, trend: null, trendType: null, icon: "file" },
-  { id: 3, label: "Sesiones creadas",       value: sesionesCreadas,       trend: null, trendType: null, icon: "calendar" },
-  { id: 4, label: "Denuncias pendientes",   value: denunciasPendientes,   trend: null, trendType: null, icon: "flag" },
-];
+    {
+      id: 1,
+      label: "Usuarios activos",
+      value: usuariosActivos,
+      trend: null,
+      trendType: null,
+      icon: "users",
+    },
+    {
+      id: 2,
+      label: "Materiales compartidos",
+      value: materialesCompartidos,
+      trend: null,
+      trendType: null,
+      icon: "file",
+    },
+  ];
 
 const buildMetricasSociales = ({
   conexionesPromedio,
@@ -77,11 +115,39 @@ const buildMetricasSociales = ({
   participantesTotales,
   tasaOcupacion,
 }) => [
-  { id: 1, label: "Conexiones promedio",   value: conexionesPromedio,         trend: null, trendType: null, icon: "link" },
-  { id: 2, label: "Sesiones activas",      value: sesionesActivas,            trend: null, trendType: null, icon: "calendar" },
-  { id: 3, label: "Participantes totales", value: participantesTotales,       trend: null, trendType: null, icon: "users" },
-  { id: 4, label: "Tasa de ocupación",     value: `${tasaOcupacion}%`,        trend: null, trendType: null, icon: "chart" },
-];
+    {
+      id: 1,
+      label: "Conexiones promedio",
+      value: conexionesPromedio,
+      trend: null,
+      trendType: null,
+      icon: "link",
+    },
+    {
+      id: 2,
+      label: "Sesiones activas",
+      value: sesionesActivas,
+      trend: null,
+      trendType: null,
+      icon: "calendar",
+    },
+    {
+      id: 3,
+      label: "Participantes totales",
+      value: participantesTotales,
+      trend: null,
+      trendType: null,
+      icon: "users",
+    },
+    {
+      id: 4,
+      label: "Tasa de ocupación",
+      value: `${tasaOcupacion}%`,
+      trend: null,
+      trendType: null,
+      icon: "chart",
+    },
+  ];
 
 const computeMateriasPorCarrera = async () => {
   const carreras = await carrera.findAll({
@@ -109,21 +175,30 @@ const computeMateriasPorCarrera = async () => {
 
   return carreras.map((c) => {
     const plain = c.get({ plain: true });
+
     let cursadas = 0;
     let aprobadas = 0;
+
     for (const plan of plain.planes || []) {
       for (const mat of plan.materias || []) {
-        for (const em of mat.estado_materias || []) {
-          if (em.estado === "cursando") cursadas += 1;
-          if (em.estado === "aprobada") aprobadas += 1;
+        const estadosMateria = mat.estado_materias || mat.estado_materia || [];
+        for (const em of estadosMateria) {
+          const estado = (em.estado || "").trim().toLowerCase();
+          if (estado === "cursando") cursadas += 1;
+          if (ESTADOS_APROBADOS.includes(estado)) aprobadas += 1;
         }
       }
     }
-    return { career: plain.nombre, cursadas, aprobadas };
+
+    return {
+      career: plain.nombre,
+      cursadas,
+      aprobadas,
+    };
   });
 };
 
-const computeTopMaterias = async () => {
+const computeTopMaterias = async (ratingOrder = "default") => {
   const rows = await material.findAll({
     attributes: [
       "materia_id",
@@ -134,19 +209,35 @@ const computeTopMaterias = async () => {
   });
 
   const ordenadas = rows
-    .map((r) => ({ materia_id: r.materia_id, cantidad: Number(r.cantidad) }))
+    .map((row) => ({
+      materia_id: Number(row.materia_id),
+      cantidad: Number(row.cantidad),
+    }))
     .sort((a, b) => b.cantidad - a.cantidad)
     .slice(0, 5);
 
-  if (ordenadas.length === 0) return [];
+  if (ordenadas.length === 0) {
+    return [];
+  }
 
-  const materiaIds = ordenadas.map((r) => r.materia_id);
+  const materiaIds = ordenadas.map((item) => item.materia_id);
+
   const materias = await materia.findAll({
-    where: { id: { [Op.in]: materiaIds } },
+    where: {
+      id: {
+        [Op.in]: materiaIds,
+      },
+    },
     attributes: ["id", "nombre"],
     raw: true,
   });
-  const materiasMap = new Map(materias.map((m) => [m.id, m.nombre]));
+
+  const materiasMap = new Map(
+    materias.map((item) => [
+      Number(item.id),
+      item.nombre,
+    ])
+  );
 
   const valoraciones = await valoracion.findAll({
     attributes: ["valor"],
@@ -154,7 +245,12 @@ const computeTopMaterias = async () => {
       {
         model: material,
         attributes: ["materia_id"],
-        where: { materia_id: { [Op.in]: materiaIds } },
+        where: {
+          materia_id: {
+            [Op.in]: materiaIds,
+          },
+        },
+        required: true,
       },
     ],
     raw: true,
@@ -162,37 +258,77 @@ const computeTopMaterias = async () => {
   });
 
   const ratingPorMateria = new Map();
-  for (const v of valoraciones) {
-    const mid = v.material?.materia_id;
-    if (!mid) continue;
-    const entry = ratingPorMateria.get(mid) || { likes: 0, total: 0 };
-    entry.total += 1;
-    if (v.valor === "like") entry.likes += 1;
-    ratingPorMateria.set(mid, entry);
+
+  for (const valoracionItem of valoraciones) {
+    const materiaId = Number(
+      valoracionItem.material?.materia_id
+    );
+
+    if (!materiaId) {
+      continue;
+    }
+
+    const actual = ratingPorMateria.get(materiaId) || {
+      likes: 0,
+      total: 0,
+    };
+
+    actual.total += 1;
+
+    if (valoracionItem.valor === "like") {
+      actual.likes += 1;
+    }
+
+    ratingPorMateria.set(materiaId, actual);
   }
 
-  return ordenadas.map((r, idx) => {
-    const stats = ratingPorMateria.get(r.materia_id);
-    const rating = stats && stats.total > 0
-      ? Math.round((stats.likes / stats.total) * 5 * 10) / 10
-      : 0;
+  const resultado = ordenadas.map((item) => {
+    const stats = ratingPorMateria.get(item.materia_id);
+
+    const rating =
+      stats && stats.total > 0
+        ? Math.round(
+          (stats.likes / stats.total) * 5 * 10
+        ) / 10
+        : 0;
+
     return {
-      position: idx + 1,
-      subject: materiasMap.get(r.materia_id) || `Materia ${r.materia_id}`,
-      materials: r.cantidad,
+      position: 0,
+      subject:
+        materiasMap.get(item.materia_id) ||
+        `Materia ${item.materia_id}`,
+      materials: item.cantidad,
       rating,
     };
   });
+
+  if (ratingOrder === "desc") {
+    resultado.sort((a, b) => b.rating - a.rating);
+  }
+
+  if (ratingOrder === "asc") {
+    resultado.sort((a, b) => a.rating - b.rating);
+  }
+
+  return resultado.map((item, index) => ({
+    ...item,
+    position: index + 1,
+  }));
 };
 
-const computeDistribucionMaterias = async (estadoBuscado, bucketDefs) => {
+const computeDistribucionMaterias = async (
+  estadoBuscado,
+  bucketDefs
+) => {
   const situaciones = await situacion_academica.findAll({
     attributes: ["id"],
     include: [
       {
         model: estado_materia,
         attributes: ["estado"],
-        where: { estado: estadoBuscado },
+        where: {
+          estado: estadoBuscado,
+        },
         required: false,
       },
     ],
@@ -213,7 +349,9 @@ const computeParticipantesPorSesion = async () => {
       {
         model: inscripcion_sesion,
         attributes: ["estado"],
-        where: { estado: "aceptada" },
+        where: {
+          estado: "aceptada",
+        },
         required: false,
       },
     ],
@@ -227,10 +365,22 @@ const computeParticipantesPorSesion = async () => {
   return bucketize(
     conteos,
     [
-      { label: "1-3 participantes",  range: [1, 3] },
-      { label: "4-6 participantes",  range: [4, 6] },
-      { label: "7-10 participantes", range: [7, 10] },
-      { label: "11+ participantes",  range: [11, null] },
+      {
+        label: "1-3 participantes",
+        range: [1, 3],
+      },
+      {
+        label: "4-6 participantes",
+        range: [4, 6],
+      },
+      {
+        label: "7-10 participantes",
+        range: [7, 10],
+      },
+      {
+        label: "11+ participantes",
+        range: [11, null],
+      },
     ],
     "sessions"
   );
@@ -238,61 +388,124 @@ const computeParticipantesPorSesion = async () => {
 
 const computeUsuariosActivosSerie = async () => {
   const meses = lastNMonths(12);
+
   return Promise.all(
     meses.map(async (m) => {
       const rows = await post.findAll({
         attributes: ["estudiante_id"],
-        where: { createdAt: { [Op.between]: [m.inicio, m.fin] } },
+        where: {
+          createdAt: {
+            [Op.between]: [m.inicio, m.fin],
+          },
+        },
         group: ["estudiante_id"],
         raw: true,
       });
-      return { month: m.label, value: rows.length };
+
+      return {
+        month: m.label,
+        value: rows.length,
+      };
     })
   );
 };
 
 const computeSesionesPorMes = async () => {
   const meses = lastNMonths(12);
+
   const counts = await Promise.all(
     meses.map((m) =>
       sesion_estudio.count({
-        where: { fecha_hora: { [Op.between]: [m.inicio, m.fin] } },
+        where: {
+          fecha_hora: {
+            [Op.between]: [m.inicio, m.fin],
+          },
+        },
       })
     )
   );
-  return { months: meses.map((m) => m.label), data: counts };
+
+  return {
+    months: meses.map((m) => m.label),
+    data: counts,
+  };
 };
 
 const computeDistribucionConexionesData = async () => {
-  const estudiantes = await estudiante.findAll({ attributes: ["id"], raw: true });
+  const estudiantes = await estudiante.findAll({
+    attributes: ["id"],
+    raw: true,
+  });
+
   if (estudiantes.length === 0) {
     return [
-      { label: "0-5",   students: 0, percentage: 0 },
-      { label: "6-10",  students: 0, percentage: 0 },
-      { label: "11-15", students: 0, percentage: 0 },
-      { label: "16-20", students: 0, percentage: 0 },
-      { label: "21+",   students: 0, percentage: 0 },
+      {
+        label: "0-5",
+        students: 0,
+        percentage: 0,
+      },
+      {
+        label: "6-10",
+        students: 0,
+        percentage: 0,
+      },
+      {
+        label: "11-15",
+        students: 0,
+        percentage: 0,
+      },
+      {
+        label: "16-20",
+        students: 0,
+        percentage: 0,
+      },
+      {
+        label: "21+",
+        students: 0,
+        percentage: 0,
+      },
     ];
   }
+
   const conteos = await Promise.all(
     estudiantes.map((e) =>
       contacto.count({
         where: {
           estado: "aceptado",
           [Op.or]: [
-            { estudiante_solicitante_id: e.id },
-            { estudiante_receptor_id: e.id },
+            {
+              estudiante_solicitante_id: e.id,
+            },
+            {
+              estudiante_receptor_id: e.id,
+            },
           ],
         },
       })
     )
   );
+
   return bucketize(conteos, [
-    { label: "0-5",   range: [0, 5] },
-    { label: "6-10",  range: [6, 10] },
-    { label: "11-15", range: [11, 15] },
-    { label: "16-20", range: [16, 20] },
-    { label: "21+",   range: [21, null] },
+    {
+      label: "0-5",
+      range: [0, 5],
+    },
+    {
+      label: "6-10",
+      range: [6, 10],
+    },
+    {
+      label: "11-15",
+      range: [11, 15],
+    },
+    {
+      label: "16-20",
+      range: [16, 20],
+    },
+    {
+      label: "21+",
+      range: [21, null],
+    },
   ]);
 };
 
@@ -303,7 +516,9 @@ const computeOcupacion = async () => {
       {
         model: inscripcion_sesion,
         attributes: ["estado"],
-        where: { estado: "aceptada" },
+        where: {
+          estado: "aceptada",
+        },
         required: false,
       },
     ],
@@ -318,17 +533,31 @@ const computeOcupacion = async () => {
     const plain = s.get({ plain: true });
     const aceptadas = (plain.inscripcion_sesions || []).length;
     const cupos = plain.cupos_max || 0;
+
     totalAceptadas += aceptadas;
     totalCupos += cupos;
-    if (cupos > 0 && aceptadas >= cupos) cuposLlenos += 1;
-    else conDisponibilidad += 1;
+
+    if (cupos > 0 && aceptadas >= cupos) {
+      cuposLlenos += 1;
+    } else {
+      conDisponibilidad += 1;
+    }
   }
 
-  const percentage = totalCupos > 0
-    ? Math.round((totalAceptadas / totalCupos) * 100)
-    : 0;
+  const percentage =
+    totalCupos > 0
+      ? Math.round(
+        (totalAceptadas / totalCupos) * 100
+      )
+      : 0;
 
-  return { percentage, cuposLlenos, conDisponibilidad, totalAceptadas, totalCupos };
+  return {
+    percentage,
+    cuposLlenos,
+    conDisponibilidad,
+    totalAceptadas,
+    totalCupos,
+  };
 };
 
 const computeCarrerasActivas = async () => {
@@ -353,28 +582,81 @@ const computeCarrerasActivas = async () => {
     carreras.map(async (c) => {
       const plain = c.get({ plain: true });
       const estudianteIds = new Set();
+
       for (const plan of plain.planes || []) {
         for (const sit of plan.situacion_academicas || []) {
-          if (sit.estudiante_id) estudianteIds.add(sit.estudiante_id);
+          if (sit.estudiante_id) {
+            estudianteIds.add(sit.estudiante_id);
+          }
         }
       }
+
       const ids = Array.from(estudianteIds);
+
       if (ids.length === 0) {
-        return { career: plain.nombre, posts: 0, sessions: 0, interactions: 0, _raw: 0 };
+        return {
+          career: plain.nombre,
+          posts: 0,
+          sessions: 0,
+          interactions: 0,
+          _raw: 0,
+        };
       }
-      const [posts, sessions, valoraciones, votos] = await Promise.all([
-        post.count({ where: { estudiante_id: { [Op.in]: ids } } }),
-        sesion_estudio.count({ where: { creador_id: { [Op.in]: ids } } }),
-        valoracion.count({ where: { estudiante_id: { [Op.in]: ids } } }),
-        voto_post.count({ where: { estudiante_id: { [Op.in]: ids } } }),
+
+      const [
+        posts,
+        sessions,
+        valoraciones,
+        votos,
+      ] = await Promise.all([
+        post.count({
+          where: {
+            estudiante_id: {
+              [Op.in]: ids,
+            },
+          },
+        }),
+        sesion_estudio.count({
+          where: {
+            creador_id: {
+              [Op.in]: ids,
+            },
+          },
+        }),
+        valoracion.count({
+          where: {
+            estudiante_id: {
+              [Op.in]: ids,
+            },
+          },
+        }),
+        voto_post.count({
+          where: {
+            estudiante_id: {
+              [Op.in]: ids,
+            },
+          },
+        }),
       ]);
+
       const interactions = valoraciones + votos;
       const raw = posts + sessions * 3 + interactions;
-      return { career: plain.nombre, posts, sessions, interactions, _raw: raw };
+
+      return {
+        career: plain.nombre,
+        posts,
+        sessions,
+        interactions,
+        _raw: raw,
+      };
     })
   );
 
-  const maxRaw = Math.max(1, ...filas.map((f) => f._raw));
+  const maxRaw = Math.max(
+    1,
+    ...filas.map((f) => f._raw)
+  );
+
   return filas
     .sort((a, b) => b._raw - a._raw)
     .map((f, idx) => ({
@@ -383,21 +665,37 @@ const computeCarrerasActivas = async () => {
       posts: f.posts,
       sessions: f.sessions,
       interactions: f.interactions,
-      score: Math.round((f._raw / maxRaw) * 100),
+      score: Math.round(
+        (f._raw / maxRaw) * 100
+      ),
     }));
 };
 
 const computeConexionesPromedio = async () => {
-  const [aceptados, totalEstudiantes] = await Promise.all([
-    contacto.count({ where: { estado: "aceptado" } }),
+  const [
+    aceptados,
+    totalEstudiantes,
+  ] = await Promise.all([
+    contacto.count({
+      where: {
+        estado: "aceptado",
+      },
+    }),
     estudiante.count(),
   ]);
-  if (totalEstudiantes === 0) return "0.0";
-  const promedio = (aceptados * 2) / totalEstudiantes;
+
+  if (totalEstudiantes === 0) {
+    return "0.0";
+  }
+
+  const promedio =
+    (aceptados * 2) / totalEstudiantes;
+
   return promedio.toFixed(1);
 };
 
 const getAdminStats = async (req, res) => {
+  const { ratingOrder = "default" } = req.query;
   const ahora = new Date();
 
   const [
@@ -411,17 +709,46 @@ const getAdminStats = async (req, res) => {
     sesionesActivas,
     participantesTotales,
   ] = await Promise.all([
-    usuario.count({ where: { activo: true } }),
-    material.count({ where: { suspendido: false } }),
-    sesion_estudio.count(),
-    denuncia.count({ where: { estado: "pendiente" } }),
-    denuncia.count(),
-    denuncia.count({ where: { estado: "verificada" } }),
-    denuncia.count({ where: { estado: "rechazada" } }),
-    sesion_estudio.count({
-      where: { cancelada: false, fecha_hora: { [Op.gte]: ahora } },
+    usuario.count({
+      where: {
+        activo: true,
+      },
     }),
-    inscripcion_sesion.count({ where: { estado: "aceptada" } }),
+    material.count({
+      where: {
+        suspendido: false,
+      },
+    }),
+    sesion_estudio.count(),
+    denuncia.count({
+      where: {
+        estado: "pendiente",
+      },
+    }),
+    denuncia.count(),
+    denuncia.count({
+      where: {
+        estado: "verificada",
+      },
+    }),
+    denuncia.count({
+      where: {
+        estado: "rechazada",
+      },
+    }),
+    sesion_estudio.count({
+      where: {
+        cancelada: false,
+        fecha_hora: {
+          [Op.gte]: ahora,
+        },
+      },
+    }),
+    inscripcion_sesion.count({
+      where: {
+        estado: "aceptada",
+      },
+    }),
   ]);
 
   const [
@@ -437,20 +764,50 @@ const getAdminStats = async (req, res) => {
     sesionesPorMes,
     distribucionConexionesData,
   ] = await Promise.all([
-    computeDistribucionMaterias("cursando", [
-      { label: "1-2 materias", range: [1, 2] },
-      { label: "3-4 materias", range: [3, 4] },
-      { label: "5-6 materias", range: [5, 6] },
-      { label: "7+ materias",  range: [7, null] },
-    ]),
-    computeDistribucionMaterias("aprobada", [
-      { label: "0-5 materias",   range: [0, 5] },
-      { label: "6-10 materias",  range: [6, 10] },
-      { label: "11-15 materias", range: [11, 15] },
-      { label: "16+ materias",   range: [16, null] },
-    ]),
+    computeDistribucionMaterias(
+      "cursando",
+      [
+        {
+          label: "1-2 materias",
+          range: [1, 2],
+        },
+        {
+          label: "3-4 materias",
+          range: [3, 4],
+        },
+        {
+          label: "5-6 materias",
+          range: [5, 6],
+        },
+        {
+          label: "7+ materias",
+          range: [7, null],
+        },
+      ]
+    ),
+    computeDistribucionMaterias(
+      "aprobada",
+      [
+        {
+          label: "0-5 materias",
+          range: [0, 5],
+        },
+        {
+          label: "6-10 materias",
+          range: [6, 10],
+        },
+        {
+          label: "11-15 materias",
+          range: [11, 15],
+        },
+        {
+          label: "16+ materias",
+          range: [16, null],
+        },
+      ]
+    ),
     computeMateriasPorCarrera(),
-    computeTopMaterias(),
+    computeTopMaterias(ratingOrder),
     computeParticipantesPorSesion(),
     computeOcupacion(),
     computeCarrerasActivas(),
@@ -460,7 +817,12 @@ const getAdminStats = async (req, res) => {
     computeDistribucionConexionesData(),
   ]);
 
-  const promedio = Math.round(sesionesCreadas / 12);
+  const promedio =
+    Math.round(sesionesCreadas / 12);
+  const materiasAprobadasPorCarrera = materiasPorCarrera.map((item) => ({
+    career: item.career,
+    approved: item.aprobadas,
+  }));
 
   return res.status(200).json({
     ok: true,
@@ -476,6 +838,7 @@ const getAdminStats = async (req, res) => {
         materiasCursadasAlumno,
         materiasAprobadasAlumno,
         materiasPorCarrera,
+        materiasAprobadasPorCarrera,
         sesionesPeriodo: {
           total: sesionesCreadas,
           promedio,
@@ -497,13 +860,17 @@ const getAdminStats = async (req, res) => {
           participantesTotales,
           tasaOcupacion: ocupacion.percentage,
         }),
-        distribucionConexiones: distribucionConexionesData.map((d) => d.label),
+        distribucionConexiones:
+          distribucionConexionesData.map(
+            (d) => d.label
+          ),
         distribucionConexionesData,
         participantesPorSesion,
         ocupacion: {
           percentage: ocupacion.percentage,
           cuposLlenos: ocupacion.cuposLlenos,
-          conDisponibilidad: ocupacion.conDisponibilidad,
+          conDisponibilidad:
+            ocupacion.conDisponibilidad,
         },
         carrerasActivas,
       },
@@ -511,4 +878,6 @@ const getAdminStats = async (req, res) => {
   });
 };
 
-module.exports = { getAdminStats };
+module.exports = {
+  getAdminStats,
+};

@@ -305,3 +305,66 @@ button:not(:disabled) {
 :global(html.dark) .container table [class*="success"] * {
   color: #22c55e !important;
 }
+
+.setupCard {
+  padding: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.setupIcon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: var(--color-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container .setupIcon,
+.container .setupIcon svg {
+  color: var(--text-muted);
+  stroke: var(--text-muted);
+}
+
+.container .setupTitle {
+  margin: 0 0 8px;
+  color: var(--text-h);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.container .setupText {
+  max-width: 520px;
+  margin: 0 auto;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.container .setupAction {
+  margin-top: 20px;
+}
+
+.container .setupAction,
+.container .setupAction span,
+.container .setupAction svg,
+:global(html.dark) .container .setupAction,
+:global(html.dark) .container .setupAction span,
+:global(html.dark) .container .setupAction svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+@media (max-width: 640px) {
+  .setupCard {
+    padding: 36px 20px;
+  }
+
+  .container .setupAction {
+    width: 100%;
+  }
+}

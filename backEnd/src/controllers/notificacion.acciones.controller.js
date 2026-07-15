@@ -13,6 +13,10 @@ const TYPE_CONFIG = {
     category: "Material",
     actionUrl: "/student/materials",
   },
+  general: {
+    category: "General",
+    actionUrl: null,
+  },
 };
 
 const formatNotification = (row) => {

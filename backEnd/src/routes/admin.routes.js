@@ -2,12 +2,22 @@ const express = require("express");
 const authMiddleware = require("../middlewares/auth.middleware");
 const requireAdmin = require("../middlewares/requireAdmin.middleware");
 const validate = require("../middlewares/validate.middleware");
-const { createAdminSchema } = require("../validators/admin.validator");
+const {
+  createAdminSchema,
+  adminIdParamSchema,
+  listarAdminsQuerySchema,
+} = require("../validators/admin.validator");
 const adminController = require("../controllers/admin.controller");
 
 const router = express.Router();
 
-router.get("/admins", authMiddleware, requireAdmin, adminController.obtenerAdmins);
+router.get(
+  "/admins",
+  authMiddleware,
+  requireAdmin,
+  validate(listarAdminsQuerySchema, "query"),
+  adminController.obtenerAdmins
+);
 
 router.post(
   "/admins",
@@ -17,11 +27,26 @@ router.post(
   adminController.crearAdmin
 );
 
-router.get(
-  "/admin/home/stats",
+router.delete(
+  "/admins/:id",
   authMiddleware,
   requireAdmin,
-  adminController.getHomeStats
+  validate(adminIdParamSchema, "params"),
+  adminController.eliminarAdmin
+);
+
+router.get(
+  "/admin/home/students/search",
+  authMiddleware,
+  requireAdmin,
+  adminController.buscarEstudiantes
+);
+
+router.patch(
+  "/admin/estudiantes/:id/estado",
+  authMiddleware,
+  requireAdmin,
+  adminController.cambiarEstadoEstudiante
 );
 
 module.exports = router;

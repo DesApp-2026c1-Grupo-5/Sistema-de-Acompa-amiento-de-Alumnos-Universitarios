@@ -23,8 +23,6 @@ function Button({
     .filter(Boolean)
     .join(' ');
 
-  const hasContent = iconLeft || iconRight || children;
-
   return (
     <button
       type={type}

@@ -5,6 +5,7 @@ const {
   denuncia,
   motivo_denuncia,
   material,
+  post,
   estudiante,
   administrador,
   usuario,
@@ -12,7 +13,6 @@ const {
 } = db;
 
 const { crearNotificacion } = require("../services/notificacion.service");
-const { sendMail } = require("../services/mailer.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -28,10 +28,19 @@ const computeSeveridad = (cantidad) => {
 
 const computeEstadoResumen = (suspendido, denuncias) => {
   if (suspendido) return "suspendido";
+
   const pendientes = denuncias.filter((d) => d.estado === "pendiente").length;
   if (pendientes > 0) return "pendiente";
-  const verificadas = denuncias.filter((d) => d.estado === "verificada").length;
-  if (verificadas > 0) return "verificada";
+
+  return "rechazada";
+};
+
+const computeEstadoResumenPost = (oculto, denuncias) => {
+  if (oculto) return "oculto";
+
+  const pendientes = denuncias.filter((d) => d.estado === "pendiente").length;
+  if (pendientes > 0) return "pendiente";
+
   return "rechazada";
 };
 
@@ -48,30 +57,133 @@ const validarMaterialId = (raw) => {
   return id;
 };
 
+const validarPostId = (raw) => {
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  return id;
+};
+
 const listarStats = async (req, res) => {
-  const [pendientes, verificadas, materiales_suspendidos] = await Promise.all([
-    denuncia.count({ where: { estado: "pendiente" } }),
-    denuncia.count({ where: { estado: "verificada" } }),
-    material.count({ where: { suspendido: true } }),
-  ]);
+  const [pendientes, verificadas, materiales_suspendidos, posts_ocultos] =
+    await Promise.all([
+      denuncia.count({ where: { estado: "pendiente" } }),
+      denuncia.count({ where: { estado: "verificada" } }),
+      material.count({ where: { suspendido: true } }),
+      post.count({ where: { oculto: true } }),
+    ]);
 
   return res.status(200).json({
     ok: true,
-    data: { pendientes, verificadas, materiales_suspendidos },
+    data: {
+      pendientes,
+      verificadas,
+      materiales_suspendidos,
+      posts_ocultos,
+    },
   });
 };
 
 const listarDenuncias = async (req, res) => {
   const { q, estado, page, limit } = req.query;
 
-  const idsRows = await denuncia.findAll({
+  const materialIdsRows = await denuncia.findAll({
     attributes: ["material_id"],
     group: ["material_id"],
     raw: true,
   });
-  const materialIds = idsRows.map((r) => r.material_id);
+  const postIdsRows = await denuncia.findAll({
+    attributes: ["post_id"],
+    group: ["post_id"],
+    raw: true,
+  });
 
-  if (materialIds.length === 0) {
+  const materialIds = materialIdsRows
+    .map((r) => r.material_id)
+    .filter(Boolean);
+  const postIds = postIdsRows.map((r) => r.post_id).filter(Boolean);
+
+  let items = [];
+
+  if (materialIds.length > 0) {
+    const materialWhere = { id: { [Op.in]: materialIds } };
+    if (estado === "suspendido") materialWhere.suspendido = true;
+
+    const materiales = await material.findAll({
+      where: materialWhere,
+      include: [
+        { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+        { model: denuncia, as: "denuncias", attributes: ["id", "estado"] },
+      ],
+      order: [["id", "DESC"]],
+    });
+
+    items.push(
+      ...materiales.map((m) => {
+        const plain = m.get({ plain: true });
+        const denuncias = plain.denuncias || [];
+        const cantidad = denuncias.length;
+        return {
+          tipo: "material",
+          recurso_id: plain.id,
+          descripcion: plain.titulo,
+          categoria: "Material",
+          uploader: plain.estudiante
+            ? {
+                id: plain.estudiante.id,
+                nombre: plain.estudiante.nombre,
+                apellido: plain.estudiante.apellido,
+              }
+            : null,
+          cantidad_denuncias: cantidad,
+          severidad: computeSeveridad(cantidad),
+          estado_resumen: computeEstadoResumen(plain.suspendido, denuncias),
+          tipo_material: plain.tipo,
+          suspendido: plain.suspendido,
+        };
+      })
+    );
+  }
+
+  if (postIds.length > 0) {
+    const postWhere = { id: { [Op.in]: postIds } };
+    if (estado === "oculto") postWhere.oculto = true;
+
+    const posts = await post.findAll({
+      where: postWhere,
+      include: [
+        { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+        { model: denuncia, as: "denuncias", attributes: ["id", "estado"] },
+      ],
+      order: [["id", "DESC"]],
+    });
+
+    items.push(
+      ...posts.map((p) => {
+        const plain = p.get({ plain: true });
+        const denuncias = plain.denuncias || [];
+        const cantidad = denuncias.length;
+        return {
+          tipo: "post",
+          recurso_id: plain.id,
+          descripcion: plain.contenido,
+          categoria: "Publicación",
+          uploader: plain.estudiante
+            ? {
+                id: plain.estudiante.id,
+                nombre: plain.estudiante.nombre,
+                apellido: plain.estudiante.apellido,
+              }
+            : null,
+          cantidad_denuncias: cantidad,
+          severidad: computeSeveridad(cantidad),
+          estado_resumen: computeEstadoResumenPost(plain.oculto, denuncias),
+          oculto: plain.oculto,
+        };
+      })
+    );
+  }
+
+  if (items.length === 0) {
     return res.status(200).json({
       ok: true,
       data: [],
@@ -79,58 +191,20 @@ const listarDenuncias = async (req, res) => {
     });
   }
 
-  const where = { id: { [Op.in]: materialIds } };
-
-  if (estado === "suspendido") {
-    where.suspendido = true;
-  }
-
-  const materiales = await material.findAll({
-    where,
-    include: [
-      { model: estudiante, attributes: ["id", "nombre", "apellido"] },
-      { model: denuncia, as: "denuncias", attributes: ["id", "estado"] },
-    ],
-    order: [["id", "DESC"]],
-  });
-
-  let items = materiales.map((m) => {
-    const plain = m.get({ plain: true });
-    const denuncias = plain.denuncias || [];
-    const cantidad = denuncias.length;
-
-    return {
-      material: {
-        id: plain.id,
-        titulo: plain.titulo,
-        tipo: plain.tipo,
-        suspendido: plain.suspendido,
-      },
-      uploader: plain.estudiante
-        ? {
-            id: plain.estudiante.id,
-            nombre: plain.estudiante.nombre,
-            apellido: plain.estudiante.apellido,
-          }
-        : null,
-      cantidad_denuncias: cantidad,
-      severidad: computeSeveridad(cantidad),
-      estado_resumen: computeEstadoResumen(plain.suspendido, denuncias),
-    };
-  });
+  items.sort((a, b) => b.recurso_id - a.recurso_id);
 
   if (q) {
     const lower = q.toLowerCase();
     items = items.filter((it) => {
-      const tituloMatch = it.material.titulo?.toLowerCase().includes(lower);
+      const descMatch = it.descripcion?.toLowerCase().includes(lower);
       const uploaderNombre = it.uploader
         ? `${it.uploader.nombre} ${it.uploader.apellido}`.toLowerCase()
         : "";
-      return tituloMatch || uploaderNombre.includes(lower);
+      return descMatch || uploaderNombre.includes(lower);
     });
   }
 
-  if (estado && estado !== "todos" && estado !== "suspendido") {
+  if (estado && estado !== "todos" && estado !== "suspendido" && estado !== "oculto") {
     items = items.filter((it) => it.estado_resumen === estado);
   }
 
@@ -196,13 +270,88 @@ const obtenerDetalle = async (req, res, next) => {
       },
       uploader: plain.estudiante
         ? {
+          id: plain.estudiante.id,
+          nombre: plain.estudiante.nombre,
+          apellido: plain.estudiante.apellido,
+        }
+        : null,
+      cantidad_denuncias: denuncias.length,
+      estado_resumen: computeEstadoResumen(plain.suspendido, denuncias),
+      denuncias: denuncias.map((d) => ({
+        id: d.id,
+        motivo: d.motivo
+          ? { id: d.motivo.id, nombre: d.motivo.descripcion }
+          : null,
+        detalle: d.detalle,
+        estado: d.estado,
+        fecha_creacion: d.fecha_creacion,
+        fecha_resolucion: d.fecha_resolucion,
+        denunciante: d.denunciante
+          ? {
+            id: d.denunciante.id,
+            nombre: d.denunciante.nombre,
+            apellido: d.denunciante.apellido,
+          }
+          : null,
+      })),
+    },
+  });
+};
+
+const obtenerDetallePost = async (req, res, next) => {
+  const postId = validarPostId(req.params.postId);
+  if (!postId) {
+    return next(buildError("id de publicación inválido", 400));
+  }
+
+  const pub = await post.findByPk(postId, {
+    include: [
+      { model: estudiante, attributes: ["id", "nombre", "apellido"] },
+      {
+        model: denuncia,
+        as: "denuncias",
+        include: [
+          {
+            model: motivo_denuncia,
+            as: "motivo",
+            attributes: ["id", "descripcion"],
+          },
+          {
+            model: estudiante,
+            as: "denunciante",
+            attributes: ["id", "nombre", "apellido"],
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!pub) {
+    return next(buildError("Publicación no encontrada", 404));
+  }
+
+  const plain = pub.get({ plain: true });
+  const denuncias = plain.denuncias || [];
+
+  return res.status(200).json({
+    ok: true,
+    data: {
+      post: {
+        id: plain.id,
+        contenido: plain.contenido,
+        event_type: plain.event_type,
+        event_subject: plain.event_subject,
+        oculto: plain.oculto,
+      },
+      uploader: plain.estudiante
+        ? {
             id: plain.estudiante.id,
             nombre: plain.estudiante.nombre,
             apellido: plain.estudiante.apellido,
           }
         : null,
       cantidad_denuncias: denuncias.length,
-      estado_resumen: computeEstadoResumen(plain.suspendido, denuncias),
+      estado_resumen: computeEstadoResumenPost(plain.oculto, denuncias),
       denuncias: denuncias.map((d) => ({
         id: d.id,
         motivo: d.motivo
@@ -241,7 +390,13 @@ const resolverDenunciasPendientes = async (materialId, nuevoEstado, adminId) => 
   });
 };
 
-const notificarDenunciantes = async (pendientes, materialTitulo, nuevoEstado) => {
+const notificarDenunciantes = async (
+  pendientes,
+  recursoNombre,
+  nuevoEstado,
+  emisor_usuario_id,
+  actionUrl = "/student/materials"
+) => {
   for (const d of pendientes) {
     const denuncianteRaw = d.denunciante;
     if (!denuncianteRaw) continue;
@@ -251,23 +406,14 @@ const notificarDenunciantes = async (pendientes, materialTitulo, nuevoEstado) =>
 
     await crearNotificacion({
       usuario_id: denuncianteRaw.usuario_id,
+      emisor_usuario_id,
       titulo: `Denuncia ${texto}`,
       tipo: "general",
-      mensaje: `Tu denuncia sobre "${materialTitulo}" fue ${texto}.`,
+      mensaje: `Tu denuncia sobre "${recursoNombre}" fue ${texto}.`,
       referencia_tipo: "denuncia",
       referencia_id: d.id,
-      action_url: "/student/materials",
+      action_url: actionUrl,
     });
-
-    const userEmail = denuncianteRaw.usuario?.email;
-    if (userEmail) {
-      await sendMail({
-        to: userEmail,
-        subject: `Denuncia ${texto}`,
-        html: `       <p>Tu denuncia sobre <strong>"${materialTitulo}"</strong> fue <strong>${texto}</strong>.</p>
-               <p>Saludos,<br/>El equipo de SIVA</p>`,
-      });
-    }
   }
 };
 
@@ -288,13 +434,18 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
       {
         model: estudiante,
         as: "denunciante",
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
 
   if (pendientes.length === 0) {
-    return next(buildError("No hay denuncias pendientes para procesar", 400));
+    const existenDenuncias = await denuncia.count({
+      where: { material_id: materialId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Este material no tiene denuncias", 400));
+    }
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
   }
 
   const adminId = await getAdminId(req);
@@ -308,7 +459,7 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
     adminId
   );
 
-  notificarDenunciantes(pendientes, mat.titulo, nuevoEstado);
+  notificarDenunciantes(pendientes, mat.titulo, nuevoEstado, req.user.sub);
 
   return res.status(200).json({
     ok: true,
@@ -320,8 +471,83 @@ const cambiarEstadoDenuncias = (nuevoEstado) => async (req, res, next) => {
   });
 };
 
+const cambiarEstadoDenunciasPost = (nuevoEstado) => async (req, res, next) => {
+  const postId = validarPostId(req.params.id);
+  if (!postId) {
+    return next(buildError("id de publicación inválido", 400));
+  }
+
+  const pub = await post.findByPk(postId);
+  if (!pub) {
+    return next(buildError("Publicación no encontrada", 404));
+  }
+
+  const pendientes = await denuncia.findAll({
+    where: { post_id: postId, estado: "pendiente" },
+    include: [
+      {
+        model: estudiante,
+        as: "denunciante",
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
+  });
+
+  if (pendientes.length === 0) {
+    const existenDenuncias = await denuncia.count({
+      where: { post_id: postId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Esta publicación no tiene denuncias", 400));
+    }
+    if (pub.oculto) {
+      return next(buildError("Ya se ocultó esta publicación", 400));
+    }
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
+  }
+
+  const adminId = await getAdminId(req);
+  if (!adminId) {
+    return next(buildError("Administrador no encontrado", 404));
+  }
+
+  const actualizadas = await sequelize.transaction(async (t) => {
+    const [count] = await denuncia.update(
+      {
+        estado: nuevoEstado,
+        fecha_resolucion: new Date(),
+        admin_revisor_id: adminId,
+      },
+      {
+        where: { post_id: postId, estado: "pendiente" },
+        transaction: t,
+      }
+    );
+    return count;
+  });
+
+  notificarDenunciantes(
+    pendientes,
+    pub.contenido,
+    nuevoEstado,
+    req.user.sub,
+    "/student/home"
+  );
+
+  return res.status(200).json({
+    ok: true,
+    data: {
+      post_id: postId,
+      nuevo_estado: nuevoEstado,
+      denuncias_actualizadas: actualizadas,
+    },
+  });
+};
+
 const verificarDenuncias = cambiarEstadoDenuncias("verificada");
 const rechazarDenuncias = cambiarEstadoDenuncias("rechazada");
+const verificarDenunciasPost = cambiarEstadoDenunciasPost("verificada");
+const rechazarDenunciasPost = cambiarEstadoDenunciasPost("rechazada");
 
 const suspenderMaterial = async (req, res, next) => {
   const materialId = validarMaterialId(req.params.id);
@@ -333,7 +559,6 @@ const suspenderMaterial = async (req, res, next) => {
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -350,10 +575,19 @@ const suspenderMaterial = async (req, res, next) => {
       {
         model: estudiante,
         as: "denunciante",
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
+
+  if (pendientes.length === 0) {
+    const existenDenuncias = await denuncia.count({
+      where: { material_id: materialId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Este material no tiene denuncias", 400));
+    }
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
+  }
 
   const adminId = await getAdminId(req);
   if (!adminId) {
@@ -376,10 +610,9 @@ const suspenderMaterial = async (req, res, next) => {
     return count;
   });
 
-  const uploaderEmail = mat.estudiante?.usuario?.email;
-
   await crearNotificacion({
     usuario_id: mat.estudiante?.usuario_id,
+    emisor_usuario_id: req.user.sub,
     titulo: "Material suspendido",
     tipo: "general",
     mensaje: `Tu material "${mat.titulo}" fue suspendido debido a denuncias verificadas.`,
@@ -388,17 +621,7 @@ const suspenderMaterial = async (req, res, next) => {
     action_url: "/student/materials",
   });
 
-  if (uploaderEmail) {
-    await sendMail({
-      to: uploaderEmail,
-      subject: "Material suspendido",
-      html: `<p>Tu material <strong>"${mat.titulo}"</strong> fue suspendido debido a denuncias verificadas.</p>
-             <p>Si consideras que es un error, contacta con el administrador.</p>
-             <p>Saludos,<br/>El equipo de SIVA</p>`,
-    });
-  }
-
-  notificarDenunciantes(pendientes, mat.titulo, "verificada");
+  notificarDenunciantes(pendientes, mat.titulo, "verificada", req.user.sub);
 
   return res.status(200).json({
     ok: true,
@@ -420,7 +643,6 @@ const restaurarMaterial = async (req, res, next) => {
     include: [
       {
         model: estudiante,
-        include: [{ model: usuario, attributes: ["email"] }],
       },
     ],
   });
@@ -431,12 +653,28 @@ const restaurarMaterial = async (req, res, next) => {
     return next(buildError("El material no esta suspendido", 400));
   }
 
-  await mat.update({ suspendido: false });
+  await sequelize.transaction(async (t) => {
+    await mat.update(
+      { suspendido: false },
+      { transaction: t }
+    );
 
-  const uploaderEmail = mat.estudiante?.usuario?.email;
+    await denuncia.update(
+      {
+        estado: "pendiente",
+        fecha_resolucion: null,
+        admin_revisor_id: null,
+      },
+      {
+        where: { material_id: materialId, estado: "verificada" },
+        transaction: t,
+      }
+    );
+  });
 
   await crearNotificacion({
     usuario_id: mat.estudiante?.usuario_id,
+    emisor_usuario_id: req.user.sub,
     titulo: "Material restaurado",
     tipo: "general",
     mensaje: `Tu material "${mat.titulo}" fue restaurado y ya está visible nuevamente.`,
@@ -445,18 +683,230 @@ const restaurarMaterial = async (req, res, next) => {
     action_url: "/student/materials",
   });
 
-  if (uploaderEmail) {
-    await sendMail({
-      to: uploaderEmail,
-      subject: "Material restaurado",
-      html: `<p>Tu material <strong>"${mat.titulo}"</strong> fue restaurado y ya está visible nuevamente.</p>
-             <p>Saludos,<br/>El equipo de SIVA</p>`,
+  return res.status(200).json({
+    ok: true,
+    data: { id: mat.id, suspendido: false },
+  });
+};
+
+const ocultarPost = async (req, res, next) => {
+  const postId = validarPostId(req.params.id);
+  if (!postId) {
+    return next(buildError("id de publicación inválido", 400));
+  }
+
+  const pub = await post.findByPk(postId, {
+    include: [
+      {
+        model: estudiante,
+      },
+    ],
+  });
+  if (!pub) {
+    return next(buildError("Publicación no encontrada", 404));
+  }
+  if (pub.oculto) {
+    return next(buildError("La publicación ya está oculta", 400));
+  }
+
+  const pendientes = await denuncia.findAll({
+    where: { post_id: postId, estado: "pendiente" },
+    include: [
+      {
+        model: estudiante,
+        as: "denunciante",
+      },
+    ],
+  });
+
+  if (pendientes.length === 0) {
+    const existenDenuncias = await denuncia.count({
+      where: { post_id: postId },
+    });
+    if (existenDenuncias === 0) {
+      return next(buildError("Esta publicación no tiene denuncias", 400));
+    }
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
+  }
+
+  const adminId = await getAdminId(req);
+  if (!adminId) {
+    return next(buildError("Administrador no encontrado", 404));
+  }
+
+  const actualizadas = await sequelize.transaction(async (t) => {
+    await pub.update({ oculto: true }, { transaction: t });
+    const [count] = await denuncia.update(
+      {
+        estado: "verificada",
+        fecha_resolucion: new Date(),
+        admin_revisor_id: adminId,
+      },
+      {
+        where: { post_id: postId, estado: "pendiente" },
+        transaction: t,
+      }
+    );
+    return count;
+  });
+
+  const contenidoBreve = pub.contenido.substring(0, 60);
+
+  await crearNotificacion({
+    usuario_id: pub.estudiante?.usuario_id,
+    emisor_usuario_id: req.user.sub,
+    titulo: "Publicación oculta",
+    tipo: "general",
+    mensaje: `Tu publicación "${contenidoBreve}..." fue oculta debido a denuncias verificadas.`,
+    referencia_tipo: "denuncia",
+    referencia_id: postId,
+    action_url: "/student/home",
+  });
+
+  notificarDenunciantes(
+    pendientes,
+    contenidoBreve,
+    "verificada",
+    req.user.sub,
+    "/student/home"
+  );
+
+  return res.status(200).json({
+    ok: true,
+    data: {
+      id: pub.id,
+      oculto: true,
+      denuncias_actualizadas: actualizadas,
+    },
+  });
+};
+
+const mostrarPost = async (req, res, next) => {
+  const postId = validarPostId(req.params.id);
+  if (!postId) {
+    return next(buildError("id de publicación inválido", 400));
+  }
+
+  const pub = await post.findByPk(postId, {
+    include: [
+      {
+        model: estudiante,
+      },
+    ],
+  });
+  if (!pub) {
+    return next(buildError("Publicación no encontrada", 404));
+  }
+  if (!pub.oculto) {
+    return next(buildError("La publicación no está oculta", 400));
+  }
+
+  await sequelize.transaction(async (t) => {
+    await pub.update({ oculto: false }, { transaction: t });
+
+    await denuncia.update(
+      {
+        estado: "pendiente",
+        fecha_resolucion: null,
+        admin_revisor_id: null,
+      },
+      {
+        where: { post_id: postId, estado: "verificada" },
+        transaction: t,
+      }
+    );
+  });
+
+  const contenidoBreve = pub.contenido.substring(0, 60);
+
+  await crearNotificacion({
+    usuario_id: pub.estudiante?.usuario_id,
+    emisor_usuario_id: req.user.sub,
+    titulo: "Publicación restaurada",
+    tipo: "general",
+    mensaje: `Tu publicación "${contenidoBreve}..." fue restaurada y ya está visible nuevamente.`,
+    referencia_tipo: "denuncia",
+    referencia_id: postId,
+    action_url: "/student/home",
+  });
+
+  return res.status(200).json({
+    ok: true,
+    data: { id: pub.id, oculto: false },
+  });
+};
+
+const rechazarDenuncia = async (req, res, next) => {
+  const denunciaId = Number(req.params.denunciaId);
+  if (!Number.isInteger(denunciaId) || denunciaId <= 0) {
+    return next(buildError("id de denuncia invalido", 400));
+  }
+
+  const den = await denuncia.findByPk(denunciaId, {
+    include: [
+      { model: material, attributes: ["id", "titulo", "suspendido"] },
+      { model: post, attributes: ["id", "contenido", "oculto"] },
+      {
+        model: estudiante,
+        as: "denunciante",
+        include: [{ model: usuario, attributes: ["email"] }],
+      },
+    ],
+  });
+
+  if (!den) {
+    return next(buildError("Denuncia no encontrada", 404));
+  }
+
+  if (den.estado === "rechazada") {
+    return next(buildError("Esta denuncia ya fue rechazada", 400));
+  }
+
+  if (den.estado === "verificada") {
+    return next(buildError("Esta denuncia ya fue resuelta", 400));
+  }
+
+  if (den.material?.suspendido) {
+    return next(buildError("Este material ya está suspendido", 400));
+  }
+
+  if (den.post?.oculto) {
+    return next(buildError("Esta publicación ya está oculta", 400));
+  }
+
+  const adminId = await getAdminId(req);
+  if (!adminId) {
+    return next(buildError("Administrador no encontrado", 404));
+  }
+
+  await den.update({
+    estado: "rechazada",
+    fecha_resolucion: new Date(),
+    admin_revisor_id: adminId,
+  });
+
+  const recursoNombre = den.material?.titulo ?? den.post?.contenido ?? "recurso";
+  const recursoAbr = String(recursoNombre).substring(0, 60);
+
+  if (den.denunciante) {
+    await crearNotificacion({
+      usuario_id: den.denunciante.usuario_id,
+      emisor_usuario_id: req.user.sub,
+      titulo: "Denuncia rechazada",
+      tipo: "general",
+      mensaje: `Tu denuncia sobre "${recursoAbr}" fue rechazada.`,
+      referencia_tipo: "denuncia",
+      referencia_id: den.id,
+      action_url: den.material ? "/student/materials" : "/student/home",
     });
   }
 
   return res.status(200).json({
     ok: true,
-    data: { id: mat.id, suspendido: false },
+    data: {
+      id: den.id,
+      estado: "rechazada",
+    },
   });
 };
 
@@ -464,8 +914,14 @@ module.exports = {
   listarStats,
   listarDenuncias,
   obtenerDetalle,
+  obtenerDetallePost,
   verificarDenuncias,
   rechazarDenuncias,
+  verificarDenunciasPost,
+  rechazarDenunciasPost,
   suspenderMaterial,
   restaurarMaterial,
+  ocultarPost,
+  mostrarPost,
+  rechazarDenuncia,
 };

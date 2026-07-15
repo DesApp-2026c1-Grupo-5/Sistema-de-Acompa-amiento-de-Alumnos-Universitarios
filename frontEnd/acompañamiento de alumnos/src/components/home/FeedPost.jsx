@@ -1,10 +1,14 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ThumbsUp,
   ThumbsDown,
-  MoreHorizontal,
+  Flag,
+  Trash2,
   BookOpen,
   CheckCircle2,
   TrendingUp,
+  MoreVertical,
 } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
@@ -21,6 +25,7 @@ function EventBadge({ eventType, eventSubject }) {
   const meta = EVENT_META[eventType];
   if (!meta) return null;
   const { label, variant, Icon } = meta;
+
   return (
     <Badge variant={variant} className={styles.eventBadge}>
       <Icon size={13} aria-hidden="true" />
@@ -32,9 +37,13 @@ function EventBadge({ eventType, eventSubject }) {
   );
 }
 
-function FeedPost({ post, userReaction, onLike, onDislike }) {
+function FeedPost({ post, userReaction, onLike, onDislike, onReport, onDelete, currentUserId }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
   const {
     id,
+    authorId,
     authorName,
     authorInitials,
     authorImage,
@@ -48,6 +57,48 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
 
   const isLikeActive = userReaction === 'like';
   const isDislikeActive = userReaction === 'dislike';
+  const isOwnPost = currentUserId && authorId === currentUserId;
+  const canReport = !isOwnPost && !post.miDenunciaPendiente;
+
+  const reportLabel = isOwnPost
+    ? 'Tu publicación'
+    : post.miDenunciaPendiente
+      ? 'Ya denunciado'
+      : 'Denunciar';
+
+  const reportTitle = isOwnPost
+    ? 'No podés denunciar tu propia publicación'
+    : post.miDenunciaPendiente
+      ? 'Ya denunciaste esta publicación'
+      : 'Denunciar publicación';
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleReportClick = () => {
+    if (!canReport) return;
+
+    setMenuOpen(false);
+    onReport?.(id);
+  };
+
+  const handleDeleteClick = () => {
+    if (!isOwnPost) return;
+
+    setMenuOpen(false);
+    onDelete?.(id);
+  };
 
   return (
     <article className={styles.card}>
@@ -56,19 +107,55 @@ function FeedPost({ post, userReaction, onLike, onDislike }) {
 
         <div className={styles.meta}>
           <div className={styles.authorRow}>
-            <span className={styles.author}>{authorName}</span>
+            <Link to={`/student/profile/${authorId}`} className={styles.authorLink}>
+              <span className={styles.author}>{authorName}</span>
+            </Link>
+
             {eventType && (
               <EventBadge eventType={eventType} eventSubject={eventSubject} />
             )}
           </div>
+
           <time className={styles.time} dateTime={createdAt}>
             {formatRelativeTime(createdAt)}
           </time>
         </div>
 
-        <button type="button" className={styles.moreBtn} aria-label="Más opciones">
-          <MoreHorizontal size={20} aria-hidden="true" />
-        </button>
+        <div className={styles.moreMenuWrapper} ref={menuRef}>
+          <button
+            type="button"
+            className={styles.moreBtn}
+            aria-label="Más opciones"
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <MoreVertical size={20} aria-hidden="true" />
+          </button>
+
+          {menuOpen && (
+            <div className={styles.dropdownMenu}>
+              <button
+                type="button"
+                className={styles.dropdownItem}
+                onClick={handleReportClick}
+                disabled={!canReport}
+                title={reportTitle}
+              >
+                <Flag size={16} aria-hidden="true" />
+                <span>{reportLabel}</span>
+              </button>
+              {isOwnPost && (
+                <button
+                  type="button"
+                  className={styles.dropdownItem}
+                  onClick={handleDeleteClick}
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                  <span>Eliminar</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       <p className={styles.content}>{content}</p>

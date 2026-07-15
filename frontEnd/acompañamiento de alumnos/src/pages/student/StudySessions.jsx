@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -11,6 +12,8 @@ import {
   Users,
   Edit,
   Trash2,
+  Globe,
+  Lock,
 } from "lucide-react";
 
 import Modal from "../../components/common/Modal";
@@ -18,6 +21,7 @@ import Avatar from "../../components/common/Avatar";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 import ModalConfirmation from "../../components/common/ModalConfirmation";
+import Pagination from "../../components/common/Pagination";
 import SessionDetailModal from "../../components/sessions/SessionDetailModal";
 import SessionForm from "./SessionForm";
 import {
@@ -36,13 +40,21 @@ import { getMaterias } from "../../services/materialService";
 import { mapSessionFromApi } from "./sessions/mapSession";
 import styles from "./StudySessions.module.css";
 
+const PAGE_SIZE = 12;
+const MY_PAGE_SIZE = 3;
+
 function StudySessions() {
-  const [sessions, setSessions] = useState([]);
+  const [mine, setMine] = useState([]);
+  const [available, setAvailable] = useState([]);
   const [materias, setMaterias] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [availableLoading, setAvailableLoading] = useState(false);
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState("");
   const [now, setNow] = useState(() => Date.now());
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editSession, setEditSession] = useState(null);
@@ -51,22 +63,27 @@ function StudySessions() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [activeMyTab, setActiveMyTab] = useState("created");
+  const [myPage, setMyPage] = useState(1);
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [availabilityFilter, setAvailabilityFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("nextDate");
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30 * 1000);
     return () => clearInterval(id);
   }, []);
 
+  const reloadMine = async () => {
+    const res = await getSessions({ vista: "mias", limit: 50 });
+    setMine((res?.data ?? []).map(mapSessionFromApi));
+  };
+
   useEffect(() => {
-    Promise.all([getSessions(), getMaterias()])
+    Promise.all([getSessions({ vista: "mias", limit: 50 }), getMaterias()])
       .then(([sesRes, matRes]) => {
-        setSessions((sesRes?.data ?? []).map(mapSessionFromApi));
+        setMine((sesRes?.data ?? []).map(mapSessionFromApi));
         setMaterias(matRes?.data ?? []);
       })
       .catch((err) => {
@@ -75,12 +92,58 @@ function StudySessions() {
       .finally(() => setLoading(false));
   }, []);
 
-  const reloadSessions = async () => {
-    const res = await getSessions();
-    setSessions((res?.data ?? []).map(mapSessionFromApi));
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchAvailable = async () => {
+      setAvailableLoading(true);
+      try {
+        const res = await getSessions({
+          vista: "disponibles",
+          page,
+          limit: PAGE_SIZE,
+          q: debouncedSearch,
+          materia_id: subjectFilter,
+          tipo: typeFilter,
+        });
+        if (!active) return;
+        setAvailable((res?.data ?? []).map(mapSessionFromApi));
+        setTotalPages(res?.pagination?.totalPages ?? 1);
+      } catch (err) {
+        if (active) setError(err.message || "No pudimos cargar las sesiones.");
+      } finally {
+        if (active) setAvailableLoading(false);
+      }
+    };
+    fetchAvailable();
+    return () => {
+      active = false;
+    };
+  }, [page, debouncedSearch, subjectFilter, typeFilter]);
+
+  const reloadAvailable = async () => {
+    const res = await getSessions({
+      vista: "disponibles",
+      page,
+      limit: PAGE_SIZE,
+      q: debouncedSearch,
+      materia_id: subjectFilter,
+      tipo: typeFilter,
+    });
+    setAvailable((res?.data ?? []).map(mapSessionFromApi));
+    setTotalPages(res?.pagination?.totalPages ?? 1);
   };
 
-  const subjects = [...new Set(sessions.map((session) => session.subject))];
+  const reloadSessions = async () => {
+    await Promise.all([reloadMine(), reloadAvailable()]);
+  };
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -117,7 +180,6 @@ function StudySessions() {
 
   const getStatusText = (session) => {
     if (session.cancelled) return "Cancelada";
-    if (getTimeStatus(session) === "past") return "Finalizada";
     if (isFull(session)) return "Completa";
     if (session.userStatus === "pending") return "Pendiente";
     return "Disponible";
@@ -125,7 +187,6 @@ function StudySessions() {
 
   const getStatusClass = (session) => {
     if (session.cancelled) return styles.statusFull;
-    if (getTimeStatus(session) === "past") return styles.statusEnded;
     if (isFull(session)) return styles.statusFull;
     if (session.userStatus === "pending") return styles.statusPending;
     return styles.statusAvailable;
@@ -144,67 +205,20 @@ function StudySessions() {
   };
 
   const mySessions = useMemo(() => {
-    const isPast = (session) => {
-      if (!session.date || !session.time) return false;
-      const start = new Date(`${session.date}T${session.time}:00`).getTime();
-      const totalMinutes = (session.durationHours || 0) * 60 + (session.durationMinutes || 0);
-      return now >= start + totalMinutes * 60 * 1000;
-    };
-    const mine = sessions.filter((s) =>
-      ["created", "joined", "pending"].includes(s.userStatus)
-    );
     const sortByDateDesc = (a, b) =>
       new Date(`${b.date}T${b.time || "00:00"}:00`).getTime() -
       new Date(`${a.date}T${a.time || "00:00"}:00`).getTime();
-    if (activeMyTab === "finished") {
-      return mine.filter(isPast).sort(sortByDateDesc);
-    }
     return mine
-      .filter((s) => s.userStatus === activeMyTab && !isPast(s))
+      .filter((s) => s.userStatus === activeMyTab)
       .sort(sortByDateDesc);
-  }, [sessions, activeMyTab, now]);
+  }, [mine, activeMyTab]);
 
-  const availableSessions = useMemo(() => {
-    let result = sessions.filter(
-      (session) => session.userStatus !== "created" && !session.cancelled
-    );
-
-    if (search.trim()) {
-      const value = search.toLowerCase();
-      result = result.filter(
-        (session) =>
-          session.subject.toLowerCase().includes(value) ||
-          session.topic.toLowerCase().includes(value)
-      );
-    }
-
-    if (subjectFilter !== "all") {
-      result = result.filter((session) => session.subject === subjectFilter);
-    }
-
-    if (typeFilter !== "all") {
-      result = result.filter((session) => session.type === typeFilter);
-    }
-
-    if (availabilityFilter === "available") {
-      result = result.filter((session) => !isFull(session));
-    }
-
-    if (availabilityFilter === "full") {
-      result = result.filter((session) => isFull(session));
-    }
-
-    result.sort((a, b) => {
-      if (sortBy === "spots") {
-        const spotsA = a.maxParticipants ? a.maxParticipants - a.participantsCount : 999;
-        const spotsB = b.maxParticipants ? b.maxParticipants - b.participantsCount : 999;
-        return spotsB - spotsA;
-      }
-      return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
-    });
-
-    return result;
-  }, [sessions, search, subjectFilter, typeFilter, availabilityFilter, sortBy]);
+  const myTotalPages = Math.max(1, Math.ceil(mySessions.length / MY_PAGE_SIZE));
+  const safeMyPage = Math.min(myPage, myTotalPages);
+  const pagedMySessions = mySessions.slice(
+    (safeMyPage - 1) * MY_PAGE_SIZE,
+    safeMyPage * MY_PAGE_SIZE
+  );
 
   const openCreateForm = () => {
     setEditSession(null);
@@ -229,6 +243,7 @@ function StudySessions() {
     }
     await reloadSessions();
     closeForm();
+    window.dispatchEvent(new Event('notifications-updated'));
   };
 
   const handleJoinSession = async (session) => {
@@ -236,6 +251,7 @@ function StudySessions() {
     try {
       await joinSession(session.id);
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos completar la inscripción.");
     }
@@ -246,6 +262,7 @@ function StudySessions() {
     try {
       await cancelSession(sessionToCancel.id);
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos cancelar la sesión.");
     } finally {
@@ -271,6 +288,7 @@ function StudySessions() {
     const res = await getSession(detailSession.id);
     setDetailSession(mapSessionFromApi(res.data));
     await reloadSessions();
+    window.dispatchEvent(new Event('notifications-updated'));
   };
 
   const handleDeleteFile = async (archivoId) => {
@@ -280,6 +298,7 @@ function StudySessions() {
     const res = await getSession(detailSession.id);
     setDetailSession(mapSessionFromApi(res.data));
     await reloadSessions();
+    window.dispatchEvent(new Event('notifications-updated'));
   };
 
   const handleApprove = async (inscripcionId) => {
@@ -289,6 +308,7 @@ function StudySessions() {
       const res = await getSession(detailSession.id);
       setDetailSession(mapSessionFromApi(res.data));
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos aprobar la solicitud.");
     }
@@ -301,6 +321,7 @@ function StudySessions() {
       const res = await getSession(detailSession.id);
       setDetailSession(mapSessionFromApi(res.data));
       await reloadSessions();
+      window.dispatchEvent(new Event('notifications-updated'));
     } catch (err) {
       setActionError(err.message || "No pudimos rechazar la solicitud.");
     }
@@ -326,13 +347,6 @@ function StudySessions() {
     : null;
 
   const getJoinButton = (session) => {
-    if (getTimeStatus(session) === "past") {
-      return (
-        <button className={styles.fullButton} disabled>
-          Finalizada
-        </button>
-      );
-    }
     if (isFull(session)) {
       return (
         <button className={styles.fullButton} disabled>
@@ -417,11 +431,17 @@ function StudySessions() {
             <div className={styles.filtersGrid}>
               <label>
                 <span>Materia</span>
-                <select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
+                <select
+                  value={subjectFilter}
+                  onChange={(e) => {
+                    setSubjectFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
                   <option value="all">Todas las materias</option>
-                  {subjects.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
+                  {materias.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nombre}
                     </option>
                   ))}
                 </select>
@@ -429,30 +449,16 @@ function StudySessions() {
 
               <label>
                 <span>Tipo</span>
-                <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
                   <option value="all">Todos</option>
                   <option value="virtual">Virtual</option>
                   <option value="presencial">Presencial</option>
-                </select>
-              </label>
-
-              <label>
-                <span>Disponibilidad</span>
-                <select
-                  value={availabilityFilter}
-                  onChange={(e) => setAvailabilityFilter(e.target.value)}
-                >
-                  <option value="all">Todas</option>
-                  <option value="available">Con cupo</option>
-                  <option value="full">Llenas</option>
-                </select>
-              </label>
-
-              <label>
-                <span>Ordenar por</span>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="nextDate">Fecha próxima</option>
-                  <option value="spots">Cupos disponibles</option>
                 </select>
               </label>
             </div>
@@ -467,30 +473,23 @@ function StudySessions() {
           <div className={styles.tabs}>
             <button
               className={activeMyTab === "created" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("created")}
+              onClick={() => { setActiveMyTab("created"); setMyPage(1); }}
             >
               Creadas por mí
             </button>
 
             <button
               className={activeMyTab === "joined" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("joined")}
+              onClick={() => { setActiveMyTab("joined"); setMyPage(1); }}
             >
               Inscripto
             </button>
 
             <button
               className={activeMyTab === "pending" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("pending")}
+              onClick={() => { setActiveMyTab("pending"); setMyPage(1); }}
             >
               Pendientes
-            </button>
-
-            <button
-              className={activeMyTab === "finished" ? styles.activeTab : ""}
-              onClick={() => setActiveMyTab("finished")}
-            >
-              Finalizadas
             </button>
           </div>
 
@@ -500,16 +499,17 @@ function StudySessions() {
               description="Cuando tengas sesiones en esta categoría, aparecerán acá."
             />
           ) : (
-            mySessions.map((session) => (
-              <article
-                className={`${styles.mySessionItem} ${getTimeStatus(session) === "past" ? styles.sessionCardPast : ""}`}
-                key={session.id}
-              >
+            pagedMySessions.map((session) => (
+              <article className={styles.mySessionItem} key={session.id}>
                 <div>
                   <h3>
                     {session.subject}
                     <span className={`${styles.statusBadge} ${getStatusClass(session)}`}>
                       {getStatusText(session)}
+                    </span>
+                    <span className={styles.privacyBadge}>
+                      {session.privacy === 'public' ? <Globe size={14} /> : <Lock size={14} />}
+                      {session.privacy === 'public' ? 'Pública' : 'Privada'}
                     </span>
                   </h3>
 
@@ -549,23 +549,28 @@ function StudySessions() {
               </article>
             ))
           )}
+
+          {myTotalPages > 1 && (
+            <div className={styles.paginationSection}>
+              <Pagination page={safeMyPage} totalPages={myTotalPages} onChange={setMyPage} />
+            </div>
+          )}
         </section>
 
         <section className={styles.availableSection}>
           <h2>Sesiones disponibles</h2>
 
-          {availableSessions.length === 0 ? (
+          {availableLoading ? (
+            <p className={styles.statusText}>Cargando sesiones…</p>
+          ) : available.length === 0 ? (
             <EmptyState
               title="No hay sesiones disponibles"
               description="Cuando haya sesiones de otros estudiantes, aparecerán acá."
             />
           ) : (
             <div className={styles.sessionsGrid}>
-              {availableSessions.map((session) => (
-                <article
-                  className={`${styles.sessionCard} ${getTimeStatus(session) === "past" ? styles.sessionCardPast : ""}`}
-                  key={session.id}
-                >
+              {available.map((session) => (
+                <article className={styles.sessionCard} key={session.id}>
                   <div className={styles.cardTop}>
                     <div>
                       <h3>
@@ -610,18 +615,29 @@ function StudySessions() {
                       <Users size={16} />
                       {session.participantsCount}/{session.maxParticipants ?? "∞"} participantes
                     </span>
+
+                    <span className={styles.privacyMeta}>
+                      {session.privacy === 'public' ? <Globe size={16} /> : <Lock size={16} />}
+                      {session.privacy === 'public' ? 'Pública' : 'Privada'}
+                    </span>
                   </div>
 
                   <footer className={styles.cardFooter}>
-                    <div className={styles.creator}>
+                    <Link to={`/student/profile/${session.creatorId}`} className={styles.creatorLink}>
                       <Avatar initials={session.creatorInitials} src={session.creatorImage} size="sm" />
                       <span>{session.creatorName}</span>
-                    </div>
+                    </Link>
 
                     {getJoinButton(session)}
                   </footer>
                 </article>
               ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className={styles.paginationSection}>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </div>
           )}
         </section>

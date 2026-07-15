@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import styles from "../../styles/landing.module.css";
 
 const Footer = () => {
@@ -14,20 +15,16 @@ const Footer = () => {
             La plataforma integral para estudiantes universitarios que buscan
             optimizar su trayectoria académica y conectar con su comunidad.
           </p>
-
-          <div className={styles.landingFooter__social}>
-            <span>𝕏</span>
-            <span>Instagram</span>
-          </div>
+          
         </div>
 
         <div className={styles.landingFooter__bottom}>
           <p>© 2026 SIVA UNAHUR. Todos los derechos reservados.</p>
 
           <div>
-            <a href="#">Privacidad</a>
-            <a href="#">Términos</a>
-            <a href="#">Cookies</a>
+            <Link to="/privacidad">Privacidad</Link>
+            <Link to="/terminos">Términos</Link>
+            <Link to="/cookies">Cookies</Link>
           </div>
         </div>
       </div>

@@ -1,6 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
+import PrivacyPage from "../pages/public/PrivacyPage";
+import TermsPage from '../pages/public/TermsPage';
+import InfoNotice from '../components/cookies/InfoNotice';
 import Layout from '../components/layouts/Layout';
 import PrivateRoute from '../components/auth/PrivateRoute';
 import { adminLinks } from '../components/navbar/AdminNavbar';
@@ -13,10 +16,12 @@ import StudySessions from '../pages/student/StudySessions';
 import MaterialRepositoryPage from '../pages/student/MaterialRepositoryPage';
 import HomeAdmin from '../pages/admin/Home/HomeAdmin';
 import Careers from '../pages/admin/Careers';
+import CareerEdit from '../pages/admin/CareerEdit';
 import StudyPlan from '../pages/admin/StudyPlan';
 import Admins from '../pages/admin/Admins';
 import Statistics from '../pages/admin/Statistics';
 import ReportMaterial from '../pages/student/ReportMaterial';
+import ReportPublication from '../pages/student/ReportPublication';
 import Notifications from '../pages/student/Notifications';
 import ModerationPage from '../pages/admin/ModerationPage/ModerationPage';
 import ComplaintConfigPage from '../pages/admin/ComplaintConfigPage/ComplaintConfigPage';
@@ -29,6 +34,18 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/privacidad',
+    element: <PrivacyPage />,
+  },
+  {
+    path: '/terminos',
+    element: <TermsPage />,
+  },
+  {
+    path: '/cookies',
+    element: <InfoNotice />,
   },
   {
     element: <PrivateRoute requiredTipo="estudiante" />,
@@ -49,6 +66,10 @@ const router = createBrowserRouter([
             element: <Profile />,
           },
           {
+            path: '/student/profile/:userId',
+            element: <Profile />,
+          },
+          {
             path: '/student/academic-status',
             element: <SituacionAcademica />,
           },
@@ -63,6 +84,10 @@ const router = createBrowserRouter([
           {
             path: '/student/report-material/:id',
             element: <ReportMaterial />,
+          },
+          {
+            path: '/student/report-publication/:id',
+            element: <ReportPublication />,
           },
           {
             path: '/student/notifications',
@@ -83,8 +108,16 @@ const router = createBrowserRouter([
             element: <HomeAdmin />,
           },
           {
+            path: '/admin/students/:userId/profile',
+            element: <Profile />,
+          },
+          {
             path: '/admin/careers',
             element: <Careers />,
+          },
+          {
+            path: '/admin/careers/:careerId/edit',
+            element: <CareerEdit />,
           },
           {
             path: '/admin/study-plan/:id?',

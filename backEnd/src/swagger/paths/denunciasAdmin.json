@@ -1,0 +1,538 @@
+{
+  "/api/admin/denuncias/stats": {
+    "get": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Estadísticas de denuncias",
+      "description": "Retorna estadísticas generales del panel de denuncias: pendientes, verificadas, materiales suspendidos y posts ocultos.",
+      "responses": {
+        "200": {
+          "description": "Estadísticas obtenidas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "pendientes": { "type": "integer" },
+                      "verificadas": { "type": "integer" },
+                      "materiales_suspendidos": { "type": "integer" },
+                      "posts_ocultos": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/denuncias": {
+    "get": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Listar denuncias (admin)",
+      "description": "Retorna una lista paginada de denuncias con filtros por texto y estado. Muestra tanto materiales como publicaciones denunciadas.",
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "schema": { "type": "string", "maxLength": 100 },
+          "description": "Texto de búsqueda"
+        },
+        {
+          "name": "estado",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["pendiente", "verificada", "rechazada", "suspendido", "todos"], "default": "todos" }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "default": 1, "minimum": 1 }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 50 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Lista de denuncias",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tipo": { "type": "string", "enum": ["material", "post"] },
+                        "recurso_id": { "type": "integer" },
+                        "descripcion": { "type": "string" },
+                        "categoria": { "type": "string", "enum": ["Material", "Publicacion"] },
+                        "uploader": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": { "type": "integer" },
+                                "nombre": { "type": "string" },
+                                "apellido": { "type": "string" }
+                              }
+                            },
+                            { "type": "null" }
+                          ]
+                        },
+                        "cantidad_denuncias": { "type": "integer" },
+                        "severidad": { "type": "string", "enum": ["baja", "media", "alta"] },
+                        "estado_resumen": { "type": "string" }
+                      }
+                    }
+                  },
+                  "pagination": { "$ref": "#/components/schemas/Pagination" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/denuncias/material/{materialId}": {
+    "get": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Detalle de denuncias de un material",
+      "description": "Retorna el detalle completo de un material denunciado incluyendo todas sus denuncias y denunciantes.",
+      "parameters": [
+        {
+          "name": "materialId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del material"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detalle obtenido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "material": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "titulo": { "type": "string" },
+                          "tipo": { "type": "string" },
+                          "suspendido": { "type": "boolean" }
+                        }
+                      },
+                      "uploader": {
+                        "oneOf": [
+                          { "type": "object", "properties": { "id": { "type": "integer" }, "nombre": { "type": "string" }, "apellido": { "type": "string" } } },
+                          { "type": "null" }
+                        ]
+                      },
+                      "cantidad_denuncias": { "type": "integer" },
+                      "estado_resumen": { "type": "string" },
+                      "denuncias": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/Denuncia" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "ID de material inválido" },
+        "404": { "description": "Material no encontrado" }
+      }
+    }
+  },
+  "/api/admin/denuncias/post/{postId}": {
+    "get": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Detalle de denuncias de un post",
+      "description": "Retorna el detalle completo de un post denunciado incluyendo todas sus denuncias y denunciantes.",
+      "parameters": [
+        {
+          "name": "postId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del post"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detalle obtenido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "post": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "contenido": { "type": "string" },
+                          "event_type": { "type": ["string", "null"] },
+                          "event_subject": { "type": ["string", "null"] },
+                          "oculto": { "type": "boolean" }
+                        }
+                      },
+                      "uploader": {
+                        "oneOf": [
+                          { "type": "object", "properties": { "id": { "type": "integer" }, "nombre": { "type": "string" }, "apellido": { "type": "string" } } },
+                          { "type": "null" }
+                        ]
+                      },
+                      "cantidad_denuncias": { "type": "integer" },
+                      "estado_resumen": { "type": "string" },
+                      "denuncias": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/Denuncia" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "ID de publicación inválido" },
+        "404": { "description": "Publicación no encontrada" }
+      }
+    }
+  },
+  "/api/admin/materiales/{id}/denuncias/verificar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Verificar denuncias de material",
+      "description": "Marca todas las denuncias pendientes de un material como verificadas.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del material" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Denuncias verificadas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "material_id": { "type": "integer" },
+                      "nuevo_estado": { "type": "string", "example": "verificada" },
+                      "denuncias_actualizadas": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Material sin denuncias o denuncia ya rechazada" },
+        "404": { "description": "Material o administrador no encontrado" }
+      }
+    }
+  },
+  "/api/admin/materiales/{id}/denuncias/rechazar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Rechazar denuncias de material",
+      "description": "Marca todas las denuncias pendientes de un material como rechazadas.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del material" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Denuncias rechazadas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "material_id": { "type": "integer" },
+                      "nuevo_estado": { "type": "string", "example": "rechazada" },
+                      "denuncias_actualizadas": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Material sin denuncias o denuncia ya rechazada" },
+        "404": { "description": "Material o administrador no encontrado" }
+      }
+    }
+  },
+  "/api/admin/materiales/{id}/suspender": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Suspender material",
+      "description": "Suspende un material y verifica automáticamente sus denuncias pendientes.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del material" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Material suspendido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "suspendido": { "type": "boolean", "example": true },
+                      "denuncias_actualizadas": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Material ya suspendido o sin denuncias" },
+        "404": { "description": "Material o administrador no encontrado" }
+      }
+    }
+  },
+  "/api/admin/materiales/{id}/restaurar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Restaurar material",
+      "description": "Restaura un material suspendido, quitándole el estado de suspensión.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del material" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Material restaurado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "suspendido": { "type": "boolean", "example": false }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Material no suspendido" },
+        "404": { "description": "Material no encontrado" }
+      }
+    }
+  },
+  "/api/admin/posts/{id}/denuncias/verificar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Verificar denuncias de post",
+      "description": "Marca todas las denuncias pendientes de un post como verificadas y lo oculta.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del post" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Denuncias verificadas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "post_id": { "type": "integer" },
+                      "nuevo_estado": { "type": "string", "example": "verificada" },
+                      "denuncias_actualizadas": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Post sin denuncias, ya oculto o denuncia rechazada" },
+        "404": { "description": "Publicación o administrador no encontrado" }
+      }
+    }
+  },
+  "/api/admin/posts/{id}/denuncias/rechazar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Rechazar denuncias de post",
+      "description": "Marca todas las denuncias pendientes de un post como rechazadas.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del post" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Denuncias rechazadas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "post_id": { "type": "integer" },
+                      "nuevo_estado": { "type": "string", "example": "rechazada" },
+                      "denuncias_actualizadas": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Post sin denuncias o denuncia rechazada" },
+        "404": { "description": "Publicación o administrador no encontrado" }
+      }
+    }
+  },
+  "/api/admin/posts/{id}/ocultar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Ocultar post",
+      "description": "Oculta un post y verifica automáticamente sus denuncias pendientes.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del post" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Post ocultado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "oculto": { "type": "boolean", "example": true },
+                      "denuncias_actualizadas": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Post ya oculto, sin denuncias o denuncia rechazada" },
+        "404": { "description": "Publicación o administrador no encontrado" }
+      }
+    }
+  },
+  "/api/admin/posts/{id}/mostrar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Mostrar post oculto",
+      "description": "Muestra un post que había sido ocultado.",
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID del post" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Post mostrado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "oculto": { "type": "boolean", "example": false }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Post no oculto" },
+        "404": { "description": "Publicación no encontrada" }
+      }
+    }
+  },
+  "/api/admin/denuncias/{denunciaId}/rechazar": {
+    "patch": {
+      "tags": ["Denuncias Admin"],
+      "summary": "Rechazar denuncia individual",
+      "description": "Rechaza una denuncia específica por su ID. Verifica el estado del material/post asociado.",
+      "parameters": [
+        { "name": "denunciaId", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID de la denuncia" }
+      ],
+      "responses": {
+        "200": {
+          "description": "Denuncia rechazada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "estado": { "type": "string", "example": "rechazada" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Denuncia ya resuelta o recurso ya en estado final" },
+        "404": { "description": "Denuncia o administrador no encontrado" }
+      }
+    }
+  }
+}

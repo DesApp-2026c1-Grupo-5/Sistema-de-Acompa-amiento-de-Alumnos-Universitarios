@@ -1,5 +1,6 @@
 const db = require("../db/models");
 const { carrera, plan_estudio, materia, correlatividad, sequelize } = db;
+const planEstudioService = require("../services/planEstudio.service");
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -13,7 +14,7 @@ const listarCarreras = async (req, res) => {
       {
         model: plan_estudio,
         as: "planes",
-        attributes: ["id", "anio", "estado"],
+        attributes: ["id", "nombre", "anio", "estado"],
       },
     ],
     order: [["nombre", "ASC"]],
@@ -23,6 +24,7 @@ const listarCarreras = async (req, res) => {
     const plain = c.get({ plain: true });
     const planes = (plain.planes || []).map((p) => ({
       id: p.id,
+      nombre: p.nombre,
       anio: p.anio,
       estado: p.estado,
     }));
@@ -42,24 +44,12 @@ const listarCarreras = async (req, res) => {
 const crearCarrera = async (req, res, next) => {
   const { nombre, titulo, instituto, duracion_anios, plan, materias } = req.body;
 
-  // Validaciones cruzadas sobre materias y correlativas
+  let materiasNormalizadas = materias;
   if (Array.isArray(materias)) {
-    const codigos = materias.map((m) => m.codigo);
-    const set = new Set(codigos);
-    if (set.size !== codigos.length) {
-      return next(buildError("Hay códigos de materia duplicados en el payload", 400));
-    }
-    for (const m of materias) {
-      for (const corr of m.correlativas || []) {
-        if (!set.has(corr)) {
-          return next(
-            buildError(
-              `La correlativa "${corr}" de la materia "${m.codigo}" no coincide con ninguna materia del plan`,
-              400
-            )
-          );
-        }
-      }
+    try {
+      materiasNormalizadas = planEstudioService.validarMateriasPayload(materias);
+    } catch (err) {
+      return next(err);
     }
     if (materias.length > 0 && !plan) {
       return next(buildError("Se enviaron materias pero falta el plan de estudio", 400));
@@ -89,8 +79,8 @@ const crearCarrera = async (req, res, next) => {
           { transaction: t }
         );
 
-        if (Array.isArray(materias) && materias.length > 0) {
-          for (const m of materias) {
+        if (Array.isArray(materiasNormalizadas) && materiasNormalizadas.length > 0) {
+          for (const m of materiasNormalizadas) {
             const nuevaMateria = await materia.create(
               {
                 plan_id: nuevoPlan.id,
@@ -112,13 +102,13 @@ const crearCarrera = async (req, res, next) => {
             materiasCreadas.map((m) => [m.codigo, m.id])
           );
 
-          for (const m of materias) {
-            for (const corrCodigo of m.correlativas || []) {
+          for (const m of materiasNormalizadas) {
+            for (const correlativa of m.correlativas || []) {
               await correlatividad.create(
                 {
                   materia_id: codigoToId[m.codigo],
-                  materia_requisito_id: codigoToId[corrCodigo],
-                  tipo: "cursar",
+                  materia_requisito_id: codigoToId[correlativa.codigo],
+                  tipo: correlativa.tipo,
                 },
                 { transaction: t }
               );
@@ -154,7 +144,45 @@ const crearCarrera = async (req, res, next) => {
   }
 };
 
+const actualizarCarrera = async (req, res, next) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return next(buildError("id de carrera inválido", 400));
+  }
+
+  const { nombre, titulo, instituto, duracion_anios } = req.body;
+
+  try {
+    const existente = await carrera.findByPk(id);
+    if (!existente) {
+      return next(buildError("Carrera no encontrada", 404));
+    }
+
+    await existente.update({
+      nombre: nombre ?? existente.nombre,
+      titulo: titulo ?? existente.titulo,
+      instituto: instituto ?? existente.instituto,
+      duracion_anios: duracion_anios ?? existente.duracion_anios,
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        id: existente.id,
+        nombre: existente.nombre,
+        titulo: existente.titulo,
+        instituto: existente.instituto,
+        duracion_anios: existente.duracion_anios,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   listarCarreras,
   crearCarrera,
+  actualizarCarrera,
 };

@@ -12,6 +12,12 @@
   gap: 12px;
 }
 
+.pagination {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
 .item {
   background: #f6f8fb;
   border-radius: 12px;

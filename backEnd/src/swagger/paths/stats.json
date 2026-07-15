@@ -1,0 +1,113 @@
+{
+  "/api/admin/stats": {
+    "get": {
+      "tags": ["Estadísticas"],
+      "summary": "Obtener estadísticas generales del admin",
+      "description": "Retorna métricas completas de uso del sistema, reportes sociales, distribución de materias, actividad de usuarios y moderación de denuncias.",
+      "parameters": [
+        {
+          "name": "ratingOrder",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["default", "desc", "asc"] },
+          "description": "Orden de las materias con más materiales por rating",
+          "default": "default"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Estadísticas generales obtenidas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "usoSistema": {
+                        "type": "object",
+                        "properties": {
+                          "metricas": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/MetricaEstadistica" }
+                          },
+                          "usuariosActivosSerie": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/DataPointMes" }
+                          },
+                          "materiasCursadasAlumno": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/BucketEstadistica" }
+                          },
+                          "materiasAprobadasAlumno": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/BucketEstadistica" }
+                          },
+                          "materiasPorCarrera": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/CarreraMateriasEstadistica" }
+                          },
+                          "materiasAprobadasPorCarrera": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/CarreraMateriasEstadistica" }
+                          },
+                          "sesionesPeriodo": {
+                            "type": "object",
+                            "properties": {
+                              "total": { "type": "integer" },
+                              "promedio": { "type": "integer" },
+                              "months": { "type": "array", "items": { "type": "string" } },
+                              "data": { "type": "array", "items": { "type": "integer" } }
+                            }
+                          },
+                          "materiasConMasMateriales": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/MateriaTopEstadistica" }
+                          },
+                          "moderacion": {
+                            "type": "object",
+                            "properties": {
+                              "total": { "type": "integer" },
+                              "pendientes": { "type": "integer" },
+                              "aceptadas": { "type": "integer" },
+                              "rechazadas": { "type": "integer" }
+                            }
+                          }
+                        }
+                      },
+                      "reportesSociales": {
+                        "type": "object",
+                        "properties": {
+                          "metricas": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/MetricaEstadistica" }
+                          },
+                          "distribucionConexiones": { "type": "array", "items": { "type": "string" } },
+                          "distribucionConexionesData": { "type": "array" },
+                          "participantesPorSesion": { "type": "array" },
+                          "ocupacion": {
+                            "type": "object",
+                            "properties": {
+                              "percentage": { "type": "integer" },
+                              "cuposLlenos": { "type": "integer" },
+                              "conDisponibilidad": { "type": "integer" }
+                            }
+                          },
+                          "carrerasActivas": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/CarreraActivaEstadistica" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

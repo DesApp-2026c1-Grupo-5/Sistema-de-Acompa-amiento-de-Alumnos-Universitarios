@@ -1,35 +1,35 @@
-import subjectsData from '../pages/student/academicAssistant/subjects.json';
-
-const lightHours = (name) =>
-  /ingl.s|optativa|unahur|pr.ctica profesional/i.test(name) ? 4 : 6;
-
-function assignCuatrimestre(subjects) {
-  const byYear = {};
-  subjects.forEach((s) => {
-    if (!byYear[s.year]) byYear[s.year] = [];
-    byYear[s.year].push(s);
-  });
-
-  const enriched = [];
-  for (const year of Object.keys(byYear).sort()) {
-    const list = byYear[year];
-    list.forEach((s, i) => {
-      const half = Math.ceil(list.length / 2);
-      enriched.push({
-        ...s,
-        cuatrimestre: i < half ? 1 : 2,
-        hours: lightHours(s.name),
-      });
-    });
-  }
-  return enriched;
-}
+import { api } from "./api";
 
 export async function getCareerSubjects() {
-  const enriched = assignCuatrimestre(subjectsData.subjects);
+  const res = await api.get("/student/academic-assistant/plan-subjects");
+  const mapSubject = (subject) => ({
+    ...subject,
+    id: Number(subject.id),
+    correlatives: (subject.correlatives ?? []).map(Number),
+    correlativeRequirements: (subject.correlativeRequirements ?? []).map((requirement) => ({
+      ...requirement,
+      subjectId: Number(requirement.subjectId),
+    })),
+    hours: subject.hours || 6,
+    cuatrimestre:
+      subject.cuatrimestre || (subject.year % 2 === 0 ? 2 : 1),
+  });
+
+  const subjects = res?.data?.subjects ?? [];
+  const simulatorSubjects = res?.data?.simulatorSubjects ?? [];
+  const currentPlan = res?.data?.currentPlan ?? [];
+
   return {
-    career: subjectsData.career,
-    plan: subjectsData.plan,
-    subjects: enriched,
+    subjects: subjects.map(mapSubject),
+    simulatorSubjects: simulatorSubjects.map(mapSubject),
+    currentPlan,
+    planningBlocked: !!res?.data?.planningBlocked,
+    unplannableSubjects: (res?.data?.unplannableSubjects ?? []).map((subject) => ({
+      ...subject,
+      id: Number(subject.id),
+      reasons: subject.reasons ?? [],
+    })),
+    materiasNombres: res?.data?.materiasNombres ?? {},
+    summary: res?.data?.summary ?? null,
   };
 }

@@ -5,6 +5,7 @@ import {
     Calendar,
     FileText,
     GraduationCap,
+    AlertCircle,
     CheckCheck,
     Trash2,
     ExternalLink,
@@ -34,6 +35,11 @@ const TYPE_CONFIG = {
         label: 'Material',
         icon: FileText,
         className: 'material',
+    },
+    general: {
+        label: 'General',
+        icon: AlertCircle,
+        className: 'general',
     },
 };
 
@@ -202,6 +208,14 @@ export default function Notifications() {
                             >
                                 Materiales
                             </button>
+
+                            <button
+                                type="button"
+                                className={typeFilter === 'general' ? styles.activeFilter : ''}
+                                onClick={() => setTypeFilter('general')}
+                            >
+                                Generales
+                            </button>
                         </div>
                     </div>
 
@@ -249,10 +263,7 @@ export default function Notifications() {
             ) : (
                 <section className={styles.notificationsList}>
                     {filteredNotifications.map((notification) => {
-                        const config = TYPE_CONFIG[notification.type] ?? {
-                            icon: Bell,
-                            className: 'academic',
-                        };
+                        const config = TYPE_CONFIG[notification.type] ?? TYPE_CONFIG.general;
                         const Icon = config.icon;
 
                         return (
@@ -280,7 +291,11 @@ export default function Notifications() {
                                         </span>
                                     </div>
 
-                                    <p>{notification.message}</p>
+                                    <p>
+                                        {notification.senderName
+                                            ? <><strong>{notification.senderName}</strong> — {notification.message}</>
+                                            : notification.message}
+                                    </p>
 
                                     <span className={styles.date}>
                                         <Clock size={13} />

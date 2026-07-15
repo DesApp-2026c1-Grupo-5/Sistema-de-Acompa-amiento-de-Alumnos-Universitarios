@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const {
   estudiante,
   situacion_academica,
@@ -7,7 +8,10 @@ const {
   correlatividad,
   actividad_credito,
   oferta_academica,
+  final,
 } = require("../db/models");
+const { mapearMateria } = require("../services/simuladorCursada.service");
+const { cumpleCorrelatividad } = require("../services/correlatividadAcademica.service");
 
 const APROBADA = ["aprobada", "aprobado", "promocionada", "promotionada"];
 const REGULAR = ["regular", "regularizada", "regularizado"];
@@ -17,6 +21,12 @@ const normalizar = (estado) => (estado || "").trim().toLowerCase();
 const esAprobada = (e) => APROBADA.includes(normalizar(e));
 const esRegular = (e) => REGULAR.includes(normalizar(e));
 const esCursando = (e) => CURSANDO.includes(normalizar(e));
+const getCanonicalSubjectStatus = (estado) => {
+  if (esAprobada(estado)) return "aprobada";
+  if (esRegular(estado)) return "regular";
+  if (esCursando(estado)) return "cursando";
+  return "pendiente";
+};
 
 const emptyPayload = {
   progress: { percentage: 0, label: "Avance de carrera" },
@@ -29,7 +39,15 @@ const emptyPayload = {
     unahurSubjects: 0,
   },
   subjects: [],
+  finals: [],
+  years: [],
+  studentStatus: { approvedIds: [], regularizedIds: [], inProgressIds: [] },
 };
+
+const unavailablePayload = (reason) => ({
+  ...emptyPayload,
+  availability: { canUse: false, reason },
+});
 
 const getSituacionActiva = (estudianteId) =>
   situacion_academica.findOne({
@@ -41,18 +59,121 @@ const getSituacionActiva = (estudianteId) =>
     ],
   });
 
+const buildFinals = async (situacionId) => {
+  const estados = await estado_materia.findAll({
+    where: { situacion_id: situacionId },
+    attributes: ["id", "materia_id", "estado", "fecha"],
+    raw: true,
+  });
+
+  const estadosRegulares = estados.filter((e) => esRegular(e.estado));
+  if (estadosRegulares.length === 0) return [];
+
+  const regularEstadoIds = estadosRegulares.map((e) => e.id);
+
+  const finalRecords = await final.findAll({
+    where: { estado_materia_id: { [Op.in]: regularEstadoIds } },
+    attributes: ["estado_materia_id", "aprobado"],
+    raw: true,
+  });
+
+  const aprobados = new Set(
+    finalRecords.filter((f) => f.aprobado).map((f) => f.estado_materia_id)
+  );
+
+  const attemptCount = new Map();
+  for (const f of finalRecords) {
+    attemptCount.set(f.estado_materia_id, (attemptCount.get(f.estado_materia_id) || 0) + 1);
+  }
+
+  const pendientes = estadosRegulares.filter((e) => !aprobados.has(e.id));
+  if (pendientes.length === 0) return [];
+
+  const materiaIds = pendientes.map((e) => e.materia_id);
+  const materiasMap = {};
+  if (materiaIds.length > 0) {
+    const materias = await materia.findAll({
+      where: { id: { [Op.in]: materiaIds } },
+      attributes: ["id", "nombre"],
+      raw: true,
+    });
+    for (const m of materias) {
+      materiasMap[m.id] = m.nombre;
+    }
+  }
+
+  const ahora = new Date();
+
+  return pendientes.map((e) => {
+    const fechaRegular = e.fecha ? new Date(e.fecha) : new Date();
+    const expiracion = new Date(fechaRegular);
+    expiracion.setFullYear(expiracion.getFullYear() + 2);
+
+    const diffMs = expiracion - ahora;
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    let status = "valid";
+    if (diffDays <= 0) status = "expired";
+    else if (diffDays <= 60) status = "expiring";
+
+    return {
+      id: e.id,
+      name: materiasMap[e.materia_id] || `Materia #${e.materia_id}`,
+      attempts: attemptCount.get(e.id) || 0,
+      expires: expiracion.toLocaleDateString("es-AR"),
+      status,
+    };
+  });
+};
+
+const buildYearsAnalysis = (materias, estadoPorMateria) => {
+  const yearsMap = new Map();
+
+  for (const m of materias) {
+    const anio = m.anio_cursada || 1;
+    if (!yearsMap.has(anio)) {
+      yearsMap.set(anio, { year: anio, total: 0, approved: 0, regularized: 0, missing: 0 });
+    }
+    const entry = yearsMap.get(anio);
+    entry.total += 1;
+
+    const estado = estadoPorMateria.get(m.id);
+    if (esAprobada(estado)) {
+      entry.approved += 1;
+    } else if (esRegular(estado)) {
+      entry.regularized += 1;
+    } else {
+      entry.missing += 1;
+    }
+  }
+
+  return Array.from(yearsMap.values())
+    .sort((a, b) => a.year - b.year)
+    .map((y) => ({
+      ...y,
+      percentage: y.total > 0 ? Math.round((y.approved / y.total) * 100) : 0,
+    }));
+};
+
 const getAcademicAssistant = async (req, res, next) => {
-  const estudianteData = await estudiante.findOne({
+  try {
+    const estudianteData = await estudiante.findOne({
     where: { usuario_id: req.user.sub },
   });
 
   if (!estudianteData) {
-    return res.status(200).json({ ok: true, data: emptyPayload });
+    return res.status(200).json({
+      ok: true,
+      data: unavailablePayload("NO_STUDENT_PROFILE"),
+    });
   }
 
   const situacion = await getSituacionActiva(estudianteData.id);
   if (!situacion) {
-    return res.status(200).json({ ok: true, data: emptyPayload });
+    return res.status(200).json({
+      ok: true,
+      data: unavailablePayload("NO_ACADEMIC_SITUATION"),
+    });
   }
 
   const plan = await plan_estudio.findByPk(situacion.plan_id, {
@@ -76,14 +197,17 @@ const getAcademicAssistant = async (req, res, next) => {
   });
 
   if (!plan) {
-    return res.status(200).json({ ok: true, data: emptyPayload });
+    return res.status(200).json({
+      ok: true,
+      data: unavailablePayload("PLAN_NOT_FOUND"),
+    });
   }
 
   const materias = plan.materias || [];
 
   const estados = await estado_materia.findAll({
     where: { situacion_id: situacion.id },
-    attributes: ["materia_id", "estado"],
+    attributes: ["id", "materia_id", "estado", "fecha"],
     raw: true,
   });
 
@@ -93,7 +217,6 @@ const getAcademicAssistant = async (req, res, next) => {
     raw: true,
   });
 
-  // Estado del alumno por materia
   const estadoPorMateria = new Map();
   for (const e of estados) {
     estadoPorMateria.set(e.materia_id, e.estado);
@@ -101,6 +224,14 @@ const getAcademicAssistant = async (req, res, next) => {
 
   const aprobadasIds = new Set(
     estados.filter((e) => esAprobada(e.estado)).map((e) => e.materia_id)
+  );
+
+  const regularizedIds = new Set(
+    estados.filter((e) => esRegular(e.estado)).map((e) => Number(e.materia_id))
+  );
+
+  const inProgressIds = new Set(
+    estados.filter((e) => esCursando(e.estado)).map((e) => Number(e.materia_id))
   );
 
   let approved = 0;
@@ -123,14 +254,10 @@ const getAcademicAssistant = async (req, res, next) => {
   }
 
   const totalMaterias = materias.length;
-  const pending = Math.max(
-    0,
-    totalMaterias - approved - regularized - cursando
-  );
+  const pending = Math.max(0, totalMaterias - approved - regularized - cursando);
 
   const creditsFromActividades = actividades.reduce(
-    (sum, a) => sum + (a.creditos || 0),
-    0
+    (sum, a) => sum + (a.creditos || 0), 0
   );
   const creditsObtained = creditsFromMaterias + creditsFromActividades;
   const creditsRequeridos = plan.creditos_requeridos || 0;
@@ -139,20 +266,18 @@ const getAcademicAssistant = async (req, res, next) => {
   const percentage =
     totalMaterias > 0 ? Math.round((approved / totalMaterias) * 100) : 0;
 
-  // Materias disponibles para cursar
   const anioActual = new Date().getFullYear();
   const subjects = [];
 
   for (const m of materias) {
     const estado = estadoPorMateria.get(m.id);
-    // Candidata: no aprobada, no regular, no cursando
     if (esAprobada(estado) || esRegular(estado) || esCursando(estado)) {
       continue;
     }
 
     const correlativas = m.correlatividades || [];
     const cumpleTodas = correlativas.every((c) =>
-      aprobadasIds.has(c.materia_requisito_id)
+      cumpleCorrelatividad(c.tipo, estadoPorMateria.get(c.materia_requisito_id))
     );
 
     if (!cumpleTodas) continue;
@@ -174,9 +299,15 @@ const getAcademicAssistant = async (req, res, next) => {
     });
   }
 
+  const [finalsData, yearsData] = await Promise.all([
+    buildFinals(situacion.id),
+    Promise.resolve(buildYearsAnalysis(materias, estadoPorMateria)),
+  ]);
+
   return res.status(200).json({
     ok: true,
     data: {
+      availability: { canUse: true, reason: null },
       progress: { percentage, label: "Avance de carrera" },
       stats: {
         approved,
@@ -187,8 +318,308 @@ const getAcademicAssistant = async (req, res, next) => {
         unahurSubjects,
       },
       subjects,
+      finals: finalsData,
+      years: yearsData,
+      studentStatus: {
+        approvedIds: Array.from(aprobadasIds),
+        regularizedIds: Array.from(regularizedIds),
+        inProgressIds: Array.from(inProgressIds),
+      },
     },
   });
+  } catch (err) {
+    next(err);
+  }
 };
 
-module.exports = { getAcademicAssistant };
+const getPlanSubjects = async (req, res, next) => {
+  try {
+    const estudianteData = await estudiante.findOne({
+      where: { usuario_id: req.user.sub },
+    });
+
+    if (!estudianteData) {
+      return res.status(200).json({
+        ok: true,
+        data: {
+          subjects: [],
+          simulatorSubjects: [],
+          currentPlan: [],
+        },
+      });
+    }
+
+    const situacion = await getSituacionActiva(estudianteData.id);
+
+    if (!situacion) {
+      return res.status(200).json({
+        ok: true,
+        data: {
+          subjects: [],
+          simulatorSubjects: [],
+          currentPlan: [],
+        },
+      });
+    }
+
+    const plan = await plan_estudio.findByPk(situacion.plan_id, {
+      include: [
+        {
+          model: materia,
+          as: "materias",
+          include: [
+            {
+              model: correlatividad,
+              as: "correlatividades",
+              attributes: ["materia_id", "materia_requisito_id", "tipo"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!plan) {
+      return res.status(200).json({
+        ok: true,
+        data: {
+          subjects: [],
+          simulatorSubjects: [],
+          currentPlan: [],
+        },
+      });
+    }
+
+    const estados = await estado_materia.findAll({
+      where: { situacion_id: situacion.id },
+      attributes: ["materia_id", "estado"],
+      raw: true,
+    });
+
+    const estadoPorMateria = new Map(
+      estados.map((estado) => [estado.materia_id, estado.estado])
+    );
+
+    const materias = plan.materias || [];
+
+    const simulatorSubjects = materias
+      .map((m) => ({
+        ...mapearMateria(m),
+        status: getCanonicalSubjectStatus(estadoPorMateria.get(m.id)),
+      }))
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        if (a.cuatrimestre !== b.cuatrimestre) {
+          return a.cuatrimestre - b.cuatrimestre;
+        }
+        return a.name.localeCompare(b.name);
+      });
+
+    const aprobadasIds = new Set(
+      estados
+        .filter((estado) => esAprobada(estado.estado))
+        .map((estado) => estado.materia_id)
+    );
+
+    const regularizadasIds = new Set(
+      estados
+        .filter((estado) => esRegular(estado.estado))
+        .map((estado) => estado.materia_id)
+    );
+
+    const cursandoIds = new Set(
+      estados
+        .filter((estado) => esCursando(estado.estado))
+        .map((estado) => estado.materia_id)
+    );
+
+    const materiasPendientes = materias
+      .filter((m) => {
+        const estado = estadoPorMateria.get(m.id);
+
+        return (
+          !esAprobada(estado) &&
+          !esRegular(estado) &&
+          !esCursando(estado)
+        );
+      })
+      .map((m) => {
+        const correlativas = (m.correlatividades || []).map(
+          (c) => c.materia_requisito_id
+        );
+        const correlativeRequirements = (m.correlatividades || []).map((c) => ({
+          subjectId: c.materia_requisito_id,
+          type: c.tipo,
+          currentStatus: getCanonicalSubjectStatus(
+            estadoPorMateria.get(c.materia_requisito_id)
+          ),
+        }));
+
+        return {
+          id: m.id,
+          name: m.nombre,
+          year: m.anio_cursada || 1,
+          cuatrimestre:
+            m.cuatrimestre ||
+            m.cuatrimestre_cursada ||
+            (m.anio_cursada % 2 === 0 ? 2 : 1),
+          type: m.modalidad || "Cuatrimestral",
+          hours: m.carga_horaria_semanal || 6,
+          credits: m.creditos_otorga || 0,
+          correlatives: correlativas,
+          correlativeRequirements,
+          status: "pendiente",
+          approved: aprobadasIds.has(m.id),
+          regularized: regularizadasIds.has(m.id),
+          inProgress: cursandoIds.has(m.id),
+        };
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.cuatrimestre - b.cuatrimestre;
+      });
+
+    const currentPlan = [];
+    const materiasPlanificadas = new Set();
+    const materiasDisponibles = [...materiasPendientes];
+    const estadosProyectables = new Set(["aprobada", "regular", "cursando"]);
+
+    let anioActual = 1;
+    let cuatrimestreActual = 1;
+    let seguridad = 0;
+
+    while (materiasDisponibles.length > 0 && seguridad < 200) {
+      seguridad += 1;
+
+      const grupo = {
+        year: anioActual,
+        cuatrimestre: cuatrimestreActual,
+        label: `Año ${anioActual} - Cuatrimestre ${cuatrimestreActual}`,
+        subjects: [],
+      };
+
+      let horasGrupo = 0;
+      let huboMateriaAgregada = false;
+      const materiasAgregadasGrupo = [];
+
+      for (let i = 0; i < materiasDisponibles.length; i += 1) {
+        const materiaActual = materiasDisponibles[i];
+
+        const cumpleCorrelativas = materiaActual.correlativeRequirements.every(
+          (requirement) =>
+            estadosProyectables.has(requirement.currentStatus) ||
+            materiasPlanificadas.has(requirement.subjectId)
+        );
+
+        if (!cumpleCorrelativas) continue;
+
+        if (horasGrupo + materiaActual.hours > 20) continue;
+
+        grupo.subjects.push({
+          id: materiaActual.id,
+          name: materiaActual.name,
+          hours: materiaActual.hours,
+          correlatives: materiaActual.correlatives,
+          correlativeRequirements: materiaActual.correlativeRequirements,
+          extraHours: 0,
+        });
+
+        horasGrupo += materiaActual.hours;
+        materiasAgregadasGrupo.push(materiaActual.id);
+        materiasDisponibles.splice(i, 1);
+        i -= 1;
+        huboMateriaAgregada = true;
+      }
+
+      if (grupo.subjects.length > 0) {
+        currentPlan.push(grupo);
+        materiasAgregadasGrupo.forEach((id) => materiasPlanificadas.add(id));
+      }
+
+      if (cuatrimestreActual === 1) {
+        cuatrimestreActual = 2;
+      } else {
+        cuatrimestreActual = 1;
+        anioActual += 1;
+      }
+
+      if (!huboMateriaAgregada && materiasDisponibles.length > 0) {
+        break;
+      }
+    }
+
+    const todasMaterias = await materia.findAll({
+      attributes: ["id", "nombre"],
+      raw: true,
+    });
+    const materiasNombres = {};
+    for (const m of todasMaterias) {
+      materiasNombres[m.id] = m.nombre;
+    }
+
+    const materiasDelPlanIds = new Set(materias.map((item) => Number(item.id)));
+    const materiasPendientesIds = new Set(
+      materiasPendientes.map((item) => Number(item.id))
+    );
+    const unplannableSubjects = materiasDisponibles.map((subject) => {
+      const reasons = [];
+      if (subject.hours > 20) {
+        reasons.push({
+          code: "HOUR_LIMIT",
+          message: `Requiere ${subject.hours}hs y supera el máximo de 20hs por cuatrimestre`,
+        });
+      }
+
+      for (const requirement of subject.correlativeRequirements) {
+        if (
+          estadosProyectables.has(requirement.currentStatus) ||
+          materiasPlanificadas.has(requirement.subjectId)
+        ) {
+          continue;
+        }
+
+        const requisitoId = Number(requirement.subjectId);
+        reasons.push({
+          code: materiasDelPlanIds.has(requisitoId)
+            ? "PENDING_PREREQUISITE"
+            : "MISSING_PREREQUISITE",
+          requirementId: requisitoId,
+          requirementName: materiasNombres[requisitoId] || null,
+          requirementType: requirement.type,
+          message: materiasPendientesIds.has(requisitoId)
+            ? `La correlativa ${materiasNombres[requisitoId] || requisitoId} debe ubicarse en un cuatrimestre anterior`
+            : `No se puede proyectar la correlativa ${materiasNombres[requisitoId] || requisitoId}`,
+        });
+      }
+
+      return {
+        id: subject.id,
+        name: subject.name,
+        correlativeRequirements: subject.correlativeRequirements,
+        reasons,
+      };
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        subjects: materiasPendientes,
+        simulatorSubjects,
+        currentPlan,
+        planningBlocked: unplannableSubjects.length > 0,
+        unplannableSubjects,
+        materiasNombres,
+        summary: {
+          totalSubjects: materias.length,
+          pendingSubjects: materiasPendientes.length,
+          approvedSubjects: aprobadasIds.size,
+          regularizedSubjects: regularizadasIds.size,
+          inProgressSubjects: cursandoIds.size,
+        },
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getAcademicAssistant, getPlanSubjects };

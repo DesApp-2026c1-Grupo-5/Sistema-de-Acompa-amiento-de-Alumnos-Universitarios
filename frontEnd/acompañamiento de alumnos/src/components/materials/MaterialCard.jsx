@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   FileText,
   Video,
@@ -9,6 +10,7 @@ import {
   ThumbsDown,
   Eye,
   Download,
+  LoaderCircle,
 } from 'lucide-react';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
@@ -34,7 +36,13 @@ const TYPE_VARIANT = {
   discord: 'discord',
 };
 
-function MaterialCard({ material, onView, onDownload, onJoinDiscord }) {
+function MaterialCard({
+  material,
+  onView,
+  onDownload,
+  onJoinDiscord,
+  isDownloading = false,
+}) {
   const Icon = TYPE_ICON[material.type] || FileText;
   const isDiscord = material.type === 'discord';
   const isFile = material.type === 'file';
@@ -73,8 +81,10 @@ function MaterialCard({ material, onView, onDownload, onJoinDiscord }) {
 
       <div className={styles.meta}>
         <div className={styles.author}>
-          <Avatar initials={material.author?.initials} src={material.author?.image} size="sm" />
-          <span className={styles.authorName}>{material.author?.name}</span>
+          <Link to={`/student/profile/${material.author?.id}`} className={styles.authorLink}>
+            <Avatar initials={material.author?.initials} src={material.author?.image} size="sm" />
+            <span className={styles.authorName}>{material.author?.name}</span>
+          </Link>
         </div>
         <span className={styles.date}>{formatDate(material.publishedAt)}</span>
       </div>
@@ -107,8 +117,15 @@ function MaterialCard({ material, onView, onDownload, onJoinDiscord }) {
             <Button
               variant="iconCircle"
               onClick={() => onDownload?.(material)}
-              aria-label="Descargar archivo"
-              iconLeft={<Download size={18} />}
+              disabled={isDownloading}
+              aria-label={isDownloading ? 'Descargando archivo' : 'Descargar archivo'}
+              iconLeft={
+                isDownloading ? (
+                  <LoaderCircle size={18} className={styles.downloadSpinner} />
+                ) : (
+                  <Download size={18} />
+                )
+              }
             />
           )}
 

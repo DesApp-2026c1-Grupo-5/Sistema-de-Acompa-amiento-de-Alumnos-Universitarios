@@ -6,7 +6,7 @@ const HeroSection = () => {
       <div className={styles.heroSection__content}>
         <div className={styles.heroSection__text}>
           <div className={styles.heroBadge}>
-            ✨ Plataforma académica inteligente
+            ✨ Sistema de Integrado de Vida Academica
           </div>
 
           <h1>
@@ -25,7 +25,6 @@ const HeroSection = () => {
           <div className={styles.dashboardPreview}>
             <div className={styles.dashboardPreview__header}>
               <h3>Mi Dashboard</h3>
-              <span>Semestre 2026-1</span>
             </div>
 
             <div className={`${styles.subjectPreview} ${styles.subjectPreviewActive}`}>

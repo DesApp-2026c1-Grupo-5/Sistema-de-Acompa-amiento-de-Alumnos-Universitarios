@@ -1,0 +1,76 @@
+/* frontEnd/src/components/privacy/PrivacySection.module.css */
+
+.section {
+  position: relative;
+  scroll-margin-top: 96px;
+  padding: 24px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 20px;
+  background: var(--card-bg, #ffffff);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.highlighted {
+  border-color: #039c9a;
+  box-shadow: 0 14px 36px rgba(3, 156, 154, 0.16);
+  transform: translateY(-2px);
+}
+
+.header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.iconBox {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+
+  color: #039c9a;
+  background: rgba(3, 156, 154, 0.12);
+}
+
+.title {
+  margin: 0;
+  color: var(--text-h, #111827);
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.content {
+  color: var(--text-p, #4b5563);
+  font-size: 0.96rem;
+  line-height: 1.75;
+}
+
+.content p {
+  margin: 0 0 12px;
+}
+
+.content ul {
+  padding-left: 20px;
+  margin: 10px 0 0;
+}
+
+.content li {
+  margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding: 30px;
+  }
+
+  .title {
+    font-size: 1.45rem;
+  }
+}

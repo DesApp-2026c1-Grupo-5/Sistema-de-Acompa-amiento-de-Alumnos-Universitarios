@@ -5,8 +5,22 @@ const {
   materia,
   tag,
   denuncia,
+  sequelize,
 } = require("../db/models");
 const { Op } = require("sequelize");
+const logger = require("../utils/logger");
+const {
+  construirNombreDescarga,
+  construirPathAdministrado,
+  decorarMaterialDto,
+  eliminarArchivoSubido,
+  existeArchivoRegular,
+  obtenerExtensionNormalizada,
+  obtenerInfoArchivoAdministrado,
+  tieneFirmaValida,
+} = require("../services/materialArchivo.service");
+
+const TIPOS_EXTERNOS = new Set(["link", "video", "drive", "github", "discord"]);
 
 const getMaterialIdsConDenunciaPendiente = async (miEstudianteId, materialIds) => {
   if (!miEstudianteId || materialIds.length === 0) return new Set();
@@ -46,11 +60,80 @@ const formatMaterial = (plain, miEstudianteId) => {
     ? votos.find((v) => v.estudiante_id === miEstudianteId)
     : null;
   delete plain.valoracions;
-  return { ...plain, likes, dislikes, mi_voto: mio?.valor ?? null };
+  return decorarMaterialDto({
+    ...plain,
+    likes,
+    dislikes,
+    mi_voto: mio?.valor ?? null,
+  });
+};
+
+const buildError = (message, statusCode) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
+const asociarTags = async (materialData, tags, transaction) => {
+  if (!Array.isArray(tags) || tags.length === 0) return;
+
+  const nombres = [
+    ...new Set(tags.map((nombre) => String(nombre).trim().toLowerCase()).filter(Boolean)),
+  ];
+  const tagIds = [];
+
+  for (const nombre of nombres) {
+    const [tagRow] = await tag.findOrCreate({
+      where: { nombre },
+      transaction,
+    });
+    tagIds.push(tagRow.id);
+  }
+
+  if (tagIds.length > 0) {
+    await materialData.addTags(tagIds, { transaction });
+  }
+};
+
+const parsearBodyArchivo = (body) => {
+  const materiaId = Number(body.materia_id);
+  if (!Number.isInteger(materiaId) || materiaId <= 0) {
+    throw buildError("materia_id debe ser un entero positivo", 400);
+  }
+
+  const titulo = String(body.titulo ?? "").trim();
+  if (!titulo) throw buildError("titulo es obligatorio", 400);
+  if (titulo.length > 120) throw buildError("titulo puede tener hasta 120 caracteres", 400);
+
+  const descripcion = String(body.descripcion ?? "").trim();
+  if (descripcion.length > 255) {
+    throw buildError("descripcion puede tener hasta 255 caracteres", 400);
+  }
+
+  let tags = [];
+  if (body.tags !== undefined) {
+    try {
+      tags = JSON.parse(body.tags);
+    } catch (error) {
+      throw buildError("tags debe ser un JSON string valido", 400);
+    }
+
+    if (!Array.isArray(tags) || tags.some((nombre) => typeof nombre !== "string")) {
+      throw buildError("tags debe ser un JSON string que represente un arreglo de textos", 400);
+    }
+
+    if (tags.length > 10 || tags.some((nombre) => nombre.trim().length > 40)) {
+      throw buildError("Se permiten hasta 10 tags de 40 caracteres cada uno", 400);
+    }
+  }
+
+  return { materiaId, titulo, descripcion, tags };
 };
 
 const listarMateriales = async (req, res) => {
-  const { q, tipo, materia_id, suspendido, page, limit } = req.query;
+  const { q, tipo, materia_id, suspendido } = req.query;
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 12));
   const offset = (page - 1) * limit;
 
   const where = {};
@@ -150,7 +233,6 @@ const crearMaterial = async (req, res, next) => {
     discord_servidor,
     discord_canal,
     size_bytes,
-    suspendido,
     tags,
   } = req.body;
 
@@ -178,6 +260,23 @@ const crearMaterial = async (req, res, next) => {
   const tituloNormalizado = String(titulo).trim();
   const urlPathNormalizado = String(url_o_path).trim();
 
+  if (tipoNormalizado === "file") {
+    return next(buildError("Los archivos deben subirse mediante /materiales/archivo", 400));
+  }
+
+  if (!TIPOS_EXTERNOS.has(tipoNormalizado)) {
+    return next(buildError("tipo de material invalido", 400));
+  }
+
+  try {
+    const parsedUrl = new URL(urlPathNormalizado);
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      throw new Error("protocolo invalido");
+    }
+  } catch {
+    return next(buildError("url_o_path debe ser una URL HTTP o HTTPS valida", 400));
+  }
+
   if (size_bytes !== undefined) {
     const parsedSize = Number(size_bytes);
 
@@ -198,14 +297,6 @@ const crearMaterial = async (req, res, next) => {
     return next(error);
   }
 
-  const materiaData = await materia.findByPk(materiaId);
-
-  if (!materiaData) {
-    const error = new Error("Materia no encontrada");
-    error.statusCode = 404;
-    return next(error);
-  }
-
   const payload = {
     materia_id: materiaId,
     estudiante_id: estudianteData.id,
@@ -217,30 +308,24 @@ const crearMaterial = async (req, res, next) => {
     subtipo_link,
     discord_servidor,
     discord_canal,
-    suspendido: suspendido ?? false,
+    suspendido: false,
   };
 
   if (size_bytes !== undefined) {
     payload.size_bytes = Number(size_bytes);
   }
 
-  const nuevoMaterial = await material.create(payload);
+  const completo = await sequelize.transaction(async (transaction) => {
+    const materiaData = await materia.findByPk(materiaId, { transaction });
+    if (!materiaData) throw buildError("Materia no encontrada", 404);
 
-  if (Array.isArray(tags) && tags.length > 0) {
-    const tagIds = [];
-    for (const nombre of tags) {
-      const limpio = String(nombre).trim().toLowerCase();
-      if (!limpio) continue;
-      const [tagRow] = await tag.findOrCreate({ where: { nombre: limpio } });
-      tagIds.push(tagRow.id);
-    }
-    if (tagIds.length > 0) {
-      await nuevoMaterial.addTags(tagIds);
-    }
-  }
+    const nuevoMaterial = await material.create(payload, { transaction });
+    await asociarTags(nuevoMaterial, tags, transaction);
 
-  const completo = await material.findByPk(nuevoMaterial.id, {
-    include: materialIncludes,
+    return material.findByPk(nuevoMaterial.id, {
+      include: materialIncludes,
+      transaction,
+    });
   });
 
   return res.status(201).json({
@@ -249,6 +334,98 @@ const crearMaterial = async (req, res, next) => {
       ...formatMaterial(completo.get({ plain: true }), estudianteData.id),
       mi_denuncia_pendiente: false,
     },
+  });
+};
+
+const crearMaterialArchivo = async (req, res, next) => {
+  try {
+    const { materiaId, titulo, descripcion, tags } = parsearBodyArchivo(req.body);
+    const extension = obtenerExtensionNormalizada(req.file.originalname);
+    if (!(await tieneFirmaValida(req.file.path, extension))) {
+      throw buildError("El contenido del archivo no coincide con su formato", 400);
+    }
+    const urlOPath = construirPathAdministrado(req.estudiante.id, req.file.filename);
+
+    const completo = await sequelize.transaction(async (transaction) => {
+      const materiaData = await materia.findByPk(materiaId, { transaction });
+      if (!materiaData) throw buildError("Materia no encontrada", 404);
+
+      const nuevoMaterial = await material.create(
+        {
+          materia_id: materiaId,
+          estudiante_id: req.estudiante.id,
+          tipo: "file",
+          titulo,
+          descripcion,
+          url_o_path: urlOPath,
+          formato: extension,
+          size_bytes: req.file.size,
+          suspendido: false,
+        },
+        { transaction }
+      );
+
+      await asociarTags(nuevoMaterial, tags, transaction);
+
+      return material.findByPk(nuevoMaterial.id, {
+        include: materialIncludes,
+        transaction,
+      });
+    });
+
+    return res.status(201).json({
+      ok: true,
+      data: {
+        ...formatMaterial(completo.get({ plain: true }), req.estudiante.id),
+        mi_denuncia_pendiente: false,
+      },
+    });
+  } catch (error) {
+    try {
+      await eliminarArchivoSubido(req.file);
+    } catch (cleanupError) {
+      logger.error("crearMaterialArchivo.cleanup", cleanupError.message || cleanupError);
+    }
+    return next(error);
+  }
+};
+
+const descargarMaterial = async (req, res, next) => {
+  const materialId = Number(req.params.id);
+  if (!Number.isInteger(materialId) || materialId <= 0) {
+    return next(buildError("id de material invalido", 400));
+  }
+
+  const materialData = await material.findByPk(materialId);
+  if (!materialData) return next(buildError("Material no encontrado", 404));
+  if (materialData.tipo !== "file") {
+    return next(buildError("El material solicitado no es un archivo", 400));
+  }
+  if (materialData.suspendido) {
+    return next(buildError("El material se encuentra suspendido", 403));
+  }
+
+  const archivo = obtenerInfoArchivoAdministrado(materialData);
+  if (!archivo) {
+    return next(buildError("El material no tiene un archivo administrado disponible", 404));
+  }
+  if (!(await existeArchivoRegular(archivo.filePath))) {
+    return next(buildError("El archivo del material no fue encontrado", 404));
+  }
+
+  const downloadName = construirNombreDescarga(
+    materialData.titulo,
+    archivo.extension,
+    materialData.id
+  );
+
+  res.set({
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+  });
+
+  return res.download(archivo.filePath, downloadName, (error) => {
+    if (error) return next(error);
   });
 };
 
@@ -334,5 +511,7 @@ module.exports = {
   listarMateriales,
   obtenerMaterialPorId,
   crearMaterial,
+  crearMaterialArchivo,
+  descargarMaterial,
   votarMaterial,
 };

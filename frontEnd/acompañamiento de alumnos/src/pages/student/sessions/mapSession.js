@@ -38,6 +38,7 @@ export const mapSessionFromApi = (s) => {
     creatorName: s.creatorName ?? "Estudiante",
     creatorInitials: getInitials(s.creatorName),
     creatorImage: s.creatorImage ?? null,
+    privacy: s.privacy ?? 'public',
     userStatus: s.userStatus,
     pendingRequests: s.pendingRequests ?? [],
     participants: (s.participants ?? []).map((p) => ({
