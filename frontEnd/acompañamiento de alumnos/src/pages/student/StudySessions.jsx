@@ -342,7 +342,6 @@ function StudySessions() {
           ? String(editSession.maxParticipants)
           : "",
         description: editSession.description,
-        privacy: editSession.privacy ?? 'public',
         requiresApproval: editSession.requiresApproval,
       }
     : null;

@@ -40,13 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     cupos_max: DataTypes.INTEGER,
     descripcion: DataTypes.STRING,
     requiere_aprobacion: DataTypes.BOOLEAN,
-    cancelada: DataTypes.BOOLEAN,
-    privacidad: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'public',
-      validate: { isIn: [['public', 'private']] },
-    },
+    cancelada: DataTypes.BOOLEAN
   }, {
     sequelize,
     modelName: 'sesion_estudio',

@@ -138,7 +138,6 @@ const normalizarSesion = (plain, miEstudianteId) => {
     cancelled: plain.cancelada,
     creatorId: plain.creador_id,
     creatorName: plain.creador ? `${plain.creador.nombre} ${plain.creador.apellido}`.trim() : null,
-    privacy: plain.privacidad ?? "public",
     userStatus,
   };
 };

@@ -6,7 +6,6 @@ const {
   inscripcion_sesion,
   archivo_sesion_estudio,
   usuario,
-  contacto,
 } = require("../db/models");
 const { crearNotificacion } = require("../services/notificacion.service");
 const { sendMail } = require("../services/mailer.service");
@@ -102,7 +101,6 @@ const normalizarSesion = (plain, miEstudianteId) => {
     creatorId: plain.creador_id,
     creatorName: plain.creador ? `${plain.creador.nombre} ${plain.creador.apellido}`.trim() : null,
     creatorImage: plain.creador?.foto_url ?? null,
-    privacy: plain.privacidad ?? "public",
     userStatus,
   };
 };
@@ -171,37 +169,6 @@ const listarSesiones = async (req, res, next) => {
   if (vista === "disponibles") {
     where.creador_id = { [Op.ne]: me };
     where.cancelada = false;
-
-    const contactos = await contacto.findAll({
-      where: {
-        [Op.or]: [
-          { estudiante_solicitante_id: me },
-          { estudiante_receptor_id: me },
-        ],
-        estado: "aceptada",
-      },
-      attributes: ["estudiante_solicitante_id", "estudiante_receptor_id"],
-    });
-
-    const contactosIds = contactos.map((c) =>
-      c.estudiante_solicitante_id === me
-        ? c.estudiante_receptor_id
-        : c.estudiante_solicitante_id
-    );
-
-    const privacyCond = {
-      [Op.or]: [
-        { "$creador.privacidad$": "public" },
-        { creador_id: { [Op.in]: contactosIds } },
-      ],
-    };
-
-    if (where[Op.or]) {
-      where[Op.and] = [{ [Op.or]: where[Op.or] }, privacyCond];
-      delete where[Op.or];
-    } else {
-      Object.assign(where, privacyCond);
-    }
   } else if (vista === "mias") {
     const insc = await inscripcion_sesion.findAll({
       where: { estudiante_id: me },
@@ -217,7 +184,7 @@ const listarSesiones = async (req, res, next) => {
   const { rows, count } = await sesion_estudio.findAndCountAll({
     where,
     include: [
-      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido", "foto_url", "privacidad"] },
+      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: materia, attributes: ["id", "nombre", "anio_cursada"] },
       { model: inscripcion_sesion, attributes: ["id", "estado", "estudiante_id"] },
     ],
@@ -225,7 +192,6 @@ const listarSesiones = async (req, res, next) => {
     limit,
     offset,
     distinct: true,
-    subQuery: false,
   });
 
   let data = rows.map((s) => normalizarSesion(s.get({ plain: true }), estudianteData.id));
