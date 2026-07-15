@@ -37,6 +37,7 @@ export default function Statistics() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('uso');
+  const [ratingOrder, setRatingOrder] = useState('default');
 
   useEffect(() => {
     let cancelled = false;
@@ -45,7 +46,7 @@ export default function Statistics() {
       try {
         setError(null);
 
-        const res = await getAdminStats();
+        const res = await getAdminStats(ratingOrder);
 
         if (cancelled) return;
 
@@ -65,14 +66,22 @@ export default function Statistics() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [ratingOrder]);
 
   if (error) {
-    return <p className={styles.loading}>{error}</p>;
+    return (
+      <p className={styles.loading}>
+        {error}
+      </p>
+    );
   }
 
   if (!data) {
-    return <p className={styles.loading}>Cargando estadísticas...</p>;
+    return (
+      <p className={styles.loading}>
+        Cargando estadísticas...
+      </p>
+    );
   }
 
   const currentData =
@@ -84,11 +93,15 @@ export default function Statistics() {
     <section className={styles.page}>
       <header className={styles.pageHeader}>
         <h1>Estadísticas y Reportes</h1>
-        <p>Análisis del uso del sistema y comportamiento de usuarios</p>
+
+        <p>
+          Análisis del uso del sistema y comportamiento de usuarios
+        </p>
       </header>
 
       <div className={styles.tabs}>
         <button
+          type="button"
           className={
             activeTab === 'uso'
               ? styles.activeTab
@@ -100,6 +113,7 @@ export default function Statistics() {
         </button>
 
         <button
+          type="button"
           className={
             activeTab === 'social'
               ? styles.activeTab
@@ -150,6 +164,8 @@ export default function Statistics() {
       {activeTab === 'uso' ? (
         <UsoSistema
           data={data.usoSistema}
+          ratingOrder={ratingOrder}
+          setRatingOrder={setRatingOrder}
         />
       ) : (
         <ReportesSociales
@@ -160,15 +176,18 @@ export default function Statistics() {
   );
 }
 
-function UsoSistema({ data }) {
+function UsoSistema({
+  data,
+  ratingOrder,
+  setRatingOrder,
+}) {
   const sesionesData = useMemo(
     () =>
       data.sesionesPeriodo.months.map(
         (month, index) => ({
           month,
           value:
-            data.sesionesPeriodo.data?.[index] ??
-            0,
+            data.sesionesPeriodo.data?.[index] ?? 0,
         })
       ),
     [data.sesionesPeriodo]
@@ -216,6 +235,8 @@ function UsoSistema({ data }) {
 
       <TopMaterialsTable
         items={data.materiasConMasMateriales}
+        ratingOrder={ratingOrder}
+        setRatingOrder={setRatingOrder}
       />
 
       <div className={styles.twoColumns}>
@@ -270,12 +291,7 @@ function MonthlyLineChart({
     <section className={styles.chartCard}>
       <h2>{title}</h2>
 
-      <div
-        style={{
-          width: '100%',
-          height: 220,
-        }}
-      >
+      <div className={styles.chartContainer}>
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -341,12 +357,7 @@ function DistributionBarChart({
     <section className={styles.chartCard}>
       <h2>{title}</h2>
 
-      <div
-        style={{
-          width: '100%',
-          height: 220,
-        }}
-      >
+      <div className={styles.chartContainer}>
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -413,9 +424,7 @@ function DistributionCard({
             className={styles.distributionItem}
             key={item.label}
           >
-            <div
-              className={styles.distributionHeader}
-            >
+            <div className={styles.distributionHeader}>
               <span>{item.label}</span>
 
               <span>
@@ -446,7 +455,9 @@ function CareerSubjectsCard({ items }) {
   );
 
   return (
-    <section className={`${styles.card} ${styles.scrollTableCard}`}>
+    <section
+      className={`${styles.card} ${styles.scrollTableCard} ${styles.careerCard}`}
+    >
       <h2>Materias cursadas por carrera</h2>
 
       <div className={styles.careerList}>
@@ -459,8 +470,10 @@ function CareerSubjectsCard({ items }) {
 
             <div className={styles.barLine}>
               <div
-                className={styles.barCyan}
-                style={{ width: `${(item.cursadas / maxCursadas) * 100}%` }}
+                className={`${styles.barCyan} ${styles.careerBar}`}
+                style={{
+                  width: `${(item.cursadas / maxCursadas) * 100}%`,
+                }}
               />
 
               <strong>{item.cursadas}</strong>
@@ -479,38 +492,79 @@ function ApprovedCareerCard({ items }) {
   );
 
   return (
-    <section className={`${styles.card} ${styles.scrollTableCard}`}>
+    <section
+      className={`${styles.card} ${styles.scrollTableCard} ${styles.careerCard}`}
+    >
       <h2>Materias aprobadas por carrera</h2>
 
       <div className={styles.careerList}>
-        {items.length > 0 ? items.map((item) => (
-          <div className={styles.careerRow} key={item.career}>
-            <h3>{item.career}</h3>
+        {items.length > 0 ? (
+          items.map((item) => (
+            <div
+              className={styles.careerRow}
+              key={item.career}
+            >
+              <h3>{item.career}</h3>
 
-            <div className={styles.barLine}>
-              <div
-                className={styles.barGreen}
-                style={{ width: `${(item.approved / maxApproved) * 100}%` }}
-              />
+              <div className={styles.barLine}>
+                <div
+                  className={`${styles.barGreen} ${styles.careerBar}`}
+                  style={{
+                    width: `${(item.approved / maxApproved) * 100}%`,
+                  }}
+                />
 
-              <strong>{item.approved}</strong>
+                <strong>{item.approved}</strong>
+              </div>
             </div>
-          </div>
-        )) : (
-          <p className={styles.emptyText}>No hay materias aprobadas registradas.</p>
+          ))
+        ) : (
+          <p className={styles.emptyText}>
+            No hay materias aprobadas registradas.
+          </p>
         )}
       </div>
     </section>
   );
 }
 
-function TopMaterialsTable({ items }) {
+function TopMaterialsTable({
+  items,
+  ratingOrder,
+  setRatingOrder,
+}) {
   return (
     <section className={styles.card}>
       <div className={styles.tableTitleRow}>
         <h2>
           Materias con más materiales compartidos
         </h2>
+
+        <div className={styles.ratingFilter}>
+          <label htmlFor="rating-order">
+            Ordenar valoración
+          </label>
+
+          <select
+            id="rating-order"
+            value={ratingOrder}
+            onChange={(event) =>
+              setRatingOrder(event.target.value)
+            }
+          >
+            <option value="default">
+              Orden original
+            </option>
+
+            <option value="desc">
+              Más valorizado a menos valorizado
+            </option>
+
+            <option value="asc">
+              Menos valorizado a más valorizado
+            </option>
+          </select>
+        </div>
       </div>
 
       <table className={styles.table}>
@@ -529,11 +583,7 @@ function TopMaterialsTable({ items }) {
               key={`${item.subject}-${item.position}`}
             >
               <td>
-                <span
-                  className={
-                    styles.positionBadge
-                  }
-                >
+                <span className={styles.positionBadge}>
                   {item.position}
                 </span>
               </td>
@@ -597,12 +647,12 @@ function ModerationStats({ stats }) {
 function ModerationDonut({ stats }) {
   const total = stats.total || 0;
 
-  const pPct =
+  const pendingPercentage =
     total > 0
       ? (stats.pendientes / total) * 100
       : 0;
 
-  const aPct =
+  const acceptedPercentage =
     total > 0
       ? (stats.aceptadas / total) * 100
       : 0;
@@ -611,9 +661,13 @@ function ModerationDonut({ stats }) {
     total > 0
       ? {
           background: `conic-gradient(
-            #f59e0b 0 ${pPct}%,
-            #ef4444 ${pPct}% ${pPct + aPct}%,
-            #22c55e ${pPct + aPct}% 100%
+            #f59e0b 0 ${pendingPercentage}%,
+            #ef4444 ${pendingPercentage}% ${
+              pendingPercentage + acceptedPercentage
+            }%,
+            #22c55e ${
+              pendingPercentage + acceptedPercentage
+            }% 100%
           )`,
         }
       : {
@@ -638,29 +692,17 @@ function ModerationDonut({ stats }) {
 
       <div className={styles.legend}>
         <span>
-          <i
-            className={
-              styles.legendOrange
-            }
-          />
+          <i className={styles.legendOrange} />
           Pendientes
         </span>
 
         <span>
-          <i
-            className={
-              styles.legendRed
-            }
-          />
+          <i className={styles.legendRed} />
           Aceptadas
         </span>
 
         <span>
-          <i
-            className={
-              styles.legendGreen
-            }
-          />
+          <i className={styles.legendGreen} />
           Rechazadas
         </span>
       </div>
@@ -688,10 +730,7 @@ function OccupancyCard({ data }) {
           style={donutStyle}
         >
           <div>
-            <strong>
-              {data.percentage}%
-            </strong>
-
+            <strong>{data.percentage}%</strong>
             <span>Ocupación</span>
           </div>
         </div>
@@ -741,11 +780,7 @@ function ActiveCareersTable({ items }) {
           {items.map((item) => (
             <tr key={item.position}>
               <td>
-                <span
-                  className={
-                    styles.purpleBadge
-                  }
-                >
+                <span className={styles.purpleBadge}>
                   {item.position}
                 </span>
               </td>
@@ -756,11 +791,7 @@ function ActiveCareersTable({ items }) {
               <td>{item.interactions}</td>
 
               <td>
-                <div
-                  className={
-                    styles.scoreCell
-                  }
-                >
+                <div className={styles.scoreCell}>
                   <span
                     style={{
                       width: `${item.score}%`,

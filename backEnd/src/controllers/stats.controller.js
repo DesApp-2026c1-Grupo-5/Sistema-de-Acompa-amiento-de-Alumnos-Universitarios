@@ -91,39 +91,39 @@ const buildMetricasUso = ({
   sesionesCreadas,
   denunciasPendientes,
 }) => [
-  {
-    id: 1,
-    label: "Usuarios activos",
-    value: usuariosActivos,
-    trend: null,
-    trendType: null,
-    icon: "users",
-  },
-  {
-    id: 2,
-    label: "Materiales compartidos",
-    value: materialesCompartidos,
-    trend: null,
-    trendType: null,
-    icon: "file",
-  },
-  {
-    id: 3,
-    label: "Sesiones creadas",
-    value: sesionesCreadas,
-    trend: null,
-    trendType: null,
-    icon: "calendar",
-  },
-  {
-    id: 4,
-    label: "Denuncias pendientes",
-    value: denunciasPendientes,
-    trend: null,
-    trendType: null,
-    icon: "flag",
-  },
-];
+    {
+      id: 1,
+      label: "Usuarios activos",
+      value: usuariosActivos,
+      trend: null,
+      trendType: null,
+      icon: "users",
+    },
+    {
+      id: 2,
+      label: "Materiales compartidos",
+      value: materialesCompartidos,
+      trend: null,
+      trendType: null,
+      icon: "file",
+    },
+    {
+      id: 3,
+      label: "Sesiones creadas",
+      value: sesionesCreadas,
+      trend: null,
+      trendType: null,
+      icon: "calendar",
+    },
+    {
+      id: 4,
+      label: "Denuncias pendientes",
+      value: denunciasPendientes,
+      trend: null,
+      trendType: null,
+      icon: "flag",
+    },
+  ];
 
 const buildMetricasSociales = ({
   conexionesPromedio,
@@ -131,39 +131,39 @@ const buildMetricasSociales = ({
   participantesTotales,
   tasaOcupacion,
 }) => [
-  {
-    id: 1,
-    label: "Conexiones promedio",
-    value: conexionesPromedio,
-    trend: null,
-    trendType: null,
-    icon: "link",
-  },
-  {
-    id: 2,
-    label: "Sesiones activas",
-    value: sesionesActivas,
-    trend: null,
-    trendType: null,
-    icon: "calendar",
-  },
-  {
-    id: 3,
-    label: "Participantes totales",
-    value: participantesTotales,
-    trend: null,
-    trendType: null,
-    icon: "users",
-  },
-  {
-    id: 4,
-    label: "Tasa de ocupación",
-    value: `${tasaOcupacion}%`,
-    trend: null,
-    trendType: null,
-    icon: "chart",
-  },
-];
+    {
+      id: 1,
+      label: "Conexiones promedio",
+      value: conexionesPromedio,
+      trend: null,
+      trendType: null,
+      icon: "link",
+    },
+    {
+      id: 2,
+      label: "Sesiones activas",
+      value: sesionesActivas,
+      trend: null,
+      trendType: null,
+      icon: "calendar",
+    },
+    {
+      id: 3,
+      label: "Participantes totales",
+      value: participantesTotales,
+      trend: null,
+      trendType: null,
+      icon: "users",
+    },
+    {
+      id: 4,
+      label: "Tasa de ocupación",
+      value: `${tasaOcupacion}%`,
+      trend: null,
+      trendType: null,
+      icon: "chart",
+    },
+  ];
 
 const computeMateriasPorCarrera = async () => {
   const carreras = await carrera.findAll({
@@ -214,7 +214,7 @@ const computeMateriasPorCarrera = async () => {
   });
 };
 
-const computeTopMaterias = async () => {
+const computeTopMaterias = async (ratingOrder = "default") => {
   const rows = await material.findAll({
     attributes: [
       "materia_id",
@@ -304,8 +304,8 @@ const computeTopMaterias = async () => {
     const rating =
       stats && stats.total > 0
         ? Math.round(
-            (stats.likes / stats.total) * 5 * 10
-          ) / 10
+          (stats.likes / stats.total) * 5 * 10
+        ) / 10
         : 0;
 
     return {
@@ -317,6 +317,14 @@ const computeTopMaterias = async () => {
       rating,
     };
   });
+
+  if (ratingOrder === "desc") {
+    resultado.sort((a, b) => b.rating - a.rating);
+  }
+
+  if (ratingOrder === "asc") {
+    resultado.sort((a, b) => a.rating - b.rating);
+  }
 
   return resultado.map((item, index) => ({
     ...item,
@@ -555,8 +563,8 @@ const computeOcupacion = async () => {
   const percentage =
     totalCupos > 0
       ? Math.round(
-          (totalAceptadas / totalCupos) * 100
-        )
+        (totalAceptadas / totalCupos) * 100
+      )
       : 0;
 
   return {
@@ -703,6 +711,7 @@ const computeConexionesPromedio = async () => {
 };
 
 const getAdminStats = async (req, res) => {
+  const { ratingOrder = "default" } = req.query;
   const ahora = new Date();
 
   const [
@@ -814,7 +823,7 @@ const getAdminStats = async (req, res) => {
       ]
     ),
     computeMateriasPorCarrera(),
-    computeTopMaterias(),
+    computeTopMaterias(ratingOrder),
     computeParticipantesPorSesion(),
     computeOcupacion(),
     computeCarrerasActivas(),

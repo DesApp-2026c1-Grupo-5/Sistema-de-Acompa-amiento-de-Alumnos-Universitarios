@@ -187,6 +187,88 @@
   font-weight: 700;
 }
 
+.chartContainer {
+  width: 100%;
+  height: 220px;
+}
+
+.careerCard {
+  overflow: hidden;
+}
+
+.careerBar {
+  flex: 1;
+  min-width: 0;
+}
+
+.ratingFilter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ratingFilter label {
+  color: #405a7a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ratingFilter select {
+  min-width: 260px;
+  height: 36px;
+  padding: 0 12px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #020617;
+
+  font-size: 12px;
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ratingFilter select:focus {
+  outline: none;
+  border-color: #08a8a8;
+  box-shadow: 0 0 0 3px rgba(8, 168, 168, 0.14);
+}
+
+:global(html.dark) .ratingFilter label {
+  color: #9db1ce;
+}
+
+:global(html.dark) .ratingFilter select,
+:global(html.dark) .ratingFilter select option {
+  background: #081226;
+  border-color: #31415f;
+  color: #ffffff;
+}
+
+:global(html.dark) .ratingFilter select:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16);
+}
+
+:global(html.dark) .emptyText {
+  color: #9db1ce;
+}
+
+@media (max-width: 640px) {
+  .ratingFilter {
+    width: 100%;
+  }
+
+  .ratingFilter select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 .tableTitleRow {
   margin-bottom: 22px;
 
