@@ -1,0 +1,149 @@
+{
+  "/api/admin/motivos-denuncia": {
+    "get": {
+      "tags": ["Motivos de Denuncia"],
+      "summary": "Listar motivos de denuncia (admin)",
+      "description": "Retorna todos los motivos de denuncia incluyendo los inactivos.",
+      "responses": {
+        "200": {
+          "description": "Lista de motivos",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/MotivoDenuncia" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Motivos de Denuncia"],
+      "summary": "Crear motivo de denuncia",
+      "description": "Crea un nuevo motivo de denuncia.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["descripcion"],
+              "properties": {
+                "descripcion": { "type": "string", "minLength": 3, "maxLength": 200 },
+                "activo": { "type": "boolean", "default": true }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Motivo creado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/MotivoDenuncia" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/motivos-denuncia/{id}": {
+    "put": {
+      "tags": ["Motivos de Denuncia"],
+      "summary": "Editar motivo de denuncia",
+      "description": "Actualiza un motivo de denuncia existente.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del motivo"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["descripcion"],
+              "properties": {
+                "descripcion": { "type": "string", "minLength": 3, "maxLength": 200 },
+                "activo": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Motivo actualizado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/MotivoDenuncia" }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "ID inválido" },
+        "404": { "description": "Motivo no encontrado" }
+      }
+    },
+    "delete": {
+      "tags": ["Motivos de Denuncia"],
+      "summary": "Eliminar motivo de denuncia",
+      "description": "Elimina un motivo de denuncia. No se puede eliminar si tiene denuncias asociadas.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del motivo"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Motivo eliminado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": { "id": { "type": "integer" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "ID inválido" },
+        "404": { "description": "Motivo no encontrado" },
+        "409": { "description": "El motivo tiene denuncias asociadas y no puede borrarse" }
+      }
+    }
+  }
+}

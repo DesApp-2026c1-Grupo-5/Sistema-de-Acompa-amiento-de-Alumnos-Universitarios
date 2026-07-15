@@ -1,0 +1,139 @@
+{
+  "/api/carreras": {
+    "get": {
+      "tags": ["Carreras"],
+      "summary": "Listar carreras",
+      "description": "Retorna todas las carreras universitarias con sus planes de estudio asociados.",
+      "responses": {
+        "200": {
+          "description": "Lista de carreras",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Carrera" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Carreras"],
+      "summary": "Crear carrera",
+      "description": "Crea una nueva carrera universitaria. Opcionalmente se puede crear un plan de estudio con materias en la misma petición.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CrearCarreraRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Carrera creada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Carrera" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Se enviaron materias pero falta el plan de estudio",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Carrera no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/carreras/{id}": {
+    "put": {
+      "tags": ["Carreras"],
+      "summary": "Actualizar carrera",
+      "description": "Actualiza los datos de una carrera existente. Todos los campos son opcionales.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la carrera"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nombre": { "type": "string", "maxLength": 200 },
+                "titulo": { "type": "string", "maxLength": 200 },
+                "instituto": { "type": "string", "maxLength": 200 },
+                "duracion_anios": { "type": "integer", "minimum": 1, "maximum": 10 }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Carrera actualizada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Carrera" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de carrera inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Carrera no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

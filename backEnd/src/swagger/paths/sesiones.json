@@ -1,0 +1,384 @@
+{
+  "/api/sesiones": {
+    "get": {
+      "tags": ["Sesiones de Estudio"],
+      "summary": "Listar sesiones de estudio",
+      "description": "Retorna una lista paginada de sesiones de estudio con filtros opcionales por materia, tipo, fecha, disponibilidad y más.",
+      "parameters": [
+        {
+          "name": "materia_id",
+          "in": "query",
+          "schema": { "type": "integer" },
+          "description": "Filtrar por materia"
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["virtual", "presencial"] },
+          "description": "Filtrar por tipo de sesión"
+        },
+        {
+          "name": "desde",
+          "in": "query",
+          "schema": { "type": "string", "format": "date-time" },
+          "description": "Fecha de inicio mínima"
+        },
+        {
+          "name": "hasta",
+          "in": "query",
+          "schema": { "type": "string", "format": "date-time" },
+          "description": "Fecha de inicio máxima"
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "schema": { "type": "string", "maxLength": 100 },
+          "description": "Búsqueda por tema"
+        },
+        {
+          "name": "disponibilidad",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["all", "con_cupo", "llenas"], "default": "all" }
+        },
+        {
+          "name": "solo_disponibles",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["true", "false"], "default": "false" }
+        },
+        {
+          "name": "vista",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["todas", "disponibles", "mias"], "default": "todas" }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "default": 1, "minimum": 1 }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 50 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Sesiones obtenidas",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "materia_id": { "type": "integer" },
+                        "subject": { "type": "string" },
+                        "topic": { "type": "string" },
+                        "type": { "type": "string" },
+                        "link_ubicacion": { "type": ["string", "null"] },
+                        "dateTime": { "type": "string", "format": "date-time" },
+                        "durationMinutes": { "type": "integer" },
+                        "maxParticipants": { "type": ["integer", "null"] },
+                        "participantsCount": { "type": "integer" },
+                        "description": { "type": ["string", "null"] },
+                        "requiresApproval": { "type": "boolean" },
+                        "cancelled": { "type": "boolean" },
+                        "creatorId": { "type": "integer" },
+                        "creatorName": { "type": "string" },
+                        "creatorImage": { "type": ["string", "null"] },
+                        "userStatus": { "type": "string", "enum": ["created", "pending", "joined", "none"] }
+                      }
+                    }
+                  },
+                  "pagination": { "$ref": "#/components/schemas/Pagination" }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Sesiones de Estudio"],
+      "summary": "Crear sesión de estudio",
+      "description": "Crea una nueva sesión de estudio grupal. El link_ubicacion es obligatorio para sesiones virtuales y presenciales.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearSesionRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Sesión creada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/SesionEstudio" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Link/ubicación obligatorio para el tipo de sesión",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o materia no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/sesiones/{id}": {
+    "get": {
+      "tags": ["Sesiones de Estudio"],
+      "summary": "Obtener sesión de estudio",
+      "description": "Retorna los detalles completos de una sesión incluyendo participantes, solicitudes pendientes y archivos.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Sesión obtenida",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "allOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "topic": { "type": "string" },
+                          "type": { "type": "string" },
+                          "dateTime": { "type": "string", "format": "date-time" },
+                          "durationMinutes": { "type": "integer" },
+                          "maxParticipants": { "type": ["integer", "null"] },
+                          "participantsCount": { "type": "integer" },
+                          "cancelled": { "type": "boolean" },
+                          "userStatus": { "type": "string" }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "pendingRequests": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "inscripcionId": { "type": "integer" },
+                                "estudianteId": { "type": "integer" },
+                                "name": { "type": "string" }
+                              }
+                            }
+                          },
+                          "participants": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "inscripcionId": { "type": "integer" },
+                                "estudianteId": { "type": "integer" },
+                                "name": { "type": "string" },
+                                "foto_url": { "type": ["string", "null"] },
+                                "estado": { "type": "string" }
+                              }
+                            }
+                          },
+                          "archivos": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/ArchivoSesion" }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o sesión no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "put": {
+      "tags": ["Sesiones de Estudio"],
+      "summary": "Editar sesión de estudio",
+      "description": "Actualiza los campos de una sesión de estudio. Solo el creador puede editar. No se puede editar una sesión cancelada.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "Al menos un campo es requerido",
+              "properties": {
+                "materia_id": { "type": "integer" },
+                "tema": { "type": "string", "minLength": 3, "maxLength": 150 },
+                "tipo": { "type": "string", "enum": ["virtual", "presencial"] },
+                "link_ubicacion": { "type": "string", "maxLength": 255 },
+                "fecha_hora": { "type": "string", "format": "date-time" },
+                "duracion_minutos": { "type": "integer", "minimum": 1, "maximum": 1440 },
+                "cupos_max": { "type": "integer" },
+                "descripcion": { "type": "string", "maxLength": 1000 },
+                "requiere_aprobacion": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Sesión actualizada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/SesionEstudio" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "No se puede editar una sesión cancelada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "403": {
+          "description": "No tiene permisos para editar esta sesión",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante, sesión o materia no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/sesiones/{id}/cancelar": {
+    "patch": {
+      "tags": ["Sesiones de Estudio"],
+      "summary": "Cancelar sesión de estudio",
+      "description": "Cancela una sesión de estudio. Solo el creador puede cancelarla.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Sesión cancelada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "allOf": [
+                      { "$ref": "#/components/schemas/SesionEstudio" },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "cancelada": { "type": "boolean", "example": true }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "No tiene permisos para cancelar esta sesión",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante o sesión no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

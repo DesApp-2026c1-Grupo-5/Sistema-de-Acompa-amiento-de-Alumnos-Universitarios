@@ -1,0 +1,272 @@
+{
+  "/api/posts": {
+    "get": {
+      "tags": ["Posts"],
+      "summary": "Listar publicaciones",
+      "description": "Retorna una lista paginada de publicaciones. Incluye likes, dislikes y voto del usuario actual.",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "default": 1, "minimum": 1 }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 50 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Posts obtenidos exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Post" }
+                  },
+                  "pagination": { "$ref": "#/components/schemas/Pagination" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Posts"],
+      "summary": "Crear publicación",
+      "description": "Crea una nueva publicación. El contenido es obligatorio. Opcionalmente se puede asociar a un evento académico.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CrearPostRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Publicación creada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "contenido": { "type": "string" },
+                      "estudiante_id": { "type": "integer" },
+                      "createdAt": { "type": "string", "format": "date-time" },
+                      "updatedAt": { "type": "string", "format": "date-time" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "El contenido es obligatorio",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/posts/{id}": {
+    "get": {
+      "tags": ["Posts"],
+      "summary": "Obtener publicación por ID",
+      "description": "Retorna una publicación específica con todos sus datos incluyendo voto del usuario y denuncia pendiente.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la publicación"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Publicación obtenida exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Post" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de publicación inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Publicación no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Posts"],
+      "summary": "Eliminar publicación",
+      "description": "Elimina una publicación. Solo el autor puede eliminar su propia publicación.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la publicación"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Publicación eliminada exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de publicación inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "403": {
+          "description": "No tenés permisos para eliminar esta publicación",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Publicación no encontrada",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/posts/{id}/voto": {
+    "post": {
+      "tags": ["Posts"],
+      "summary": "Votar publicación",
+      "description": "Vota una publicación con like o dislike. Funciona como toggle: si ya votó igual, se elimina el voto. Si es un like en el post de otro usuario, se crea una notificación.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la publicación"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/VotarPostRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Voto registrado exitosamente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "likes": { "type": "integer" },
+                      "dislikes": { "type": "integer" },
+                      "mi_voto": {
+                        "type": ["string", "null"],
+                        "enum": ["like", "dislike", null]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Tipo de voto inválido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Post no encontrado o estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

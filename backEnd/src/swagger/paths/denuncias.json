@@ -1,0 +1,146 @@
+{
+  "/api/motivos-denuncia": {
+    "get": {
+      "tags": ["Denuncias"],
+      "summary": "Listar motivos de denuncia",
+      "description": "Retorna la lista de motivos de denuncia activos disponibles para los estudiantes.",
+      "responses": {
+        "200": {
+          "description": "Lista de motivos",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "nombre": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/materiales/{id}/denuncias": {
+    "post": {
+      "tags": ["Denuncias"],
+      "summary": "Denunciar material",
+      "description": "Crea una denuncia contra un material. No se puede denunciar el propio material. Solo se permite una denuncia pendiente por material.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID del material"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearDenunciaRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Denuncia creada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Denuncia" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Motivo no encontrado, denuncia duplicada o material propio",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Material o estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/posts/{id}/denuncias": {
+    "post": {
+      "tags": ["Denuncias"],
+      "summary": "Denunciar publicación",
+      "description": "Crea una denuncia contra una publicación. No se puede denunciar la propia publicación. Solo se permite una denuncia pendiente por publicación.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la publicación"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CrearDenunciaRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Denuncia creada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "$ref": "#/components/schemas/Denuncia" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Motivo no encontrado, denuncia duplicada o publicación propia",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        },
+        "404": {
+          "description": "Publicación o estudiante no encontrado",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

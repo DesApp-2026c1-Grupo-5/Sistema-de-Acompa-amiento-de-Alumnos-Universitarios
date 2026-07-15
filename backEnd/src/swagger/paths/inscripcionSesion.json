@@ -1,0 +1,187 @@
+{
+  "/api/sesiones/{id}/inscripciones": {
+    "post": {
+      "tags": ["Inscripciones a Sesiones"],
+      "summary": "Inscribirse a una sesión",
+      "description": "Inscribe al estudiante autenticado en una sesión de estudio. Si la sesión requiere aprobación, queda en estado pendiente.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        }
+      ],
+      "responses": {
+        "201": {
+          "description": "Inscripción exitosa",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la inscripción" }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "ID de sesión requerido",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Inscripciones a Sesiones"],
+      "summary": "Cancelar inscripción propia",
+      "description": "Cancela la inscripción del estudiante autenticado a una sesión de estudio.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Inscripción cancelada",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la cancelación" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/sesiones/{id}/inscripciones/{inscripcionId}/aprobar": {
+    "patch": {
+      "tags": ["Inscripciones a Sesiones"],
+      "summary": "Aprobar participante",
+      "description": "Aproba la inscripción de un participante a una sesión. Solo el creador de la sesión puede aprobar.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        },
+        {
+          "name": "inscripcionId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la inscripción"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Participante aprobado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la aprobación" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/sesiones/{id}/inscripciones/{inscripcionId}/rechazar": {
+    "patch": {
+      "tags": ["Inscripciones a Sesiones"],
+      "summary": "Rechazar participante",
+      "description": "Rechaza la inscripción de un participante a una sesión. Solo el creador de la sesión puede rechazar.",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la sesión"
+        },
+        {
+          "name": "inscripcionId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "ID de la inscripción"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Participante rechazado",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado del rechazo" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/sesiones/inscribirse": {
+    "post": {
+      "tags": ["Inscripciones a Sesiones"],
+      "summary": "Inscribirse a sesión (legacy)",
+      "description": "Endpoint legacy para inscribirse a una sesión proporcionando el sesion_id en el body. Se recomienda usar POST /api/sesiones/{id}/inscripciones.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["sesion_id"],
+              "properties": {
+                "sesion_id": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Inscripción exitosa",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ok": { "type": "boolean", "example": true },
+                  "data": { "description": "Resultado de la inscripción" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
