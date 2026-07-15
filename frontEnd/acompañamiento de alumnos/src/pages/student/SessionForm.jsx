@@ -129,6 +129,7 @@ function SessionForm({ onSubmit, onCancel, materias = [], initialValues = null }
       cupos_max: form.maxParticipants ? Number(form.maxParticipants) : null,
       descripcion: form.description.trim(),
       requiere_aprobacion: form.requiresApproval,
+      privacidad: form.privacy,
     };
 
     setSubmitting(true);

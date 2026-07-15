@@ -15,6 +15,7 @@ const crearSesionSchema = Joi.object({
   cupos_max: Joi.number().integer().positive().allow(null),
   descripcion: Joi.string().trim().max(1000).allow("", null),
   requiere_aprobacion: Joi.boolean().default(false),
+  privacidad: Joi.string().valid("public", "private").default("public"),
 });
 
 const editarSesionSchema = Joi.object({
@@ -29,6 +30,7 @@ const editarSesionSchema = Joi.object({
   cupos_max: Joi.number().integer().positive().allow(null),
   descripcion: Joi.string().trim().max(1000).allow("", null),
   requiere_aprobacion: Joi.boolean(),
+  privacidad: Joi.string().valid("public", "private"),
 })
   .min(1)
   .messages({ "object.min": "Debe enviar al menos un campo a editar" });
