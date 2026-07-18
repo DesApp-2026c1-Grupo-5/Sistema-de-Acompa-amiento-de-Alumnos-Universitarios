@@ -36,7 +36,7 @@ const crearCarreraSchema = Joi.object({
   nombre: Joi.string().trim().max(200).required(),
   titulo: Joi.string().trim().max(200).required(),
   instituto: Joi.string().trim().max(200).required(),
-  duracion_anios: Joi.number().integer().min(1).max(10).required(),
+  duracion_anios: Joi.number().integer().min(1).max(6).required(),
   plan: planSchema.optional(),
   materias: Joi.array().items(materiaSchema).optional(),
 });
@@ -45,7 +45,7 @@ const actualizarCarreraSchema = Joi.object({
   nombre: Joi.string().trim().max(200).optional(),
   titulo: Joi.string().trim().max(200).optional(),
   instituto: Joi.string().trim().max(200).optional(),
-  duracion_anios: Joi.number().integer().min(1).max(10).optional(),
+  duracion_anios: Joi.number().integer().min(1).max(6).optional(),
 });
 
 module.exports = {

@@ -207,9 +207,12 @@ function CareerForm({ onCancel, onCreated }) {
             <input
               type="number"
               min={1}
-              max={10}
+              max={6}
               value={carrera.duracion_anios}
-              onChange={(e) => setCarreraField('duracion_anios', e.target.value)}
+              onChange={(e) => {
+                const value = Math.min(6, Math.max(1, Number(e.target.value) || 1));
+                setCarreraField('duracion_anios', value);
+              }}
               disabled={submitting}
               required
             />

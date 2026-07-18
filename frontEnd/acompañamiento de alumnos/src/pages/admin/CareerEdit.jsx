@@ -264,9 +264,12 @@ function CareerEdit() {
             <input
               type="number"
               min={1}
-              max={10}
+              max={6}
               value={form.duracion_anios}
-              onChange={(e) => setFormField('duracion_anios', e.target.value)}
+              onChange={(e) => {
+                const value = Math.min(6, Math.max(1, Number(e.target.value) || 1));
+                setFormField('duracion_anios', value);
+              }}
               disabled={saving}
             />
           </label>
