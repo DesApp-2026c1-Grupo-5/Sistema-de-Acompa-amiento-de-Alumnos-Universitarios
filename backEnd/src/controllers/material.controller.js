@@ -133,7 +133,10 @@ const parsearBodyArchivo = (body) => {
 const listarMateriales = async (req, res) => {
   const { q, tipo, materia_id, suspendido } = req.query;
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 12));
+  const limit = Math.min(
+    50,
+    Math.max(1, parseInt(req.query.limit, 10) || 12)
+  );
   const offset = (page - 1) * limit;
 
   const where = {};
@@ -150,10 +153,34 @@ const listarMateriales = async (req, res) => {
     where.suspendido = suspendido === "true";
   }
 
-  if (q) {
+  const search = String(q ?? "")
+    .trim()
+    .replace(/^#+/, "");
+
+  if (search) {
+    const searchPattern = `%${search}%`;
+
     where[Op.or] = [
-      { titulo: { [Op.like]: `%${q}%` } },
-      { descripcion: { [Op.like]: `%${q}%` } },
+      {
+        titulo: {
+          [Op.iLike]: searchPattern,
+        },
+      },
+      {
+        descripcion: {
+          [Op.iLike]: searchPattern,
+        },
+      },
+      {
+        "$materia.nombre$": {
+          [Op.iLike]: searchPattern,
+        },
+      },
+      {
+        "$tags.nombre$": {
+          [Op.iLike]: searchPattern,
+        },
+      },
     ];
   }
 
@@ -166,18 +193,24 @@ const listarMateriales = async (req, res) => {
     limit,
     offset,
     distinct: true,
+    subQuery: false,
   });
 
-  const denunciadosSet = await getMaterialIdsConDenunciaPendiente(
-    miEstudianteId,
-    rows.map((r) => r.id)
-  );
+  const denunciadosSet =
+    await getMaterialIdsConDenunciaPendiente(
+      miEstudianteId,
+      rows.map((row) => row.id)
+    );
 
-  const data = rows.map((item) => {
-    const plain = item.get({ plain: true });
+  const data = rows.map((row) => {
+    const formatted = formatMaterial(
+      row.get({ plain: true }),
+      miEstudianteId
+    );
+
     return {
-      ...formatMaterial(plain, miEstudianteId),
-      mi_denuncia_pendiente: denunciadosSet.has(plain.id),
+      ...formatted,
+      denunciado_por_mi: denunciadosSet.has(row.id),
     };
   });
 
