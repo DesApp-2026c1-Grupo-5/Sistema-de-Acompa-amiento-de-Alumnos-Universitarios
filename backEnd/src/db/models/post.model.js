@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
     contenido: DataTypes.STRING,
     event_type: DataTypes.STRING,
     event_subject: DataTypes.STRING,
-    oculto: { type: DataTypes.BOOLEAN, defaultValue: false },
+    suspendido: {type: DataTypes.BOOLEAN,defaultValue: false,},
   }, {
     sequelize,
     modelName: 'post',

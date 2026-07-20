@@ -3,27 +3,34 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn('actividad_creditos', 'situacion_id', {
-      type: Sequelize.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'situacion_academicas',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
-    });
+    const table = await queryInterface.describeTable('actividad_creditos');
 
-    await queryInterface.addColumn('actividad_creditos', 'estado', {
-      type: Sequelize.ENUM('pendiente', 'aprobada'),
-      allowNull: false,
-      defaultValue: 'pendiente',
-    });
+    if (!table.situacion_id) {
+      await queryInterface.addColumn(
+        'actividad_creditos',
+        'situacion_id',
+        {
+          type: Sequelize.INTEGER,
+          allowNull: true,
+          references: {
+            model: 'situacion_academicas',
+            key: 'id',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'CASCADE',
+        }
+      );
+    }
   },
 
   async down(queryInterface) {
-    await queryInterface.removeColumn('actividad_creditos', 'estado');
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_actividad_creditos_estado";');
-    await queryInterface.removeColumn('actividad_creditos', 'situacion_id');
+    const table = await queryInterface.describeTable('actividad_creditos');
+
+    if (table.situacion_id) {
+      await queryInterface.removeColumn(
+        'actividad_creditos',
+        'situacion_id'
+      );
+    }
   },
 };

@@ -8,8 +8,6 @@ import {
     MessageSquare,
     XCircle,
     Ban,
-    EyeOff,
-    Eye,
     AlertTriangle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -22,8 +20,8 @@ import {
     rechazarDenuncia,
     suspenderMaterialAdmin,
     restaurarMaterialAdmin,
-    ocultarPostAdmin,
-    mostrarPostAdmin,
+    suspenderPostAdmin,
+    restaurarPostAdmin,
 } from '../../../services/denunciaAdminService';
 import Pagination from '../../../components/common/Pagination';
 import styles from './ModerationPage.module.css';
@@ -32,10 +30,9 @@ const PAGE_SIZE = 6;
 
 const SEVERIDAD_LABEL = { alta: 'Alta', media: 'Media', baja: 'Baja' };
 const ESTADO_LABEL = {
-    pendiente: 'Pendiente',
-    rechazada: 'Rechazada',
-    suspendido: 'Suspendido',
-    oculto: 'Oculta',
+    pendiente: "Pendiente",
+    rechazada: "Rechazada",
+    suspendido: "Suspendido",
 };
 const COMPLAINT_ESTADO_LABEL = {
     pendiente: 'Pendiente',
@@ -88,7 +85,7 @@ function mapDetail(data) {
             tipo: 'post',
             id: data.post.id,
             contenido: data.post.contenido,
-            oculto: data.post.oculto,
+            suspendido: data.post.suspendido,
             subidoPor: `${uploader.nombre ?? ''} ${uploader.apellido ?? ''}`.trim() || 'Sin usuario',
             cantidad: data.cantidad_denuncias,
             estado: data.estado_resumen,
@@ -112,7 +109,11 @@ function ModerationPage() {
     const navigate = useNavigate();
 
     const [items, setItems] = useState([]);
-    const [stats, setStats] = useState({ pendientes: 0, verificadas: 0, materiales_suspendidos: 0, posts_ocultos: 0 });
+    const [stats, setStats] = useState({
+        pendientes: 0,
+        rechazadas: 0,
+        suspendidos: 0,
+    });
     const [selectedDetail, setSelectedDetail] = useState(null);
     const [selectedKey, setSelectedKey] = useState(null);
 
@@ -242,20 +243,23 @@ function ModerationPage() {
         runAction(() => rechazarDenuncia(selectedDenunciaId));
     };
 
-    const handleSuspendOcultar = () => {
+    const handleSuspendRestore = () => {
         if (!selectedDetail) return;
-        if (selectedDetail.tipo === 'material') {
+
+        if (selectedDetail.tipo === "material") {
             if (selectedDetail.suspendido) {
                 runAction(restaurarMaterialAdmin);
             } else {
                 runAction(suspenderMaterialAdmin);
             }
+
+            return;
+        }
+
+        if (selectedDetail.suspendido) {
+            runAction(restaurarPostAdmin);
         } else {
-            if (selectedDetail.oculto) {
-                runAction(mostrarPostAdmin);
-            } else {
-                runAction(ocultarPostAdmin);
-            }
+            runAction(suspenderPostAdmin);
         }
     };
 
@@ -269,7 +273,9 @@ function ModerationPage() {
     };
 
     const getStatusBadgeClass = (estado) => {
-        if (estado === 'suspendido' || estado === 'oculto') return styles.statusSuspended;
+        if (estado === "suspendido") {
+            return styles.statusSuspended;
+        }
         if (estado === 'rechazada') return styles.statusRejected;
         return styles.statusPending;
     };
@@ -305,24 +311,25 @@ function ModerationPage() {
             </header>
 
             <section className={styles.summaryGrid}>
-                <article className={`${styles.summaryCard} ${styles.pendingLine}`}>
+                <article
+                    className={`${styles.summaryCard} ${styles.pendingLine}`}
+                >
                     <span>Denuncias pendientes</span>
                     <strong>{stats.pendientes}</strong>
                 </article>
 
-                <article className={`${styles.summaryCard} ${styles.verifiedLine}`}>
-                    <span>Denuncias verificadas</span>
-                    <strong>{stats.verificadas}</strong>
+                <article
+                    className={`${styles.summaryCard} ${styles.rejectedLine}`}
+                >
+                    <span>Denuncias rechazadas</span>
+                    <strong>{stats.rechazadas}</strong>
                 </article>
 
-                <article className={`${styles.summaryCard} ${styles.suspendedLine}`}>
-                    <span>Materiales suspendidos</span>
-                    <strong>{stats.materiales_suspendidos}</strong>
-                </article>
-
-                <article className={`${styles.summaryCard} ${styles.ocultoLine}`}>
-                    <span>Publicaciones ocultas</span>
-                    <strong>{stats.posts_ocultos}</strong>
+                <article
+                    className={`${styles.summaryCard} ${styles.suspendedLine}`}
+                >
+                    <span>Recursos suspendidos</span>
+                    <strong>{stats.suspendidos}</strong>
                 </article>
             </section>
 
@@ -347,7 +354,6 @@ function ModerationPage() {
                     <option value="pendiente">Pendiente</option>
                     <option value="rechazada">Rechazada</option>
                     <option value="suspendido">Suspendido</option>
-                    <option value="oculto">Oculta</option>
                 </select>
             </section>
 
@@ -530,20 +536,18 @@ function ModerationPage() {
                             <button
                                 type="button"
                                 className={styles.suspendButton}
-                                onClick={handleSuspendOcultar}
+                                onClick={handleSuspendRestore}
                                 disabled={actionLoading}
                             >
-                                {selectedDetail.tipo === 'material' ? (
-                                    <>
-                                        <Ban size={16} />
-                                        {selectedDetail.suspendido ? 'Restaurar material' : 'Suspender material'}
-                                    </>
-                                ) : (
-                                    <>
-                                        {selectedDetail.oculto ? <Eye size={16} /> : <EyeOff size={16} />}
-                                        {selectedDetail.oculto ? 'Mostrar publicación' : 'Ocultar publicación'}
-                                    </>
-                                )}
+                                <Ban size={16} />
+
+                                {selectedDetail.suspendido
+                                    ? selectedDetail.tipo === "material"
+                                        ? "Restaurar material"
+                                        : "Restaurar publicación"
+                                    : selectedDetail.tipo === "material"
+                                        ? "Suspender material"
+                                        : "Suspender publicación"}
                             </button>
                         </div>
                     </aside>

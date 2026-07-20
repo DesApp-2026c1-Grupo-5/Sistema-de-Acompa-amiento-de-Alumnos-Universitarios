@@ -18,15 +18,13 @@ const {
   listarDenuncias,
   obtenerDetalle,
   obtenerDetallePost,
-  verificarDenuncias,
   rechazarDenuncias,
-  verificarDenunciasPost,
   rechazarDenunciasPost,
   suspenderMaterial,
   restaurarMaterial,
-  ocultarPost,
-  mostrarPost,
   rechazarDenuncia,
+  suspenderPost,
+  restaurarPost,
 } = require("../controllers/denunciaAdmin.controller");
 
 router.get("/admin/denuncias/stats", authMiddleware, requireAdmin, listarStats);
@@ -56,14 +54,6 @@ router.get(
 );
 
 router.patch(
-  "/admin/materiales/:id/denuncias/verificar",
-  authMiddleware,
-  requireAdmin,
-  validate(denunciaAdminIdParamSchema, "params"),
-  verificarDenuncias
-);
-
-router.patch(
   "/admin/materiales/:id/denuncias/rechazar",
   authMiddleware,
   requireAdmin,
@@ -88,14 +78,6 @@ router.patch(
 );
 
 router.patch(
-  "/admin/posts/:id/denuncias/verificar",
-  authMiddleware,
-  requireAdmin,
-  validate(denunciaAdminIdParamSchema, "params"),
-  verificarDenunciasPost
-);
-
-router.patch(
   "/admin/posts/:id/denuncias/rechazar",
   authMiddleware,
   requireAdmin,
@@ -104,27 +86,33 @@ router.patch(
 );
 
 router.patch(
-  "/admin/posts/:id/ocultar",
-  authMiddleware,
-  requireAdmin,
-  validate(denunciaAdminIdParamSchema, "params"),
-  ocultarPost
-);
-
-router.patch(
-  "/admin/posts/:id/mostrar",
-  authMiddleware,
-  requireAdmin,
-  validate(denunciaAdminIdParamSchema, "params"),
-  mostrarPost
-);
-
-router.patch(
   "/admin/denuncias/:denunciaId/rechazar",
   authMiddleware,
   requireAdmin,
   validate(denunciaIdParamSchema, "params"),
   rechazarDenuncia
+);
+
+router.patch(
+  "/admin/posts/:id/suspender",
+  authMiddleware,
+  requireAdmin,
+  validate(
+    denunciaAdminIdParamSchema,
+    "params"
+  ),
+  suspenderPost
+);
+
+router.patch(
+  "/admin/posts/:id/restaurar",
+  authMiddleware,
+  requireAdmin,
+  validate(
+    denunciaAdminIdParamSchema,
+    "params"
+  ),
+  restaurarPost
 );
 
 module.exports = router;

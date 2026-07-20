@@ -78,7 +78,7 @@ const obtenerPosts = async (req, res) => {
   const offset = (page - 1) * limit;
 
   const { count, rows } = await post.findAndCountAll({
-    where: { oculto: false },
+    where: { suspendido: false },
     include: [
       { model: estudiante, attributes: ["id", "nombre", "apellido", "foto_url"] },
       { model: voto_post, attributes: ["tipo", "estudiante_id"] },
