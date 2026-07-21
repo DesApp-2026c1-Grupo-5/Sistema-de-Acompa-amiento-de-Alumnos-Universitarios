@@ -588,6 +588,13 @@ const confirmarImportacion = async (req, res, next) => {
       ? await actualizarEstadosMaterias(req.user.sub, materias, { transaction })
       : [];
 
+    if (credit_activities.length > 0) {
+      await actividad_credito.destroy({
+        where: { situacion_id: situacion.id },
+        transaction,
+      });
+    }
+
     for (const act of credit_activities) {
       const actividad = await actividad_credito.create(
         {
