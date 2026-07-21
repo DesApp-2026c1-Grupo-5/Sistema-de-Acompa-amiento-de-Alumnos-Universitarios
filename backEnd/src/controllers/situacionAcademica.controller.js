@@ -9,7 +9,9 @@ const {
   estadosAceptadosPara,
   normalizarEstadoMateria,
 } = require("../services/correlatividadAcademica.service");
-const { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo } = require("../services/excelImport.service");
+const {
+  parseExcel, validarFilas, validarFilasReporte, limpiarArchivo, normalizarTexto,
+} = require("../services/excelImport.service");
 const planCursadaService = require("../services/planCursada.service");
 
 const {
@@ -537,7 +539,7 @@ const importarExcel = async (req, res, next) => {
         const planMateria = planMaterias.find((m) => Number(m.id) === Number(item.materia_id));
         const row = rows.find(
           (candidate) =>
-            candidate.materia?.toLowerCase().trim() === planMateria?.nombre?.toLowerCase().trim()
+            normalizarTexto(candidate.materia) === normalizarTexto(planMateria?.nombre)
         );
         const faltantes = (err.details?.violations || [])
           .filter((violation) => Number(violation.materia_id) === Number(item.materia_id))

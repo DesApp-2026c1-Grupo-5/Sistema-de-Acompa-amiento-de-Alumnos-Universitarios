@@ -12,6 +12,14 @@ const COLUMNAS_ESPERADAS = [
 
 const ESTADOS_VALIDOS = ["pendiente", "cursando", "regular", "aprobada"];
 
+const normalizarTexto = (texto) =>
+  (texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const esFormatoReporte = (workbook) => {
   const sheetName = workbook.SheetNames[0];
   return sheetName && sheetName.toLowerCase() === "reporte";
@@ -74,7 +82,9 @@ const parseReporteExcel = (filePath) => {
     const estado = inferirEstado(notaRaw);
     const notaNumerica = extraerNotaNumerica(notaRaw);
 
-    const esActividadCredito = creditos !== null && creditos > 0 && !anio && notaRaw.toLowerCase().includes("c (aprobado)");
+    const notaLower = notaRaw.toLowerCase();
+    const esActividadCredito = creditos !== null && creditos > 0 && !anio &&
+      (notaLower.includes("c (aprobado)") || notaLower.includes("actividad") || notaLower.includes("credito"));
 
     rows.push({
       rowNumber: i + 1,
@@ -129,7 +139,7 @@ const parseExcel = (filePath) => {
 const validarFilas = (rows, materiasDelPlan) => {
   const mapaMaterias = new Map();
   for (const m of materiasDelPlan) {
-    mapaMaterias.set(m.nombre.toLowerCase().trim(), m);
+    mapaMaterias.set(normalizarTexto(m.nombre), m);
   }
 
   const errors = [];
@@ -143,7 +153,7 @@ const validarFilas = (rows, materiasDelPlan) => {
       rowErrors.push("El nombre de la materia es obligatorio");
     }
 
-    const materiaMatch = row.materia ? mapaMaterias.get(row.materia.toLowerCase()) : null;
+    const materiaMatch = row.materia ? mapaMaterias.get(normalizarTexto(row.materia)) : null;
     if (row.materia && !materiaMatch) {
       rowErrors.push(`La materia "${row.materia}" no existe en el plan de estudios`);
     }
@@ -200,7 +210,7 @@ const validarFilas = (rows, materiasDelPlan) => {
 const validarFilasReporte = (rows, materiasDelPlan) => {
   const mapaMaterias = new Map();
   for (const m of materiasDelPlan) {
-    mapaMaterias.set(m.nombre.toLowerCase().trim(), m);
+    mapaMaterias.set(normalizarTexto(m.nombre), m);
   }
 
   const errors = [];
@@ -218,7 +228,7 @@ const validarFilasReporte = (rows, materiasDelPlan) => {
     }
 
     const rowErrors = [];
-    const materiaMatch = row.materia ? mapaMaterias.get(row.materia.toLowerCase()) : null;
+    const materiaMatch = row.materia ? mapaMaterias.get(normalizarTexto(row.materia)) : null;
 
     if (!materiaMatch) {
       rowErrors.push(`La materia "${row.nombreCompleto || row.materia}" no existe en el plan de estudios`);
@@ -253,4 +263,4 @@ const limpiarArchivo = (filePath) => {
   }
 };
 
-module.exports = { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo };
+module.exports = { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo, normalizarTexto };
