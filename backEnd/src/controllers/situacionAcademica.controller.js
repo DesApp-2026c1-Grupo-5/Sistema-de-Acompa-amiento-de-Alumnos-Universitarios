@@ -9,7 +9,9 @@ const {
   estadosAceptadosPara,
   normalizarEstadoMateria,
 } = require("../services/correlatividadAcademica.service");
-const { parseExcel, validarFilas, validarFilasReporte, limpiarArchivo } = require("../services/excelImport.service");
+const {
+  parseExcel, validarFilas, validarFilasReporte, limpiarArchivo, normalizarTexto,
+} = require("../services/excelImport.service");
 const planCursadaService = require("../services/planCursada.service");
 
 const {
@@ -493,68 +495,68 @@ const importarExcel = async (req, res, next) => {
       return next(buildError(err.message, 400));
     }
 
-  const esReporte = rows.length > 0 && "esActividadCredito" in rows[0];
+    const esReporte = rows.length > 0 && "esActividadCredito" in rows[0];
 
-  const planMaterias = await materia.findAll({
-    where: { plan_id: situacion.plan_id },
-    attributes: ["id", "nombre"],
-    raw: true,
-  });
+    const planMaterias = await materia.findAll({
+      where: { plan_id: situacion.plan_id },
+      attributes: ["id", "nombre"],
+      raw: true,
+    });
 
-  let errors, validRows, creditActivities;
+    let errors, validRows, creditActivities;
 
-  if (esReporte) {
-    const result = validarFilasReporte(rows, planMaterias);
-    errors = result.errors;
-    validRows = result.validRows;
-    creditActivities = result.creditActivities;
-  } else {
-    const result = validarFilas(rows, planMaterias);
-    errors = result.errors;
-    validRows = result.validRows;
-    creditActivities = [];
-  }
-
-  let preview = validRows;
-  const correlativasReportadas = new Set();
-
-  while (preview.length > 0) {
-    try {
-      await validarEstadosMaterias(req.user.sub, preview);
-      break;
-    } catch (err) {
-      if (err.code !== "CORRELATIVIDADES_INCUMPLIDAS") throw err;
-
-      const idsInvalidos = new Set(
-        (err.details?.violations || []).map((violation) => Number(violation.materia_id))
-      );
-      const removidos = preview.filter((item) => idsInvalidos.has(Number(item.materia_id)));
-      if (removidos.length === 0) throw err;
-
-      for (const item of removidos) {
-        if (correlativasReportadas.has(item.materia_id)) continue;
-        correlativasReportadas.add(item.materia_id);
-        const planMateria = planMaterias.find((m) => Number(m.id) === Number(item.materia_id));
-        const row = rows.find(
-          (candidate) =>
-            candidate.materia?.toLowerCase().trim() === planMateria?.nombre?.toLowerCase().trim()
-        );
-        const faltantes = (err.details?.violations || [])
-          .filter((violation) => Number(violation.materia_id) === Number(item.materia_id))
-          .map(
-            (violation) =>
-              `${violation.requisito || violation.requisito_codigo || "Correlativa"} debe estar ${violation.estados_aceptados.join(" o ")}`
-          );
-        errors.push({
-          row: row?.rowNumber || "-",
-          materia: planMateria?.nombre || item.materia_id,
-          errors: faltantes,
-        });
-      }
-
-      preview = preview.filter((item) => !idsInvalidos.has(Number(item.materia_id)));
+    if (esReporte) {
+      const result = validarFilasReporte(rows, planMaterias);
+      errors = result.errors;
+      validRows = result.validRows;
+      creditActivities = result.creditActivities;
+    } else {
+      const result = validarFilas(rows, planMaterias);
+      errors = result.errors;
+      validRows = result.validRows;
+      creditActivities = [];
     }
-  }
+
+    let preview = validRows;
+    const correlativasReportadas = new Set();
+
+    while (preview.length > 0) {
+      try {
+        await validarEstadosMaterias(req.user.sub, preview);
+        break;
+      } catch (err) {
+        if (err.code !== "CORRELATIVIDADES_INCUMPLIDAS") throw err;
+
+        const idsInvalidos = new Set(
+          (err.details?.violations || []).map((violation) => Number(violation.materia_id))
+        );
+        const removidos = preview.filter((item) => idsInvalidos.has(Number(item.materia_id)));
+        if (removidos.length === 0) throw err;
+
+        for (const item of removidos) {
+          if (correlativasReportadas.has(item.materia_id)) continue;
+          correlativasReportadas.add(item.materia_id);
+          const planMateria = planMaterias.find((m) => Number(m.id) === Number(item.materia_id));
+          const row = rows.find(
+            (candidate) =>
+              normalizarTexto(candidate.materia) === normalizarTexto(planMateria?.nombre)
+          );
+          const faltantes = (err.details?.violations || [])
+            .filter((violation) => Number(violation.materia_id) === Number(item.materia_id))
+            .map(
+              (violation) =>
+                `${violation.requisito || violation.requisito_codigo || "Correlativa"} debe estar ${violation.estados_aceptados.join(" o ")}`
+            );
+          errors.push({
+            row: row?.rowNumber || "-",
+            materia: planMateria?.nombre || item.materia_id,
+            errors: faltantes,
+          });
+        }
+
+        preview = preview.filter((item) => !idsInvalidos.has(Number(item.materia_id)));
+      }
+    }
 
     return res.status(200).json({
       ok: true,
@@ -585,6 +587,13 @@ const confirmarImportacion = async (req, res, next) => {
     const transactionResults = materias.length
       ? await actualizarEstadosMaterias(req.user.sub, materias, { transaction })
       : [];
+
+    if (credit_activities.length > 0) {
+      await actividad_credito.destroy({
+        where: { situacion_id: situacion.id },
+        transaction,
+      });
+    }
 
     for (const act of credit_activities) {
       const actividad = await actividad_credito.create(
@@ -802,6 +811,39 @@ const eliminarPlanCursada = async (req, res, next) => {
   return res.status(200).json({ ok: true, data: { id: eliminado.id } });
 };
 
+const descargarPlantillaExcel = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActiva(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada", 400));
+
+  const planMaterias = await materia.findAll({
+    where: { plan_id: situacion.plan_id },
+    attributes: ["nombre", "anio_cursada", "cuatrimestre"],
+    order: [["anio_cursada", "ASC"], ["cuatrimestre", "ASC"], ["nombre", "ASC"]],
+    raw: true,
+  });
+
+  const XLSX = require("xlsx");
+  const data = planMaterias.map((m) => ({
+    materia: m.nombre,
+    estado: "pendiente",
+    anio: m.anio_cursada || "",
+    cuatrimestre: m.cuatrimestre || "",
+    nota: "",
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Situacion Academica");
+  const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", 'attachment; filename="plantilla_situacion_academica.xlsx"');
+  return res.send(buffer);
+};
+
 module.exports = {
   crearSituacion,
   obtenerSituacion,
@@ -815,6 +857,7 @@ module.exports = {
   importarExcel,
   confirmarImportacion,
   cambiarCarrera,
+  descargarPlantillaExcel,
   guardarPlanCursada,
   obtenerPlanesCursada,
   obtenerPlanCursada,
