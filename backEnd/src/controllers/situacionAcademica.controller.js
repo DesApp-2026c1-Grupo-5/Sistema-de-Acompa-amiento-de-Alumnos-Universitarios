@@ -495,68 +495,68 @@ const importarExcel = async (req, res, next) => {
       return next(buildError(err.message, 400));
     }
 
-  const esReporte = rows.length > 0 && "esActividadCredito" in rows[0];
+    const esReporte = rows.length > 0 && "esActividadCredito" in rows[0];
 
-  const planMaterias = await materia.findAll({
-    where: { plan_id: situacion.plan_id },
-    attributes: ["id", "nombre"],
-    raw: true,
-  });
+    const planMaterias = await materia.findAll({
+      where: { plan_id: situacion.plan_id },
+      attributes: ["id", "nombre"],
+      raw: true,
+    });
 
-  let errors, validRows, creditActivities;
+    let errors, validRows, creditActivities;
 
-  if (esReporte) {
-    const result = validarFilasReporte(rows, planMaterias);
-    errors = result.errors;
-    validRows = result.validRows;
-    creditActivities = result.creditActivities;
-  } else {
-    const result = validarFilas(rows, planMaterias);
-    errors = result.errors;
-    validRows = result.validRows;
-    creditActivities = [];
-  }
-
-  let preview = validRows;
-  const correlativasReportadas = new Set();
-
-  while (preview.length > 0) {
-    try {
-      await validarEstadosMaterias(req.user.sub, preview);
-      break;
-    } catch (err) {
-      if (err.code !== "CORRELATIVIDADES_INCUMPLIDAS") throw err;
-
-      const idsInvalidos = new Set(
-        (err.details?.violations || []).map((violation) => Number(violation.materia_id))
-      );
-      const removidos = preview.filter((item) => idsInvalidos.has(Number(item.materia_id)));
-      if (removidos.length === 0) throw err;
-
-      for (const item of removidos) {
-        if (correlativasReportadas.has(item.materia_id)) continue;
-        correlativasReportadas.add(item.materia_id);
-        const planMateria = planMaterias.find((m) => Number(m.id) === Number(item.materia_id));
-        const row = rows.find(
-          (candidate) =>
-            normalizarTexto(candidate.materia) === normalizarTexto(planMateria?.nombre)
-        );
-        const faltantes = (err.details?.violations || [])
-          .filter((violation) => Number(violation.materia_id) === Number(item.materia_id))
-          .map(
-            (violation) =>
-              `${violation.requisito || violation.requisito_codigo || "Correlativa"} debe estar ${violation.estados_aceptados.join(" o ")}`
-          );
-        errors.push({
-          row: row?.rowNumber || "-",
-          materia: planMateria?.nombre || item.materia_id,
-          errors: faltantes,
-        });
-      }
-
-      preview = preview.filter((item) => !idsInvalidos.has(Number(item.materia_id)));
+    if (esReporte) {
+      const result = validarFilasReporte(rows, planMaterias);
+      errors = result.errors;
+      validRows = result.validRows;
+      creditActivities = result.creditActivities;
+    } else {
+      const result = validarFilas(rows, planMaterias);
+      errors = result.errors;
+      validRows = result.validRows;
+      creditActivities = [];
     }
-  }
+
+    let preview = validRows;
+    const correlativasReportadas = new Set();
+
+    while (preview.length > 0) {
+      try {
+        await validarEstadosMaterias(req.user.sub, preview);
+        break;
+      } catch (err) {
+        if (err.code !== "CORRELATIVIDADES_INCUMPLIDAS") throw err;
+
+        const idsInvalidos = new Set(
+          (err.details?.violations || []).map((violation) => Number(violation.materia_id))
+        );
+        const removidos = preview.filter((item) => idsInvalidos.has(Number(item.materia_id)));
+        if (removidos.length === 0) throw err;
+
+        for (const item of removidos) {
+          if (correlativasReportadas.has(item.materia_id)) continue;
+          correlativasReportadas.add(item.materia_id);
+          const planMateria = planMaterias.find((m) => Number(m.id) === Number(item.materia_id));
+          const row = rows.find(
+            (candidate) =>
+              normalizarTexto(candidate.materia) === normalizarTexto(planMateria?.nombre)
+          );
+          const faltantes = (err.details?.violations || [])
+            .filter((violation) => Number(violation.materia_id) === Number(item.materia_id))
+            .map(
+              (violation) =>
+                `${violation.requisito || violation.requisito_codigo || "Correlativa"} debe estar ${violation.estados_aceptados.join(" o ")}`
+            );
+          errors.push({
+            row: row?.rowNumber || "-",
+            materia: planMateria?.nombre || item.materia_id,
+            errors: faltantes,
+          });
+        }
+
+        preview = preview.filter((item) => !idsInvalidos.has(Number(item.materia_id)));
+      }
+    }
 
     return res.status(200).json({
       ok: true,
