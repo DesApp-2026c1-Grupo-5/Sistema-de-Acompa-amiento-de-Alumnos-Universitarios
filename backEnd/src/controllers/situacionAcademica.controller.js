@@ -811,6 +811,39 @@ const eliminarPlanCursada = async (req, res, next) => {
   return res.status(200).json({ ok: true, data: { id: eliminado.id } });
 };
 
+const descargarPlantillaExcel = async (req, res, next) => {
+  const estudianteData = await getEstudiante(req.user.sub);
+  if (!estudianteData) return next(buildError("Estudiante no encontrado", 404));
+
+  const situacion = await getSituacionActiva(estudianteData.id);
+  if (!situacion) return next(buildError("Situación académica no encontrada", 400));
+
+  const planMaterias = await materia.findAll({
+    where: { plan_id: situacion.plan_id },
+    attributes: ["nombre", "anio_cursada", "cuatrimestre"],
+    order: [["anio_cursada", "ASC"], ["cuatrimestre", "ASC"], ["nombre", "ASC"]],
+    raw: true,
+  });
+
+  const XLSX = require("xlsx");
+  const data = planMaterias.map((m) => ({
+    materia: m.nombre,
+    estado: "pendiente",
+    anio: m.anio_cursada || "",
+    cuatrimestre: m.cuatrimestre || "",
+    nota: "",
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Situacion Academica");
+  const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", 'attachment; filename="plantilla_situacion_academica.xlsx"');
+  return res.send(buffer);
+};
+
 module.exports = {
   crearSituacion,
   obtenerSituacion,
@@ -824,6 +857,7 @@ module.exports = {
   importarExcel,
   confirmarImportacion,
   cambiarCarrera,
+  descargarPlantillaExcel,
   guardarPlanCursada,
   obtenerPlanesCursada,
   obtenerPlanCursada,

@@ -32,6 +32,7 @@ router.patch("/student/academic-situation/credits/:id", authMiddleware, validate
 router.delete("/student/academic-situation/credits/:id", authMiddleware, controller.eliminarActividad);
 router.post("/student/academic-situation/import-excel", authMiddleware, validarCargaExcel, controller.importarExcel);
 router.post("/student/academic-situation/confirm-excel", authMiddleware, validate(confirmarImportacionSchema), controller.confirmarImportacion);
+router.get("/student/academic-situation/excel-template", authMiddleware, controller.descargarPlantillaExcel);
 router.patch("/student/academic-situation/change-career",authMiddleware,validate(crearSituacionSchema),controller.cambiarCarrera);
 
 router.post("/student/plan-cursada", authMiddleware, validate(crearPlanCursadaSchema), controller.guardarPlanCursada);
