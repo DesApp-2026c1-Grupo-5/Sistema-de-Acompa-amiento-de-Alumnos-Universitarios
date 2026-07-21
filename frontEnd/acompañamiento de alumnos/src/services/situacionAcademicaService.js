@@ -23,6 +23,9 @@ export const importarExcel = (formData) => api.postFormData("/student/academic-s
 export const confirmarImportacion = (materias, creditActivities = []) =>
   api.post("/student/academic-situation/confirm-excel", { materias, credit_activities: creditActivities });
 
+export const descargarPlantillaExcel = () =>
+  api.download("/student/academic-situation/excel-template");
+
 export const cambiarCarrera = (plan_id) =>
   api.patch("/student/academic-situation/change-career", { plan_id });
 
