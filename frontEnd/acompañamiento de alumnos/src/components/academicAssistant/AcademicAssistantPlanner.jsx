@@ -1,5 +1,16 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Save, GripVertical, Wand2, Loader2, Plus, Trash2, Pencil, ChevronRight, ChevronDown, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import {
+  Save,
+  GripVertical,
+  Wand2,
+  Loader2,
+  Plus,
+  Trash2,
+  Pencil,
+  ChevronRight,
+  ChevronDown,
+  AlertTriangle,
+} from 'lucide-react';
 import Card from '../common/Card';
 import ErrorState from '../common/ErrorState';
 import { getCareerSubjects } from '../../services/plannerService';
@@ -17,7 +28,6 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const [editingLabel, setEditingLabel] = useState(null);
   const [labelDraft, setLabelDraft] = useState('');
   const [expandedCorr, setExpandedCorr] = useState({});
-  const [hideApproved, setHideApproved] = useState(false);
   const [nombrePlan, setNombrePlan] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
@@ -40,10 +50,10 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   const requirementsFor = (subject) => subject.correlativeRequirements?.length
     ? subject.correlativeRequirements
     : (subject.correlatives || []).map((subjectId) => ({
-        subjectId,
-        type: 'aprobar',
-        currentStatus: approvedSet.has(subjectId) ? 'aprobada' : 'pendiente',
-      }));
+      subjectId,
+      type: 'aprobar',
+      currentStatus: approvedSet.has(subjectId) ? 'aprobada' : 'pendiente',
+    }));
 
   const corrSatisfecha = (requirement, earlierIds) => {
     if (earlierIds.has(Number(requirement.subjectId))) return true;
@@ -52,8 +62,7 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
   };
 
   function filterSubjects(subjects) {
-    if (!hideApproved || approvedSet.size === 0) return subjects;
-    return subjects.filter((s) => !approvedSet.has(s.id));
+    return subjects;
   }
 
   function nextLabel() {
@@ -196,18 +205,6 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
     } finally {
       setGuardando(false);
     }
-  };
-
-  const handleToggleHide = (checked) => {
-    setHideApproved(checked);
-    setPlan((current) => current
-      .map((group) => ({
-        ...group,
-        subjects: checked
-          ? group.subjects.filter((subject) => !approvedSet.has(subject.id))
-          : group.subjects,
-      }))
-      .filter((group) => group.subjects.length > 0));
   };
 
   const handleGenerate = () => {
@@ -487,23 +484,9 @@ function AcademicAssistantPlanner({ approvedIds = [] }) {
         </div>
 
         <div className={styles.planHeader}>
-          <p className={styles.dragHint}>Arrastrá las materias para reorganizar tu plan</p>
-          <div className={styles.planActions}>
-            {approvedIds.length > 0 && (
-              <label className={styles.toggleLabel}>
-                <input
-                  type="checkbox"
-                  className={styles.toggleCheckbox}
-                  checked={hideApproved}
-                  onChange={(e) => handleToggleHide(e.target.checked)}
-                />
-                <span className={styles.toggleVisual}>
-                  {hideApproved ? <EyeOff size={14} /> : <Eye size={14} />}
-                </span>
-                Ocultar aprobadas
-              </label>
-            )}
-          </div>
+          <p className={styles.dragHint}>
+            Arrastrá las materias para reorganizar tu plan
+          </p>
         </div>
 
         {mensaje && (
