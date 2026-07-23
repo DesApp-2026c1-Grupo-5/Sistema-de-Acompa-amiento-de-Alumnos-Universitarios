@@ -15,6 +15,7 @@ import {
   importarExcel,
   confirmarImportacion,
   cambiarCarrera,
+  descargarPlantillaExcel,
 } from '../../services/situacionAcademicaService';
 import styles from './SituacionAcademica.module.css';
 
@@ -341,6 +342,7 @@ export default function SituacionAcademica() {
   const [previewExcel, setPreviewExcel] = useState(null);
   const [creditActivitiesPreview, setCreditActivitiesPreview] = useState([]);
   const [excelErrors, setExcelErrors] = useState([]);
+  const [excelLoading, setExcelLoading] = useState(false);
   const inputExcelRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -599,28 +601,20 @@ export default function SituacionAcademica() {
 
   const handleImportarExcel = async () => {
     if (!archivoExcel) return;
-    setSaving(true);
+    setExcelLoading(true);
     setActionError(null);
     try {
       const fd = new FormData();
       fd.append('archivo', archivoExcel);
       const res = await importarExcel(fd);
       const { preview, errors, creditActivities } = res?.data ?? {};
-      if (errors?.length > 0) {
-        setExcelErrors(errors);
-      }
+      setExcelErrors(errors ?? []);
       setPreviewExcel(preview ?? []);
       setCreditActivitiesPreview(creditActivities ?? []);
-      if (!errors || errors.length === 0) {
-        await confirmarImportacion(preview ?? [], creditActivities ?? []);
-        setArchivoExcel(null);
-        setMostrarCargaExcel(false);
-        await cargarDatos();
-      }
     } catch (err) {
       setActionError(crearErrorAccion(err, 'Error al importar Excel'));
     } finally {
-      setSaving(false);
+      setExcelLoading(false);
     }
   };
 
@@ -640,6 +634,20 @@ export default function SituacionAcademica() {
       setActionError(crearErrorAccion(err, 'Error al confirmar importación'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDescargarPlantilla = async () => {
+    try {
+      const { blob, filename } = await descargarPlantillaExcel();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'plantilla_situacion_academica.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setActionError(crearErrorAccion(err, 'No se pudo descargar la plantilla'));
     }
   };
 
@@ -778,6 +786,11 @@ export default function SituacionAcademica() {
         {mostrarCargaExcel && (
           <div className={styles.excelUploadBox}>
             <input ref={inputExcelRef} type="file" accept=".xls,.xlsx" className={styles.excelInput} onChange={handleSeleccionarExcel} />
+            <p className={styles.excelSubtitle}>
+              <button type="button" className={styles.templateLink} onClick={handleDescargarPlantilla}>
+                Descargar plantilla Excel
+              </button>
+            </p>
             <div className={styles.excelIcon}>⇧</div>
             <p className={styles.excelTitle}>Arrastra tu archivo Excel aquí</p>
             <p className={styles.excelSubtitle}>o haz clic para seleccionar</p>
@@ -785,33 +798,101 @@ export default function SituacionAcademica() {
               Seleccionar archivo
             </button>
             {archivoExcel && <p className={styles.excelFileName}>Archivo seleccionado: {archivoExcel.name}</p>}
-            {archivoExcel && !previewExcel && (
-              <button type="button" className={styles.primaryButton} style={{ marginTop: 12 }} onClick={handleImportarExcel} disabled={saving}>
-                {saving ? 'Procesando...' : 'Previsualizar'}
+
+            {excelLoading && (
+              <div className={styles.excelLoadingOverlay}>
+                <div className={styles.spinner} />
+                <p>Procesando archivo...</p>
+              </div>
+            )}
+
+            {archivoExcel && !previewExcel && !excelLoading && (
+              <button type="button" className={styles.primaryButton} style={{ marginTop: 12 }} onClick={handleImportarExcel}>
+                Previsualizar
               </button>
             )}
 
             {excelErrors.length > 0 && (
               <div className={styles.excelErrors}>
                 <h4>Errores en el archivo ({excelErrors.length})</h4>
-                {excelErrors.map((e) => (
-                  <p key={e.row} className={styles.errorText}>Fila {e.row}: {e.materia} — {e.errors.join(', ')}</p>
-                ))}
+                <ul className={styles.excelErrorList}>
+                  {excelErrors.map((e, i) => (
+                    <li key={i} className={styles.excelErrorItem}>
+                      <span className={styles.excelErrorRow}>Fila {e.row}</span>
+                      <span className={styles.excelErrorMateria}>{e.materia}</span>
+                      <span className={styles.excelErrorDetail}>{e.errors.join('; ')}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
             {previewExcel && (previewExcel.length > 0 || creditActivitiesPreview.length > 0) && (
-              <div style={{ marginTop: 12 }}>
-                <p>
-                  {previewExcel.length} materias válidas para importar
-                  {creditActivitiesPreview.length > 0 && (
-                    <> + {creditActivitiesPreview.length} actividades con crédito</>
-                  )}
+              <div className={styles.excelPreview}>
+                <h4>Vista previa de la importación</h4>
+                <p className={styles.excelPreviewSummary}>
+                  {previewExcel.length} materia(s) válida(s)
+                  {creditActivitiesPreview.length > 0 && ` + ${creditActivitiesPreview.length} actividad(es) con crédito`}
+                  {excelErrors.length > 0 && ` · ${excelErrors.length} error(es)`}
                 </p>
-                <button type="button" className={styles.primaryButton} onClick={handleConfirmarExcel} disabled={saving}>
-                  {saving ? 'Importando...' : '✅ Confirmar importación'}
-                </button>
+
+                {previewExcel.length > 0 && (
+                  <table className={`${styles.table} ${styles.excelPreviewTable}`}>
+                    <thead>
+                      <tr>
+                        <th>Materia</th>
+                        <th>Estado</th>
+                        <th>Año</th>
+                        <th>Nota</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewExcel.map((row, i) => {
+                        const materia = data?.subjects?.find(s => s.materia_id === row.materia_id);
+                        return (
+                          <tr key={i}>
+                            <td>{materia?.name || `ID ${row.materia_id}`}</td>
+                            <td>
+                              <span className={`${styles.badge} ${styles[`badge${row.estado.charAt(0).toUpperCase() + row.estado.slice(1)}`] || ''}`}>
+                                {row.estado}
+                              </span>
+                            </td>
+                            <td>{row.anio || '-'}</td>
+                            <td>{row.nota ?? '-'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+
+                {creditActivitiesPreview.length > 0 && (
+                  <div className={styles.excelCreditPreview}>
+                    <h5>Actividades con crédito</h5>
+                    {creditActivitiesPreview.map((act, i) => (
+                      <p key={i}>{act.descripcion} — {act.creditos} crédito(s)</p>
+                    ))}
+                  </div>
+                )}
+
+                <div className={styles.excelPreviewActions}>
+                  <button type="button" className={styles.secondaryButton} onClick={() => {
+                    setPreviewExcel(null);
+                    setCreditActivitiesPreview([]);
+                    setExcelErrors([]);
+                    setArchivoExcel(null);
+                  }}>
+                    Cancelar
+                  </button>
+                  <button type="button" className={styles.primaryButton} onClick={handleConfirmarExcel} disabled={saving || previewExcel.length === 0}>
+                    {saving ? 'Importando...' : 'Confirmar importación'}
+                  </button>
+                </div>
               </div>
+            )}
+
+            {excelErrors.length > 0 && (!previewExcel || (previewExcel.length === 0 && creditActivitiesPreview.length === 0)) && (
+              <p className={styles.hintText}>Corregí los errores en el archivo y volvé a intentar.</p>
             )}
           </div>
         )}

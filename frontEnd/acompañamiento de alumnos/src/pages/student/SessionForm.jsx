@@ -84,16 +84,24 @@ function SessionForm({ onSubmit, onCancel, materias = [], initialValues = null }
     const hours = Number(form.durationHours);
     const minutes = Number(form.durationMinutes);
 
-    if (Number.isNaN(hours) || hours < 0) {
-      newErrors.durationHours = 'Las horas no pueden ser negativas.';
+    if (
+      Number.isNaN(hours) ||
+      !Number.isInteger(hours) ||
+      hours < 1 ||
+      hours > 12
+    ) {
+      newErrors.durationHours =
+        'Las horas deben estar entre 1 y 12.';
     }
 
-    if (Number.isNaN(minutes) || minutes < 0 || minutes > 59) {
-      newErrors.durationMinutes = 'Los minutos deben estar entre 0 y 59.';
-    }
-
-    if (hours === 0 && minutes === 0) {
-      newErrors.durationHours = 'La duración debe ser mayor a 0.';
+    if (
+      Number.isNaN(minutes) ||
+      !Number.isInteger(minutes) ||
+      minutes < 1 ||
+      minutes > 60
+    ) {
+      newErrors.durationMinutes =
+        'Los minutos deben estar entre 1 y 60.';
     }
 
     if (form.maxParticipants) {
@@ -255,18 +263,36 @@ function SessionForm({ onSubmit, onCancel, materias = [], initialValues = null }
           label="Duración (horas)"
           name="durationHours"
           type="number"
+          min={1}
+          max={12}
           value={form.durationHours}
           error={errors.durationHours}
-          onChange={(e) => handleChange('durationHours', e.target.value)}
+          onChange={(e) =>
+            handleChange(
+              'durationHours',
+              e.target.value === ''
+                ? ''
+                : Math.max(1, Math.min(12, Number(e.target.value)))
+            )
+          }
         />
 
         <InputField
           label="Duración (minutos)"
           name="durationMinutes"
           type="number"
+          min={0}
+          max={60}
           value={form.durationMinutes}
           error={errors.durationMinutes}
-          onChange={(e) => handleChange('durationMinutes', e.target.value)}
+          onChange={(e) =>
+            handleChange(
+              'durationMinutes',
+              e.target.value === ''
+                ? ''
+                : Math.max(0, Math.min(60, Number(e.target.value)))
+            )
+          }
         />
       </div>
 
@@ -274,10 +300,18 @@ function SessionForm({ onSubmit, onCancel, materias = [], initialValues = null }
         label="Cupo máximo (opcional)"
         name="maxParticipants"
         type="number"
+        min={1}
         value={form.maxParticipants}
         placeholder="Dejar vacío para sin límite"
         error={errors.maxParticipants}
-        onChange={(e) => handleChange('maxParticipants', e.target.value)}
+        onChange={(e) =>
+          handleChange(
+            'maxParticipants',
+            e.target.value === ''
+              ? ''
+              : Math.max(1, Number(e.target.value))
+          )
+        }
       />
 
       <div className={styles.formGroup}>

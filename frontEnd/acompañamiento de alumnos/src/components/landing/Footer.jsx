@@ -24,7 +24,6 @@ const Footer = () => {
           <div>
             <Link to="/privacidad">Privacidad</Link>
             <Link to="/terminos">Términos</Link>
-            <Link to="/cookies">Cookies</Link>
           </div>
         </div>
       </div>

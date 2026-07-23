@@ -35,15 +35,6 @@ const computeEstadoResumen = (suspendido, denuncias) => {
   return "rechazada";
 };
 
-const computeEstadoResumenPost = (oculto, denuncias) => {
-  if (oculto) return "oculto";
-
-  const pendientes = denuncias.filter((d) => d.estado === "pendiente").length;
-  if (pendientes > 0) return "pendiente";
-
-  return "rechazada";
-};
-
 const getAdminId = async (req) => {
   const admin = await administrador.findOne({
     where: { usuario_id: req.user.sub },
@@ -64,21 +55,37 @@ const validarPostId = (raw) => {
 };
 
 const listarStats = async (req, res) => {
-  const [pendientes, verificadas, materiales_suspendidos, posts_ocultos] =
-    await Promise.all([
-      denuncia.count({ where: { estado: "pendiente" } }),
-      denuncia.count({ where: { estado: "verificada" } }),
-      material.count({ where: { suspendido: true } }),
-      post.count({ where: { oculto: true } }),
-    ]);
+  const [
+    pendientes,
+    rechazadas,
+    materialesSuspendidos,
+    publicacionesSuspendidas,
+  ] = await Promise.all([
+    denuncia.count({
+      where: { estado: "pendiente" },
+    }),
+
+    denuncia.count({
+      where: { estado: "rechazada" },
+    }),
+
+    material.count({
+      where: { suspendido: true },
+    }),
+
+    post.count({
+      where: { suspendido: true },
+    }),
+  ]);
 
   return res.status(200).json({
     ok: true,
     data: {
       pendientes,
-      verificadas,
-      materiales_suspendidos,
-      posts_ocultos,
+      rechazadas,
+      suspendidos:
+        materialesSuspendidos +
+        publicacionesSuspendidas,
     },
   });
 };
@@ -129,10 +136,10 @@ const listarDenuncias = async (req, res) => {
           categoria: "Material",
           uploader: plain.estudiante
             ? {
-                id: plain.estudiante.id,
-                nombre: plain.estudiante.nombre,
-                apellido: plain.estudiante.apellido,
-              }
+              id: plain.estudiante.id,
+              nombre: plain.estudiante.nombre,
+              apellido: plain.estudiante.apellido,
+            }
             : null,
           cantidad_denuncias: cantidad,
           severidad: computeSeveridad(cantidad),
@@ -145,8 +152,13 @@ const listarDenuncias = async (req, res) => {
   }
 
   if (postIds.length > 0) {
-    const postWhere = { id: { [Op.in]: postIds } };
-    if (estado === "oculto") postWhere.oculto = true;
+    const postWhere = {
+      id: { [Op.in]: postIds },
+    };
+
+    if (estado === "suspendido") {
+      postWhere.suspendido = true;
+    }
 
     const posts = await post.findAll({
       where: postWhere,
@@ -169,14 +181,18 @@ const listarDenuncias = async (req, res) => {
           categoria: "Publicación",
           uploader: plain.estudiante
             ? {
-                id: plain.estudiante.id,
-                nombre: plain.estudiante.nombre,
-                apellido: plain.estudiante.apellido,
-              }
+              id: plain.estudiante.id,
+              nombre: plain.estudiante.nombre,
+              apellido: plain.estudiante.apellido,
+            }
             : null,
           cantidad_denuncias: cantidad,
           severidad: computeSeveridad(cantidad),
-          estado_resumen: computeEstadoResumenPost(plain.oculto, denuncias),
+          estado_resumen: computeEstadoResumen(
+            plain.suspendido,
+            denuncias
+          ),
+          suspendido: plain.suspendido,
           oculto: plain.oculto,
         };
       })
@@ -204,8 +220,14 @@ const listarDenuncias = async (req, res) => {
     });
   }
 
-  if (estado && estado !== "todos" && estado !== "suspendido" && estado !== "oculto") {
-    items = items.filter((it) => it.estado_resumen === estado);
+  if (
+    estado &&
+    estado !== "todos" &&
+    estado !== "suspendido"
+  ) {
+    items = items.filter(
+      (it) => it.estado_resumen === estado
+    );
   }
 
   const total = items.length;
@@ -341,17 +363,20 @@ const obtenerDetallePost = async (req, res, next) => {
         contenido: plain.contenido,
         event_type: plain.event_type,
         event_subject: plain.event_subject,
-        oculto: plain.oculto,
+        suspendido: plain.suspendido,
       },
       uploader: plain.estudiante
         ? {
-            id: plain.estudiante.id,
-            nombre: plain.estudiante.nombre,
-            apellido: plain.estudiante.apellido,
-          }
+          id: plain.estudiante.id,
+          nombre: plain.estudiante.nombre,
+          apellido: plain.estudiante.apellido,
+        }
         : null,
       cantidad_denuncias: denuncias.length,
-      estado_resumen: computeEstadoResumenPost(plain.oculto, denuncias),
+      estado_resumen: computeEstadoResumen(
+        plain.suspendido,
+        denuncias
+      ),
       denuncias: denuncias.map((d) => ({
         id: d.id,
         motivo: d.motivo
@@ -363,10 +388,10 @@ const obtenerDetallePost = async (req, res, next) => {
         fecha_resolucion: d.fecha_resolucion,
         denunciante: d.denunciante
           ? {
-              id: d.denunciante.id,
-              nombre: d.denunciante.nombre,
-              apellido: d.denunciante.apellido,
-            }
+            id: d.denunciante.id,
+            nombre: d.denunciante.nombre,
+            apellido: d.denunciante.apellido,
+          }
           : null,
       })),
     },
@@ -401,8 +426,10 @@ const notificarDenunciantes = async (
     const denuncianteRaw = d.denunciante;
     if (!denuncianteRaw) continue;
 
-    const esVerificada = nuevoEstado === "verificada";
-    const texto = esVerificada ? "verificada" : "rechazada";
+    const texto =
+      nuevoEstado === "suspendido"
+        ? "aceptada"
+        : "rechazada";
 
     await crearNotificacion({
       usuario_id: denuncianteRaw.usuario_id,
@@ -544,9 +571,7 @@ const cambiarEstadoDenunciasPost = (nuevoEstado) => async (req, res, next) => {
   });
 };
 
-const verificarDenuncias = cambiarEstadoDenuncias("verificada");
 const rechazarDenuncias = cambiarEstadoDenuncias("rechazada");
-const verificarDenunciasPost = cambiarEstadoDenunciasPost("verificada");
 const rechazarDenunciasPost = cambiarEstadoDenunciasPost("rechazada");
 
 const suspenderMaterial = async (req, res, next) => {
@@ -598,7 +623,7 @@ const suspenderMaterial = async (req, res, next) => {
     await mat.update({ suspendido: true }, { transaction: t });
     const [count] = await denuncia.update(
       {
-        estado: "verificada",
+        estado: "suspendido",
         fecha_resolucion: new Date(),
         admin_revisor_id: adminId,
       },
@@ -621,7 +646,12 @@ const suspenderMaterial = async (req, res, next) => {
     action_url: "/student/materials",
   });
 
-  notificarDenunciantes(pendientes, mat.titulo, "verificada", req.user.sub);
+  notificarDenunciantes(
+    pendientes,
+    mat.titulo,
+    "suspendido",
+    req.user.sub
+  );
 
   return res.status(200).json({
     ok: true,
@@ -666,7 +696,10 @@ const restaurarMaterial = async (req, res, next) => {
         admin_revisor_id: null,
       },
       {
-        where: { material_id: materialId, estado: "verificada" },
+        where: {
+          material_id: materialId,
+          estado: "suspendido",
+        },
         transaction: t,
       }
     );
@@ -689,10 +722,20 @@ const restaurarMaterial = async (req, res, next) => {
   });
 };
 
-const ocultarPost = async (req, res, next) => {
+const suspenderPost = async (
+  req,
+  res,
+  next
+) => {
   const postId = validarPostId(req.params.id);
+
   if (!postId) {
-    return next(buildError("id de publicación inválido", 400));
+    return next(
+      buildError(
+        "id de publicación inválido",
+        400
+      )
+    );
   }
 
   const pub = await post.findByPk(postId, {
@@ -702,15 +745,30 @@ const ocultarPost = async (req, res, next) => {
       },
     ],
   });
+
   if (!pub) {
-    return next(buildError("Publicación no encontrada", 404));
+    return next(
+      buildError(
+        "Publicación no encontrada",
+        404
+      )
+    );
   }
-  if (pub.oculto) {
-    return next(buildError("La publicación ya está oculta", 400));
+
+  if (pub.suspendido) {
+    return next(
+      buildError(
+        "La publicación ya está suspendida",
+        400
+      )
+    );
   }
 
   const pendientes = await denuncia.findAll({
-    where: { post_id: postId, estado: "pendiente" },
+    where: {
+      post_id: postId,
+      estado: "pendiente",
+    },
     include: [
       {
         model: estudiante,
@@ -720,53 +778,85 @@ const ocultarPost = async (req, res, next) => {
   });
 
   if (pendientes.length === 0) {
-    const existenDenuncias = await denuncia.count({
-      where: { post_id: postId },
-    });
+    const existenDenuncias =
+      await denuncia.count({
+        where: { post_id: postId },
+      });
+
     if (existenDenuncias === 0) {
-      return next(buildError("Esta publicación no tiene denuncias", 400));
+      return next(
+        buildError(
+          "Esta publicación no tiene denuncias",
+          400
+        )
+      );
     }
-    return next(buildError("Esta denuncia ya fue rechazada", 400));
+
+    return next(
+      buildError(
+        "Esta denuncia ya fue rechazada",
+        400
+      )
+    );
   }
 
   const adminId = await getAdminId(req);
+
   if (!adminId) {
-    return next(buildError("Administrador no encontrado", 404));
+    return next(
+      buildError(
+        "Administrador no encontrado",
+        404
+      )
+    );
   }
 
-  const actualizadas = await sequelize.transaction(async (t) => {
-    await pub.update({ oculto: true }, { transaction: t });
-    const [count] = await denuncia.update(
-      {
-        estado: "verificada",
-        fecha_resolucion: new Date(),
-        admin_revisor_id: adminId,
-      },
-      {
-        where: { post_id: postId, estado: "pendiente" },
-        transaction: t,
-      }
-    );
-    return count;
-  });
+  const actualizadas =
+    await sequelize.transaction(async (t) => {
+      await pub.update(
+        { suspendido: true },
+        { transaction: t }
+      );
 
-  const contenidoBreve = pub.contenido.substring(0, 60);
+      const [count] = await denuncia.update(
+        {
+          estado: "suspendido",
+          fecha_resolucion: new Date(),
+          admin_revisor_id: adminId,
+        },
+        {
+          where: {
+            post_id: postId,
+            estado: "pendiente",
+          },
+          transaction: t,
+        }
+      );
+
+      return count;
+    });
+
+  const contenidoBreve = String(
+    pub.contenido
+  ).substring(0, 60);
 
   await crearNotificacion({
     usuario_id: pub.estudiante?.usuario_id,
     emisor_usuario_id: req.user.sub,
-    titulo: "Publicación oculta",
+    titulo: "Publicación suspendida",
     tipo: "general",
-    mensaje: `Tu publicación "${contenidoBreve}..." fue oculta debido a denuncias verificadas.`,
+    mensaje:
+      `Tu publicación "${contenidoBreve}..." ` +
+      "fue suspendida debido a denuncias aceptadas.",
     referencia_tipo: "denuncia",
     referencia_id: postId,
     action_url: "/student/home",
   });
 
-  notificarDenunciantes(
+  await notificarDenunciantes(
     pendientes,
     contenidoBreve,
-    "verificada",
+    "suspendido",
     req.user.sub,
     "/student/home"
   );
@@ -775,16 +865,26 @@ const ocultarPost = async (req, res, next) => {
     ok: true,
     data: {
       id: pub.id,
-      oculto: true,
+      suspendido: true,
       denuncias_actualizadas: actualizadas,
     },
   });
 };
 
-const mostrarPost = async (req, res, next) => {
+const restaurarPost = async (
+  req,
+  res,
+  next
+) => {
   const postId = validarPostId(req.params.id);
+
   if (!postId) {
-    return next(buildError("id de publicación inválido", 400));
+    return next(
+      buildError(
+        "id de publicación inválido",
+        400
+      )
+    );
   }
 
   const pub = await post.findByPk(postId, {
@@ -794,15 +894,30 @@ const mostrarPost = async (req, res, next) => {
       },
     ],
   });
+
   if (!pub) {
-    return next(buildError("Publicación no encontrada", 404));
+    return next(
+      buildError(
+        "Publicación no encontrada",
+        404
+      )
+    );
   }
-  if (!pub.oculto) {
-    return next(buildError("La publicación no está oculta", 400));
+
+  if (!pub.suspendido) {
+    return next(
+      buildError(
+        "La publicación no está suspendida",
+        400
+      )
+    );
   }
 
   await sequelize.transaction(async (t) => {
-    await pub.update({ oculto: false }, { transaction: t });
+    await pub.update(
+      { suspendido: false },
+      { transaction: t }
+    );
 
     await denuncia.update(
       {
@@ -811,20 +926,27 @@ const mostrarPost = async (req, res, next) => {
         admin_revisor_id: null,
       },
       {
-        where: { post_id: postId, estado: "verificada" },
+        where: {
+          post_id: postId,
+          estado: "suspendido",
+        },
         transaction: t,
       }
     );
   });
 
-  const contenidoBreve = pub.contenido.substring(0, 60);
+  const contenidoBreve = String(
+    pub.contenido
+  ).substring(0, 60);
 
   await crearNotificacion({
     usuario_id: pub.estudiante?.usuario_id,
     emisor_usuario_id: req.user.sub,
     titulo: "Publicación restaurada",
     tipo: "general",
-    mensaje: `Tu publicación "${contenidoBreve}..." fue restaurada y ya está visible nuevamente.`,
+    mensaje:
+      `Tu publicación "${contenidoBreve}..." ` +
+      "fue restaurada y ya está visible nuevamente.",
     referencia_tipo: "denuncia",
     referencia_id: postId,
     action_url: "/student/home",
@@ -832,7 +954,10 @@ const mostrarPost = async (req, res, next) => {
 
   return res.status(200).json({
     ok: true,
-    data: { id: pub.id, oculto: false },
+    data: {
+      id: pub.id,
+      suspendido: false,
+    },
   });
 };
 
@@ -845,7 +970,14 @@ const rechazarDenuncia = async (req, res, next) => {
   const den = await denuncia.findByPk(denunciaId, {
     include: [
       { model: material, attributes: ["id", "titulo", "suspendido"] },
-      { model: post, attributes: ["id", "contenido", "oculto"] },
+      {
+        model: post,
+        attributes: [
+          "id",
+          "contenido",
+          "suspendido",
+        ],
+      },
       {
         model: estudiante,
         as: "denunciante",
@@ -862,16 +994,26 @@ const rechazarDenuncia = async (req, res, next) => {
     return next(buildError("Esta denuncia ya fue rechazada", 400));
   }
 
-  if (den.estado === "verificada") {
-    return next(buildError("Esta denuncia ya fue resuelta", 400));
+  if (den.estado === "suspendido") {
+    return next(
+      buildError(
+        "Esta denuncia ya fue resuelta",
+        400
+      )
+    );
   }
 
   if (den.material?.suspendido) {
     return next(buildError("Este material ya está suspendido", 400));
   }
 
-  if (den.post?.oculto) {
-    return next(buildError("Esta publicación ya está oculta", 400));
+  if (den.post?.suspendido) {
+    return next(
+      buildError(
+        "Esta publicación ya está suspendida",
+        400
+      )
+    );
   }
 
   const adminId = await getAdminId(req);
@@ -915,13 +1057,11 @@ module.exports = {
   listarDenuncias,
   obtenerDetalle,
   obtenerDetallePost,
-  verificarDenuncias,
   rechazarDenuncias,
-  verificarDenunciasPost,
   rechazarDenunciasPost,
   suspenderMaterial,
   restaurarMaterial,
-  ocultarPost,
-  mostrarPost,
   rechazarDenuncia,
+  suspenderPost,
+  restaurarPost,
 };

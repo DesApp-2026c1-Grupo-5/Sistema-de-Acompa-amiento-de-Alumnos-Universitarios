@@ -3,27 +3,82 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.sequelize.transaction(async (transaction) => {
-      await queryInterface.addColumn('estudiantes', 'localidad', {
-        type: Sequelize.STRING(120),
-        allowNull: true,
-      }, { transaction });
-      await queryInterface.addColumn('estudiantes', 'telefono', {
-        type: Sequelize.STRING(32),
-        allowNull: true,
-      }, { transaction });
-      await queryInterface.addColumn('estudiantes', 'fecha_nacimiento', {
-        type: Sequelize.DATEONLY,
-        allowNull: true,
-      }, { transaction });
-    });
+    const table = await queryInterface.describeTable('estudiantes');
+
+    if (!table.localidad) {
+      await queryInterface.addColumn(
+        'estudiantes',
+        'localidad',
+        {
+          type: Sequelize.STRING,
+          allowNull: true,
+        }
+      );
+    }
+
+    if (!table.bio) {
+      await queryInterface.addColumn(
+        'estudiantes',
+        'bio',
+        {
+          type: Sequelize.TEXT,
+          allowNull: true,
+        }
+      );
+    }
+
+    if (!table.telefono) {
+      await queryInterface.addColumn(
+        'estudiantes',
+        'telefono',
+        {
+          type: Sequelize.STRING,
+          allowNull: true,
+        }
+      );
+    }
+
+    if (!table.fecha_nacimiento) {
+      await queryInterface.addColumn(
+        'estudiantes',
+        'fecha_nacimiento',
+        {
+          type: Sequelize.DATEONLY,
+          allowNull: true,
+        }
+      );
+    }
   },
 
   async down(queryInterface) {
-    await queryInterface.sequelize.transaction(async (transaction) => {
-      await queryInterface.removeColumn('estudiantes', 'fecha_nacimiento', { transaction });
-      await queryInterface.removeColumn('estudiantes', 'telefono', { transaction });
-      await queryInterface.removeColumn('estudiantes', 'localidad', { transaction });
-    });
+    const table = await queryInterface.describeTable('estudiantes');
+
+    if (table.fecha_nacimiento) {
+      await queryInterface.removeColumn(
+        'estudiantes',
+        'fecha_nacimiento'
+      );
+    }
+
+    if (table.telefono) {
+      await queryInterface.removeColumn(
+        'estudiantes',
+        'telefono'
+      );
+    }
+
+    if (table.bio) {
+      await queryInterface.removeColumn(
+        'estudiantes',
+        'bio'
+      );
+    }
+
+    if (table.localidad) {
+      await queryInterface.removeColumn(
+        'estudiantes',
+        'localidad'
+      );
+    }
   },
 };

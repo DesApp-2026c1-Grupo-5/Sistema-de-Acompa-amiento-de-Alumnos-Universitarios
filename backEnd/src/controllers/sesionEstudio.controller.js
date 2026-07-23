@@ -158,7 +158,18 @@ const listarSesiones = async (req, res, next) => {
     if (hasta) where.fecha_hora[Op.lte] = new Date(hasta);
   }
   if (q) {
-    where[Op.or] = [{ tema: { [Op.like]: `%${q}%` } }];
+    where[Op.or] = [
+      {
+        tema: {
+          [Op.iLike]: `%${q}%`,
+        },
+      },
+      {
+        "$materium.nombre$": {
+          [Op.iLike]: `%${q}%`,
+        },
+      },
+    ];
   }
 
   // Excluir sesiones finalizadas (inicio + duracion ya paso)
@@ -184,14 +195,25 @@ const listarSesiones = async (req, res, next) => {
   const { rows, count } = await sesion_estudio.findAndCountAll({
     where,
     include: [
-      { model: estudiante, as: "creador", attributes: ["id", "nombre", "apellido", "foto_url"] },
-      { model: materia, attributes: ["id", "nombre", "anio_cursada"] },
-      { model: inscripcion_sesion, attributes: ["id", "estado", "estudiante_id"] },
+      {
+        model: estudiante,
+        as: "creador",
+        attributes: ["id", "nombre", "apellido", "foto_url"],
+      },
+      {
+        model: materia,
+        attributes: ["id", "nombre", "anio_cursada"],
+      },
+      {
+        model: inscripcion_sesion,
+        attributes: ["id", "estado", "estudiante_id"],
+      },
     ],
     order: [["fecha_hora", "ASC"]],
     limit,
     offset,
     distinct: true,
+    subQuery: false,
   });
 
   let data = rows.map((s) => normalizarSesion(s.get({ plain: true }), estudianteData.id));
@@ -251,14 +273,14 @@ const obtenerSesion = async (req, res, next) => {
 
   const pendingRequests = esCreador
     ? (plain.inscripcion_sesions || [])
-        .filter((i) => i.estado === "pendiente")
-        .map((i) => ({
-          inscripcionId: i.id,
-          estudianteId: i.estudiante_id,
-          name: i.estudiante
-            ? `${i.estudiante.nombre} ${i.estudiante.apellido}`.trim()
-            : "Estudiante",
-        }))
+      .filter((i) => i.estado === "pendiente")
+      .map((i) => ({
+        inscripcionId: i.id,
+        estudianteId: i.estudiante_id,
+        name: i.estudiante
+          ? `${i.estudiante.nombre} ${i.estudiante.apellido}`.trim()
+          : "Estudiante",
+      }))
     : [];
 
   const participants = (plain.inscripcion_sesions || [])
