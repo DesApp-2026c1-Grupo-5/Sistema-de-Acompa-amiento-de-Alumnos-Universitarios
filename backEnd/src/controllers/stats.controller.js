@@ -336,7 +336,7 @@ const computeDistribucionMaterias = async (
 
   const conteos = situaciones.map((s) => {
     const plain = s.get({ plain: true });
-    return (plain.estado_materias || []).length;
+    return (plain.estado_materia || []).length;
   });
 
   return bucketize(conteos, bucketDefs);

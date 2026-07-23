@@ -1417,6 +1417,32 @@ describe("integracion backend", () => {
     );
   });
 
+  test("estadisticas admin cuentan materias cursando por alumno", async () => {
+    const admin = await createAdmin("statscursandoadmin");
+    const student = await registerStudent("statscursandoalumno");
+    const { plan, materia } = await createPlanWithSubject();
+    const situation = await request(app)
+      .post("/api/student/academic-situation")
+      .set("Authorization", `Bearer ${student.token}`)
+      .send({ plan_id: plan.id })
+      .expect(201);
+    await db.estado_materia.update(
+      { estado: "cursando", anio: 2026, cuatrimestre: 1 },
+      { where: { situacion_id: situation.body.data.id, materia_id: materia.id } }
+    );
+
+    const res = await request(app)
+      .get("/api/admin/stats")
+      .set("Authorization", `Bearer ${admin.token}`)
+      .expect(200);
+
+    expect(res.body.data.usoSistema.materiasCursadasAlumno).toEqual(
+      expect.arrayContaining([
+        { label: "1-2 materias", students: 1, percentage: 100 },
+      ])
+    );
+  });
+
   test("admin elimina otro administrador", async () => {
     const admin = await createAdmin("adminprincipal");
     const target = await createAdmin("adminborrar");
